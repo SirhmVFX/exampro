@@ -1,0 +1,191 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function membershipId(instId) {
+      return request.auth.uid + '_' + instId;
+    }
+    function hasMembership(instId) {
+      return exists(/databases/$(database)/documents/memberships/$(membershipId(instId)));
+    }
+    function membership(instId) {
+      return get(/databases/$(database)/documents/memberships/$(membershipId(instId))).data;
+    }
+    function isMember(instId) {
+      return signedIn() && (
+        profile().institutionId == instId ||
+        hasMembership(instId)
+      );
+    }
+    function roleIn(instId) {
+      return hasMembership(instId) ? membership(instId).role : profile().role;
+    }
+    function sameTenant(instId) {
+      return isMember(instId);
+    }
+    function isAdmin(instId) {
+      return isMember(instId) && roleIn(instId) == 'admin';
+    }
+    function isTeacher(instId) {
+      return isMember(instId) && roleIn(instId) == 'teacher';
+    }
+    function isStaff(instId) {
+      return isMember(instId) && (
+        roleIn(instId) == 'admin' ||
+        roleIn(instId) == 'teacher' ||
+        roleIn(instId) == 'manager'
+      );
+    }
+
+    match /institutions/{id} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update, delete: if isAdmin(id);
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (
+        request.auth.uid == uid ||
+        sameTenant(resource.data.institutionId)
+      );
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && (
+        request.auth.uid == uid ||
+        isAdmin(resource.data.institutionId)
+      );
+      allow delete: if isAdmin(resource.data.institutionId);
+    }
+
+    match /invites/{id} {
+      allow read: if true;
+      allow create: if isAdmin(request.resource.data.institutionId);
+      allow update, delete: if isAdmin(resource.data.institutionId);
+    }
+
+    match /questions/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create: if isStaff(request.resource.data.institutionId);
+      allow update, delete: if isStaff(resource.data.institutionId);
+    }
+
+    match /assessments/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create: if isStaff(request.resource.data.institutionId);
+      allow update, delete: if isStaff(resource.data.institutionId);
+    }
+
+    match /attempts/{id} {
+      allow read: if signedIn() && (
+        request.auth.uid == resource.data.studentId ||
+        request.auth.uid == resource.data.teacherId ||
+        isAdmin(resource.data.institutionId) ||
+        (sameTenant(resource.data.institutionId) && profile().role == 'manager') ||
+        (profile().role == 'parent' &&
+          request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.studentId)).data.get('parentIds', []))
+      );
+      allow create: if signedIn() && request.auth.uid == request.resource.data.studentId;
+      allow update: if signedIn() && (
+        request.auth.uid == resource.data.studentId ||
+        request.auth.uid == resource.data.teacherId ||
+        isAdmin(resource.data.institutionId)
+      );
+    }
+
+    match /materials/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create: if isStaff(request.resource.data.institutionId);
+      allow update, delete: if isStaff(resource.data.institutionId);
+    }
+
+    match /materialProgress/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create, update: if signedIn() && request.auth.uid == request.resource.data.studentId;
+    }
+
+    match /notifications/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create: if isStaff(request.resource.data.institutionId);
+      allow update: if sameTenant(resource.data.institutionId);
+      allow delete: if isAdmin(resource.data.institutionId);
+    }
+
+    match /payments/{id} {
+      allow read: if isAdmin(resource.data.institutionId);
+      allow create: if isAdmin(request.resource.data.institutionId);
+    }
+
+    match /departments/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create, update, delete: if isAdmin(resource.data.institutionId) ||
+        isAdmin(request.resource.data.institutionId);
+    }
+
+    match /terms/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create, update, delete: if isAdmin(resource.data.institutionId) ||
+        isAdmin(request.resource.data.institutionId);
+    }
+
+    match /cohorts/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create, update, delete: if isStaff(resource.data.institutionId) ||
+        isStaff(request.resource.data.institutionId);
+    }
+
+    match /enrollments/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create: if signedIn() && (
+        request.auth.uid == request.resource.data.userId ||
+        isStaff(request.resource.data.institutionId)
+      );
+      allow update, delete: if isStaff(resource.data.institutionId);
+    }
+
+    match /rubrics/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create, update, delete: if isStaff(resource.data.institutionId) ||
+        isStaff(request.resource.data.institutionId);
+    }
+
+    match /paths/{id} {
+      allow read: if sameTenant(resource.data.institutionId);
+      allow create, update, delete: if isStaff(resource.data.institutionId) ||
+        isStaff(request.resource.data.institutionId);
+    }
+
+    match /certificates/{id} {
+      allow read: if true;
+      allow create, update, delete: if isStaff(resource.data.institutionId) ||
+        isStaff(request.resource.data.institutionId);
+    }
+
+    match /audit/{id} {
+      allow read: if isAdmin(resource.data.institutionId);
+      allow create: if signedIn() && sameTenant(request.resource.data.institutionId);
+    }
+
+    match /memberships/{id} {
+      allow read: if signedIn() && (
+        resource.data.uid == request.auth.uid ||
+        isMember(resource.data.institutionId)
+      );
+      allow create: if signedIn() && (
+        request.resource.data.uid == request.auth.uid ||
+        isAdmin(request.resource.data.institutionId)
+      );
+      allow update: if signedIn() && (
+        resource.data.uid == request.auth.uid ||
+        isAdmin(resource.data.institutionId)
+      );
+      allow delete: if signedIn() && (
+        resource.data.uid == request.auth.uid ||
+        isAdmin(resource.data.institutionId)
+      );
+    }
+  }
+}
