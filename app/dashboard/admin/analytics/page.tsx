@@ -22,7 +22,7 @@ function BarRow({ label, value, max }: { label: string; value: number; max: numb
       </div>
       <div className="h-2 bg-gray-100 overflow-hidden">
         <div
-          className="h-full bg-[var(--dash-primary-soft)]0"
+          className="h-full bg-[var(--dash-primary-soft)]"
           style={{ width: `${pct}%` }}
         />
       </div>

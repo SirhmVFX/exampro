@@ -132,7 +132,7 @@ export default function StudentProgressPage() {
                     </div>
                     <div className="h-2.5 bg-gray-100">
                       <div
-                        className="h-full bg-[var(--dash-primary-soft)]0"
+                        className="h-full bg-[var(--dash-primary-soft)]"
                         style={{ width: `${r.avg}%` }}
                       />
                     </div>

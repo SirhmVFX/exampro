@@ -48,8 +48,8 @@ const AuthContext = createContext<AuthState>({
   orgs: [],
   loading: true,
   switching: false,
-  refresh: async () => {},
-  logout: async () => {},
+  refresh: async () => { },
+  logout: async () => { },
   switchOrg: async () => {
     throw new Error("Not signed in");
   },
@@ -95,13 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (gen !== loadGen.current) return;
 
+      // p is non-null here — we returned early above if it was null
+      const nonNullP = p as NonNullable<typeof p>;
+
       const activeOk = mems.some(
-        (m) => m.institutionId === p.institutionId && m.status === "active"
+        (m) => m.institutionId === nonNullP.institutionId && m.status === "active"
       );
       if (!activeOk) {
         let stored: string | null = null;
         try {
-          stored = localStorage.getItem(STORAGE_KEY(p.uid));
+          stored = localStorage.getItem(STORAGE_KEY(nonNullP.uid));
         } catch {
           stored = null;
         }
@@ -116,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
       try {
-        localStorage.setItem(STORAGE_KEY(p.uid), p.institutionId);
+        localStorage.setItem(STORAGE_KEY(p!.uid), p!.institutionId);
       } catch {
         /* ignore */
       }

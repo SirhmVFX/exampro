@@ -105,7 +105,7 @@ export default function TeacherAnalyticsPage() {
                       </div>
                       <div className="h-2 bg-gray-100">
                         <div
-                          className="h-full bg-[var(--dash-primary-soft)]0"
+                          className="h-full bg-[var(--dash-primary-soft)]"
                           style={{ width: `${r.value}%` }}
                         />
                       </div>

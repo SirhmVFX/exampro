@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  setPersistence,
+} from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebase";
 import { getInstitution, waitForUserProfile } from "@/lib/db";
@@ -53,6 +58,10 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
+      await setPersistence(
+        auth,
+        form.remember ? browserLocalPersistence : browserSessionPersistence
+      );
       const cred = await signInWithEmailAndPassword(
         auth,
         form.email.trim(),
@@ -86,145 +95,145 @@ export default function LoginPage() {
   return (
     <AuthFrame>
       <AuthCard>
-          <h1 className="text-2xl font-semibold tracking-tight mb-1">
-            Welcome back
-          </h1>
-          <p className="text-white/45 text-sm mb-8">
-            Sign in to your institution workspace
-          </p>
+        <h1 className="text-2xl font-semibold tracking-tight mb-1">
+          Welcome back
+        </h1>
+        <p className="text-white/45 text-sm mb-8">
+          Sign in to your institution workspace
+        </p>
 
-          {error && (
-            <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+        {error && (
+          <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-1.5">
-                Email address
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-1.5">
+              Email address
+            </label>
+            <input
+              type="email"
+              required
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="you@institution.com"
+              className={darkInput}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium text-white/70">
+                Password
               </label>
+              <Link
+                href="/auth/forgot-password"
+                className="text-xs text-white/40 hover:text-white"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <div className="relative">
               <input
-                type="email"
+                type={showPassword ? "text" : "password"}
                 required
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="you@institution.com"
-                className={darkInput}
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-white/70">
-                  Password
-                </label>
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-xs text-white/40 hover:text-white"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  placeholder="••••••••"
-                  className={`${darkInput} pr-10`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="remember"
-                checked={form.remember}
+                value={form.password}
                 onChange={(e) =>
-                  setForm({ ...form, remember: e.target.checked })
+                  setForm({ ...form, password: e.target.value })
                 }
-                className="w-4 h-4 rounded border-white/20 bg-white/5"
+                placeholder="••••••••"
+                className={`${darkInput} pr-10`}
               />
-              <label htmlFor="remember" className="text-sm text-white/45">
-                Remember me for 30 days
-              </label>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
-
-            <Button type="submit" variant="inverse" fullWidth loading={loading} size="lg">
-              Sign in
-            </Button>
-          </form>
-
-          <div className="my-6 flex items-center gap-3 text-xs text-white/30">
-            <div className="flex-1 h-px bg-white/10" />
-            or
-            <div className="flex-1 h-px bg-white/10" />
           </div>
-          <SsoButtons
-            disabled={loading}
-            onError={setError}
-            onSuccess={async (profile) => {
-              const institution =
-                profile.role === "admin"
-                  ? await getInstitution(profile.institutionId)
-                  : null;
-              await refresh();
-              const next = safeNext(
-                typeof window !== "undefined"
-                  ? new URLSearchParams(window.location.search).get("next")
-                  : null
-              );
-              router.replace(next ?? postAuthPath(profile, institution));
-            }}
-          />
 
-          <div className="mt-6 space-y-3 text-center text-sm text-white/40">
-            <p>
-              Don&apos;t have an account?{" "}
-              <Link href="/auth/register/institution" className="text-white hover:underline">
-                Register your institution
-              </Link>
-            </p>
-            <p>
-              Already on ExamPro?{" "}
-              <Link href="/auth/join" className="text-white hover:underline">
-                Join another institution
-              </Link>
-            </p>
-            <p>
-              <Link href="/auth/register/student" className="text-white hover:underline">
-                Sign up
-              </Link>
-              {" · "}
-              Teacher?{" "}
-              <Link href="/auth/register/teacher" className="text-white hover:underline">
-                Sign up
-              </Link>
-              {" · "}
-              Parent?{" "}
-              <Link href="/auth/register/parent" className="text-white hover:underline">
-                Sign up
-              </Link>
-            </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="remember"
+              checked={form.remember}
+              onChange={(e) =>
+                setForm({ ...form, remember: e.target.checked })
+              }
+              className="w-4 h-4 rounded border-white/20 bg-white/5"
+            />
+            <label htmlFor="remember" className="text-sm text-white/45">
+              Remember me for 30 days
+            </label>
           </div>
+
+          <Button type="submit" variant="inverse" fullWidth loading={loading} size="lg">
+            Sign in
+          </Button>
+        </form>
+
+        <div className="my-6 flex items-center gap-3 text-xs text-white/30">
+          <div className="flex-1 h-px bg-white/10" />
+          or
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+        <SsoButtons
+          disabled={loading}
+          onError={setError}
+          onSuccess={async (profile) => {
+            const institution =
+              profile.role === "admin"
+                ? await getInstitution(profile.institutionId)
+                : null;
+            await refresh();
+            const next = safeNext(
+              typeof window !== "undefined"
+                ? new URLSearchParams(window.location.search).get("next")
+                : null
+            );
+            router.replace(next ?? postAuthPath(profile, institution));
+          }}
+        />
+
+        <div className="mt-6 space-y-3 text-center text-sm text-white/40">
+          <p>
+            Don&apos;t have an account?{" "}
+            <Link href="/auth/register/institution" className="text-white hover:underline">
+              Register your institution
+            </Link>
+          </p>
+          <p>
+            Already on ExamPro?{" "}
+            <Link href="/auth/join" className="text-white hover:underline">
+              Join another institution
+            </Link>
+          </p>
+          <p>
+            <Link href="/auth/register/student" className="text-white hover:underline">
+              Sign up
+            </Link>
+            {" · "}
+            Teacher?{" "}
+            <Link href="/auth/register/teacher" className="text-white hover:underline">
+              Sign up
+            </Link>
+            {" · "}
+            Parent?{" "}
+            <Link href="/auth/register/parent" className="text-white hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </AuthCard>
     </AuthFrame>
   );
