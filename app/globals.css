@@ -36,6 +36,31 @@
   --dash-accent: #000000;
   --dash-on-accent: #ffffff;
   --dash-accent-soft: rgba(0, 0, 0, 0.08);
+  /* Dashboard content area — light mode default */
+  --dash-bg: #fafafa;
+  --dash-surface: #ffffff;
+  --dash-surface-alt: #f4f4f5;
+  --dash-border: #e4e4e7;
+  --dash-text: #09090b;
+  --dash-text-muted: #52525b;
+  --dash-text-faint: #a1a1aa;
+  --dash-topbar-bg: #ffffff;
+  --dash-topbar-border: #e4e4e7;
+}
+
+/* ── True-black dark mode — same palette as the marketing site ── */
+.dash-dark {
+  --dash-bg: #000000;
+  --dash-surface: #09090b;
+  --dash-surface-alt: #18181b;
+  --dash-border: rgba(255,255,255,0.10);
+  --dash-text: #fafafa;
+  --dash-text-muted: rgba(255,255,255,0.55);
+  --dash-text-faint: rgba(255,255,255,0.28);
+  --dash-topbar-bg: #09090b;
+  --dash-topbar-border: rgba(255,255,255,0.10);
+  --dash-primary-soft: rgba(255,255,255,0.08);
+  color-scheme: dark;
 }
 
 * {
@@ -159,9 +184,10 @@ body {
 }
 
 /* ── TipTap WYSIWYG ─────────────────────────────────────────────────────── */
+/* All colours are theme variables so the editor follows light/dark mode. */
 .tiptap-editor {
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--dash-border, #d1d5db);
+  background: var(--dash-surface, #fff);
   border-radius: 0.75rem;
   /* rounded-xl */
   overflow: hidden;
@@ -172,18 +198,18 @@ body {
   flex-wrap: wrap;
   gap: 4px;
   padding: 8px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-bottom: 1px solid var(--dash-border, #e5e7eb);
+  background: var(--dash-surface-alt, #f9fafb);
 }
 
 .tiptap-toolbar button {
   padding: 4px 8px;
   font-size: 0.8rem;
   font-weight: 600;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  border: 1px solid var(--dash-border, #e5e7eb);
+  background: var(--dash-surface, #fff);
   cursor: pointer;
-  color: #374151;
+  color: var(--dash-text-muted, #374151);
   min-width: 28px;
   border-radius: 0.375rem;
   /* rounded-md */
@@ -197,7 +223,7 @@ body {
 }
 
 .tiptap-sep {
-  border-left: 1px solid #e5e7eb;
+  border-left: 1px solid var(--dash-border, #e5e7eb);
   margin: 0 4px;
   align-self: stretch;
 }
@@ -208,6 +234,8 @@ body {
   outline: none;
   font-size: 0.9rem;
   line-height: 1.7;
+  background: var(--dash-surface, #fff);
+  color: var(--dash-text, #111827);
 }
 
 .tiptap-content h1 {
@@ -249,7 +277,7 @@ body {
 .tiptap-content blockquote {
   border-left: 3px solid var(--dash-primary, #000);
   padding-left: 12px;
-  color: #64748b;
+  color: var(--dash-text-muted, #64748b);
 }
 
 .tiptap-content strong {
@@ -271,7 +299,7 @@ body {
 }
 
 .tiptap-content p.is-editor-empty:first-child::before {
-  color: #adb5bd;
+  color: var(--dash-text-muted, #adb5bd);
   content: attr(data-placeholder);
   float: left;
   height: 0;
@@ -287,7 +315,7 @@ body {
 .html-content-compact {
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: #4b5563;
+  color: var(--dash-text-muted, #4b5563);
 }
 
 .html-content h1 {

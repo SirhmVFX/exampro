@@ -13,8 +13,9 @@ const variantClasses: Record<BadgeVariant, string> = {
   success: "bg-emerald-100 text-emerald-700",
   warning: "bg-amber-100 text-amber-700",
   danger: "bg-red-100 text-red-700",
-  info: "bg-black text-white",
-  outline: "border border-gray-300 text-gray-600 bg-transparent",
+  info: "bg-[var(--dash-primary)] text-[var(--dash-on-primary)]",
+  outline:
+    "border border-[var(--dash-border)] text-[var(--dash-text-muted)] bg-transparent",
 };
 
 export function Badge({

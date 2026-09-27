@@ -1,19 +1,25 @@
 import { ReactNode, ButtonHTMLAttributes } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "inverse";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "danger"
+  | "inverse";
 type ButtonSize = "sm" | "md" | "lg";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
     "bg-[var(--dash-primary)] text-[var(--dash-on-primary)] hover:opacity-90 focus:ring-[var(--dash-primary)]",
   secondary:
-    "bg-black text-white hover:bg-zinc-800 focus:ring-black",
+    "bg-[var(--dash-surface-alt)] text-[var(--dash-text)] hover:opacity-80 focus:ring-[var(--dash-border)]",
   outline:
     "border border-[var(--dash-primary)] text-[var(--dash-primary)] hover:bg-[var(--dash-primary-soft)] focus:ring-[var(--dash-primary)]",
-  ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-400",
+  ghost:
+    "text-[var(--dash-text-muted)] hover:bg-[var(--dash-surface-alt)] focus:ring-[var(--dash-border)]",
   danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-  inverse:
-    "bg-white text-black hover:bg-zinc-200 focus:ring-white",
+  inverse: "bg-white text-black hover:bg-zinc-200 focus:ring-white",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -55,11 +61,7 @@ export function Button({
       {...props}
     >
       {loading && (
-        <svg
-          className="animate-spin h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
+        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle
             className="opacity-25"
             cx="12"

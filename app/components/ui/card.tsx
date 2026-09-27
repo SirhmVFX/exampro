@@ -9,7 +9,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`bg-white border border-gray-200 rounded-xl overflow-hidden ${className}`}
+      className={`bg-[var(--dash-surface)] border border-[var(--dash-border)] rounded-xl overflow-hidden transition-colors ${className}`}
     >
       {children}
     </div>
@@ -24,7 +24,7 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={`px-6 py-4 border-b border-gray-100 ${className}`}>
+    <div className={`px-6 py-4 border-b border-[var(--dash-border)] ${className}`}>
       {children}
     </div>
   );
@@ -49,7 +49,7 @@ export function CardFooter({
 }) {
   return (
     <div
-      className={`px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl ${className}`}
+      className={`px-6 py-4 border-t border-[var(--dash-border)] bg-[var(--dash-surface-alt)] rounded-b-xl ${className}`}
     >
       {children}
     </div>
