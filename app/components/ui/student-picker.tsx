@@ -60,24 +60,26 @@ export function StudentPicker({
         </button>
         <button
           type="button"
-          className="text-xs font-medium text-gray-500 px-2"
+          className="text-xs font-medium text-[var(--dash-text-muted)] px-2"
           onClick={() => onChange([])}
         >
           Clear
         </button>
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-[var(--dash-text-muted)]">
         {selectedIds.length} selected
         {classFilter ? ` · filtered by ${classFilter}` : ""}
       </p>
-      <div className="max-h-48 overflow-y-auto border border-gray-200 divide-y divide-gray-50">
+      <div className="max-h-48 overflow-y-auto border border-[var(--dash-border)] divide-y divide-[var(--dash-border)] rounded-lg">
         {visible.length === 0 ? (
-          <p className="px-3 py-4 text-xs text-gray-400">No students match.</p>
+          <p className="px-3 py-4 text-xs text-[var(--dash-text-faint)]">
+            No students match.
+          </p>
         ) : (
           visible.map((s) => (
             <label
               key={s.uid}
-              className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50"
+              className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-[var(--dash-surface-alt)] text-[var(--dash-text)]"
             >
               <input
                 type="checkbox"
@@ -85,7 +87,7 @@ export function StudentPicker({
                 onChange={() => toggle(s.uid)}
               />
               <span className="flex-1 min-w-0 truncate">{s.name}</span>
-              <span className="text-xs text-gray-400 truncate">
+              <span className="text-xs text-[var(--dash-text-faint)] truncate">
                 {learnerClassNames(s)[0] ?? s.email}
               </span>
             </label>

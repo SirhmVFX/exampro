@@ -19,7 +19,7 @@ export function CopyButton({
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      className={`p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 transition shrink-0 ${className}`}
+      className={`p-1.5 rounded-lg hover:bg-[var(--dash-surface-alt)] text-[var(--dash-text-muted)] transition shrink-0 ${className}`}
       title="Copy to clipboard"
     >
       {copied ? (

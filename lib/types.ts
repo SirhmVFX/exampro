@@ -54,7 +54,7 @@ export interface Institution {
   plan: PlanId;
   planStatus: "active" | "past_due" | "canceled";
   planRenewsAt?: number;
-  trialEndsAt?: number;        // ms timestamp — set 30 days after creation; absent = no trial
+  trialEndsAt?: number; // ms timestamp — set 30 days after creation; absent = no trial
   aiGenerationsUsed: number;
   createdAt: number;
 }
@@ -72,6 +72,9 @@ export interface UserProfile {
   name: string;
   email: string;
   avatarUrl?: string;
+  phone?: string;
+  gender?: "male" | "female" | "other" | "prefer_not_to_say";
+  dateOfBirth?: string; // ISO date "YYYY-MM-DD"
   status: "active" | "suspended";
   externalId?: string;
   departmentId?: string;
@@ -239,6 +242,15 @@ export type QuestionType =
   | "coding"
   | "project";
 
+/** Difficulty buckets used by the AI generator and question sets. */
+export type QuestionDifficulty =
+  | "easy"
+  | "medium"
+  | "hard"
+  | "support"
+  | "core"
+  | "extension";
+
 export interface TestCase {
   input: string;
   expectedOutput: string;
@@ -255,7 +267,10 @@ export interface Question {
   type: QuestionType;
   text: string;
   points: number;
+  difficulty?: QuestionDifficulty;
   explanation?: string;
+  workedSolution?: string; // step-by-step working shown after grading
+  imageUrl?: string; // optional diagram/illustration
   options?: string[];
   correctIndex?: number;
   correctBool?: boolean;
@@ -267,6 +282,30 @@ export interface Question {
   shared?: boolean;
   aiGenerated?: boolean;
   createdAt: number;
+}
+
+/**
+ * A saved batch of questions (AI-generated or hand-built) filed in a subject
+ * folder of the question bank — mirrors the bridgitus question set concept.
+ */
+export interface QuestionSet {
+  id: string;
+  institutionId: string;
+  teacherId: string;
+  teacherName?: string;
+  title: string;
+  subject: string; // the folder this set lives in
+  className: string;
+  topic?: string;
+  skill?: string;
+  difficulty?: QuestionDifficulty;
+  format?: string; // e.g. "Multiple Choice", "Mixed"
+  questions: Question[];
+  questionCount: number;
+  aiGenerated?: boolean;
+  shared?: boolean;
+  createdAt: number;
+  updatedAt?: number;
 }
 
 export type AssessmentKind =
@@ -338,15 +377,15 @@ export interface PerQuestionResult {
 
 export interface AttemptEvent {
   type:
-  | "start"
-  | "resume"
-  | "autosave"
-  | "tab_blur"
-  | "tab_focus"
-  | "leave_attempt"
-  | "webcam_on"
-  | "webcam_off"
-  | "submit";
+    | "start"
+    | "resume"
+    | "autosave"
+    | "tab_blur"
+    | "tab_focus"
+    | "leave_attempt"
+    | "webcam_on"
+    | "webcam_off"
+    | "submit";
   at: number;
   detail?: string;
 }
@@ -376,9 +415,11 @@ export interface Attempt {
   events?: AttemptEvent[];
   locked?: boolean;
   extraTimePercent?: number;
+  attachmentUrl?: string; // student-uploaded PDF/file with their work
+  attachmentName?: string;
 }
 
-export type MaterialType = "document" | "video" | "link" | "note";
+export type MaterialType = "document" | "pdf" | "video" | "link" | "note";
 
 export interface Material {
   id: string;
@@ -391,8 +432,11 @@ export interface Material {
   className: string;
   type: MaterialType;
   url?: string;
-  content?: string;
+  fileName?: string; // original filename for uploaded PDFs / documents
+  content?: string; // rich-text body for note materials
   linkedAssessmentId?: string;
+  /** When set, only these students see the material. Empty = whole class. */
+  assignedStudentIds?: string[];
   createdAt: number;
 }
 
@@ -430,5 +474,28 @@ export interface PaymentRecord {
   amount: number;
   currency: string;
   status: "success" | "failed" | "pending";
+  createdAt: number;
+}
+
+/** Tracks per-student, per-topic accuracy for the Practice Similar feature */
+export interface LearningGap {
+  id: string;
+  institutionId: string;
+  studentId: string;
+  subject: string;
+  topic: string;
+  accuracy: number; // 0–100 running average
+  attemptCount: number;
+  updatedAt: number;
+}
+
+/** One doc per student per day — written the first time a student opens the
+ *  dashboard that day, and counted as their attendance record. */
+export interface AttendanceRecord {
+  id: string; // `${uid}_${YYYY-MM-DD}`
+  institutionId: string;
+  studentId: string;
+  studentName: string;
+  date: string; // YYYY-MM-DD (student's local calendar day)
   createdAt: number;
 }
