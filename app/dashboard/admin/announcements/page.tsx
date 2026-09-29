@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Megaphone, Send, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { adminNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -35,6 +36,7 @@ export default function AdminAnnouncementsPage() {
   const [people, setPeople] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "",
     body: "",
@@ -80,6 +82,9 @@ export default function AdminAnnouncementsPage() {
       });
       setForm({ title: "", body: "", audience: "all", targetUserId: "" });
       await reload();
+      toast.success("Announcement sent");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send announcement. Please try again.");
     } finally {
       setSending(false);
     }
@@ -204,10 +209,19 @@ export default function AdminAnnouncementsPage() {
                     </div>
                     <button
                       onClick={async () => {
-                        await deleteNotification(n.id);
-                        await reload();
+                        setDeletingId(n.id);
+                        try {
+                          await deleteNotification(n.id);
+                          await reload();
+                          toast.success("Announcement deleted");
+                        } catch {
+                          toast.error("Failed to delete. Please try again.");
+                        } finally {
+                          setDeletingId(null);
+                        }
                       }}
-                      className="p-2 text-gray-400 hover:text-red-600"
+                      disabled={deletingId === n.id}
+                      className="p-2 text-gray-400 hover:text-red-600 disabled:opacity-40"
                       aria-label="Delete"
                     >
                       <Trash2 className="w-4 h-4" />

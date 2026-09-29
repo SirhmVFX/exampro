@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -81,6 +82,9 @@ export default function PathsPage() {
       setDescription("");
       setItems([]);
       await reload();
+      toast.success("Learning path saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save path. Please try again.");
     } finally {
       setSaving(false);
     }

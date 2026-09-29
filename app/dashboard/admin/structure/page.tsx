@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FolderTree, Save } from "lucide-react";
+import toast from "react-hot-toast";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -87,6 +88,9 @@ export default function AdminStructurePage() {
       await reload();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+      toast.success("Structure saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save structure. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -95,29 +99,39 @@ export default function AdminStructurePage() {
   const addTerm = async () => {
     if (!institution || !termName.trim()) return;
     const start = Date.now();
-    await saveTerm({
-      id: newId(COL.terms),
-      institutionId: institution.id,
-      name: termName.trim(),
-      startAt: start,
-      endAt: start + 90 * 24 * 60 * 60 * 1000,
-      status: "active",
-      createdAt: Date.now(),
-    });
-    setTermName("");
-    await reload();
+    try {
+      await saveTerm({
+        id: newId(COL.terms),
+        institutionId: institution.id,
+        name: termName.trim(),
+        startAt: start,
+        endAt: start + 90 * 24 * 60 * 60 * 1000,
+        status: "active",
+        createdAt: Date.now(),
+      });
+      setTermName("");
+      await reload();
+      toast.success("Term added");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add term.");
+    }
   };
 
   const addDept = async () => {
     if (!institution || !deptName.trim()) return;
-    await saveDepartment({
-      id: newId(COL.departments),
-      institutionId: institution.id,
-      name: deptName.trim(),
-      createdAt: Date.now(),
-    });
-    setDeptName("");
-    await reload();
+    try {
+      await saveDepartment({
+        id: newId(COL.departments),
+        institutionId: institution.id,
+        name: deptName.trim(),
+        createdAt: Date.now(),
+      });
+      setDeptName("");
+      await reload();
+      toast.success("Department added");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add department.");
+    }
   };
 
   return (

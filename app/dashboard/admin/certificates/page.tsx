@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -25,6 +26,7 @@ export default function CertificatesAdminPage() {
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [form, setForm] = useState({ userId: "", title: "Certificate of completion", skills: "" });
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const reload = async () => {
     if (!institution) return;
@@ -63,7 +65,11 @@ export default function CertificatesAdminPage() {
         entityId: cert.id,
         detail: `${user.name} · ${cert.verifyCode}`,
       });
+      setForm({ userId: "", title: "Certificate of completion", skills: "" });
       await reload();
+      toast.success(`Certificate issued for ${user.name}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to issue certificate. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -112,6 +118,7 @@ export default function CertificatesAdminPage() {
             </Button>
           </CardBody>
         </Card>
+
         <Card>
           <CardHeader>
             <h2 className="font-semibold">Issued</h2>
