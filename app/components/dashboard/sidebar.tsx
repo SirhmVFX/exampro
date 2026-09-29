@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -34,8 +34,22 @@ export default function DashboardSidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { logout, institution } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Active-state that understands query-string nav items like
+  // "/dashboard/teacher/assessments?kind=quiz" (sidebar Test/Exam/Quiz tabs).
+  const isActiveFor = (href: string) => {
+    const [path, qs] = href.split("?");
+    const itemKind = qs ? new URLSearchParams(qs).get("kind") : null;
+    const currentKind = searchParams.get("kind");
+    if (itemKind) return pathname === path && currentKind === itemKind;
+    if (href === `/dashboard/${role}`) return pathname === href;
+    const pathMatch = pathname === path || pathname.startsWith(path + "/");
+    // When a kind filter is active, the matching kind item owns the highlight.
+    return pathMatch && !(currentKind && pathname === path);
+  };
 
   const handleSignOut = async () => {
     await logout();
@@ -44,8 +58,9 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className={`relative flex flex-col transition-all duration-300 ${collapsed ? "w-16" : "w-64"
-        } min-h-screen shrink-0`}
+      className={`relative flex flex-col transition-all duration-300 ${
+        collapsed ? "w-16" : "w-64"
+      } min-h-screen shrink-0`}
       style={{
         background: "var(--dash-sidebar)",
         color: "var(--dash-sidebar-fg)",
@@ -75,7 +90,10 @@ export default function DashboardSidebar({
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="text-sm font-semibold truncate">{institutionName}</p>
-            <p className="text-xs" style={{ color: "var(--dash-sidebar-muted)" }}>
+            <p
+              className="text-xs"
+              style={{ color: "var(--dash-sidebar-muted)" }}
+            >
               {roleTitle(role, institution)}
             </p>
           </div>
@@ -86,10 +104,7 @@ export default function DashboardSidebar({
 
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
-          const isOverview = item.href === `/dashboard/${role}`;
-          const isActive = isOverview
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive = isActiveFor(item.href);
           return (
             <Link
               key={item.href}
@@ -99,9 +114,9 @@ export default function DashboardSidebar({
               style={
                 isActive
                   ? {
-                    background: "var(--dash-nav-active)",
-                    color: "var(--dash-nav-active-fg)",
-                  }
+                      background: "var(--dash-nav-active)",
+                      color: "var(--dash-nav-active-fg)",
+                    }
                   : { color: "var(--dash-sidebar-muted)" }
               }
               onMouseEnter={(e) => {
@@ -125,13 +140,13 @@ export default function DashboardSidebar({
                       style={
                         isActive
                           ? {
-                            background: "var(--dash-nav-active-fg)",
-                            color: "var(--dash-nav-active)",
-                          }
+                              background: "var(--dash-nav-active-fg)",
+                              color: "var(--dash-nav-active)",
+                            }
                           : {
-                            background: "var(--dash-sidebar-hover)",
-                            color: "var(--dash-sidebar-fg)",
-                          }
+                              background: "var(--dash-sidebar-hover)",
+                              color: "var(--dash-sidebar-fg)",
+                            }
                       }
                     >
                       {item.badge}

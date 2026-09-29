@@ -17,10 +17,14 @@ import {
   listMembershipsForUser,
   ensureMembership,
   switchActiveInstitution,
+  recordAttendance,
 } from "./db";
 import type { Institution, Membership, UserProfile } from "./types";
 
 const STORAGE_KEY = (uid: string) => `exampro:activeInstitution:${uid}`;
+// Once-per-day guard so refreshes/tabs don't hammer the attendance write.
+const ATTENDED_KEY = (uid: string) =>
+  `exampro:attended:${uid}:${new Date().toISOString().slice(0, 10)}`;
 
 export interface OrgOption {
   membership: Membership;
@@ -48,8 +52,8 @@ const AuthContext = createContext<AuthState>({
   orgs: [],
   loading: true,
   switching: false,
-  refresh: async () => { },
-  logout: async () => { },
+  refresh: async () => {},
+  logout: async () => {},
   switchOrg: async () => {
     throw new Error("Not signed in");
   },
@@ -65,83 +69,109 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [switching, setSwitching] = useState(false);
   const loadGen = useRef(0);
 
-  const loadData = useCallback(async (user: User | null) => {
-    const gen = ++loadGen.current;
-    setLoading(true);
+  // Attendance: the first dashboard session of the day records presence.
+  // Fire-and-forget — a failed write must never block the app.
+  const markAttendance = useCallback((p: UserProfile) => {
+    if (p.role !== "student") return;
     try {
-      if (!user) {
-        if (gen === loadGen.current) {
+      if (localStorage.getItem(ATTENDED_KEY(p.uid))) return;
+      localStorage.setItem(ATTENDED_KEY(p.uid), "1");
+    } catch {
+      /* private mode — just write */
+    }
+    recordAttendance(p.institutionId, p).catch(() => {
+      try {
+        localStorage.removeItem(ATTENDED_KEY(p.uid));
+      } catch {
+        /* ignore */
+      }
+    });
+  }, []);
+
+  const loadData = useCallback(
+    async (user: User | null) => {
+      const gen = ++loadGen.current;
+      setLoading(true);
+      try {
+        if (!user) {
+          if (gen === loadGen.current) {
+            setProfile(null);
+            setInstitution(null);
+            setMemberships([]);
+            setOrgs([]);
+          }
+          return;
+        }
+        let p = await waitForUserProfile(user.uid);
+        if (gen !== loadGen.current) return;
+        if (!p) {
           setProfile(null);
           setInstitution(null);
           setMemberships([]);
           setOrgs([]);
+          return;
         }
-        return;
-      }
-      let p = await waitForUserProfile(user.uid);
-      if (gen !== loadGen.current) return;
-      if (!p) {
-        setProfile(null);
-        setInstitution(null);
-        setMemberships([]);
-        setOrgs([]);
-        return;
-      }
 
-      let mems = await listMembershipsForUser(p.uid);
-      if (!mems.length) {
-        await ensureMembership(p);
-        mems = await listMembershipsForUser(p.uid);
-      }
-      if (gen !== loadGen.current) return;
+        let mems = await listMembershipsForUser(p.uid);
+        if (!mems.length) {
+          await ensureMembership(p);
+          mems = await listMembershipsForUser(p.uid);
+        }
+        if (gen !== loadGen.current) return;
 
-      // p is non-null here — we returned early above if it was null
-      const nonNullP = p as NonNullable<typeof p>;
+        // p is non-null here — we returned early above if it was null
+        const nonNullP = p as NonNullable<typeof p>;
 
-      const activeOk = mems.some(
-        (m) => m.institutionId === nonNullP.institutionId && m.status === "active"
-      );
-      if (!activeOk) {
-        let stored: string | null = null;
+        const activeOk = mems.some(
+          (m) =>
+            m.institutionId === nonNullP.institutionId && m.status === "active",
+        );
+        if (!activeOk) {
+          let stored: string | null = null;
+          try {
+            stored = localStorage.getItem(STORAGE_KEY(nonNullP.uid));
+          } catch {
+            stored = null;
+          }
+          const preferred =
+            (stored
+              ? mems.find(
+                  (m) => m.institutionId === stored && m.status === "active",
+                )
+              : null) ??
+            mems.find((m) => m.status === "active") ??
+            mems[0];
+          if (preferred) {
+            p = await switchActiveInstitution(p.uid, preferred.institutionId);
+          }
+        }
         try {
-          stored = localStorage.getItem(STORAGE_KEY(nonNullP.uid));
+          localStorage.setItem(STORAGE_KEY(p!.uid), p!.institutionId);
         } catch {
-          stored = null;
+          /* ignore */
         }
-        const preferred =
-          (stored
-            ? mems.find((m) => m.institutionId === stored && m.status === "active")
-            : null) ??
-          mems.find((m) => m.status === "active") ??
-          mems[0];
-        if (preferred) {
-          p = await switchActiveInstitution(p.uid, preferred.institutionId);
-        }
-      }
-      try {
-        localStorage.setItem(STORAGE_KEY(p!.uid), p!.institutionId);
-      } catch {
-        /* ignore */
-      }
 
-      const insts = await Promise.all(
-        mems.map(async (m) => ({
-          membership: m,
-          institution: await getInstitution(m.institutionId),
-        }))
-      );
-      if (gen !== loadGen.current) return;
+        const insts = await Promise.all(
+          mems.map(async (m) => ({
+            membership: m,
+            institution: await getInstitution(m.institutionId),
+          })),
+        );
+        if (gen !== loadGen.current) return;
 
-      const inst = await getInstitution(p.institutionId);
-      if (gen !== loadGen.current) return;
-      setProfile(p);
-      setInstitution(inst);
-      setMemberships(mems);
-      setOrgs(insts);
-    } finally {
-      if (gen === loadGen.current) setLoading(false);
-    }
-  }, []);
+        const inst = await getInstitution(p.institutionId);
+        if (gen !== loadGen.current) return;
+        setProfile(p);
+        setInstitution(inst);
+        setMemberships(mems);
+        setOrgs(insts);
+        markAttendance(p as NonNullable<typeof p>);
+      } finally {
+        if (gen === loadGen.current) setLoading(false);
+      }
+    },
+    [markAttendance],
+  );
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -177,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSwitching(false);
       }
     },
-    [loadData]
+    [loadData],
   );
 
   return (
@@ -214,7 +244,7 @@ export function dashboardPathForRole(role: string): string {
 
 export function postAuthPath(
   profile: UserProfile,
-  institution: Institution | null
+  institution: Institution | null,
 ): string {
   if (profile.status === "suspended") return "/auth/suspended";
   if (profile.role === "admin" && (!institution || !institution.onboarded)) {
