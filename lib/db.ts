@@ -23,6 +23,7 @@ import type {
   UserProfile,
   Invite,
   Question,
+  QuestionSet,
   Assessment,
   Attempt,
   AttemptEvent,
@@ -42,6 +43,7 @@ import type {
   Certificate,
   AuditEvent,
   Membership,
+  AttendanceRecord,
 } from "./types";
 import { assessmentVisibleTo, learnerClassNames } from "./learners";
 import { isReservedSlug, isValidSlug, slugify } from "./domain";
@@ -52,6 +54,7 @@ export const COL = {
   users: "users",
   invites: "invites",
   questions: "questions",
+  questionSets: "questionSets",
   assessments: "assessments",
   attempts: "attempts",
   materials: "materials",
@@ -67,6 +70,7 @@ export const COL = {
   certificates: "certificates",
   audit: "audit",
   memberships: "memberships",
+  attendance: "attendance",
 } as const;
 
 export function newId(col: string): string {
@@ -77,7 +81,7 @@ export function generateJoinCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   return Array.from(
     { length: 6 },
-    () => chars[Math.floor(Math.random() * chars.length)]
+    () => chars[Math.floor(Math.random() * chars.length)],
   ).join("");
 }
 
@@ -145,32 +149,36 @@ export async function getInstitution(id: string): Promise<Institution | null> {
 }
 
 export async function getInstitutionByCode(
-  code: string
+  code: string,
 ): Promise<Institution | null> {
   const snap = await getDocs(
     query(
       collection(db, COL.institutions),
       where("code", "==", code.toUpperCase().trim()),
-      fbLimit(1)
-    )
+      fbLimit(1),
+    ),
   );
   return snap.empty ? null : (snap.docs[0].data() as Institution);
 }
 
 export async function getInstitutionBySlug(
-  slug: string
+  slug: string,
 ): Promise<Institution | null> {
   const value = slugify(slug);
   if (!value) return null;
   const snap = await getDocs(
-    query(collection(db, COL.institutions), where("slug", "==", value), fbLimit(1))
+    query(
+      collection(db, COL.institutions),
+      where("slug", "==", value),
+      fbLimit(1),
+    ),
   );
   return snap.empty ? null : (snap.docs[0].data() as Institution);
 }
 
 export async function allocateSlug(
   name: string,
-  excludeId?: string
+  excludeId?: string,
 ): Promise<string> {
   const base = slugify(name);
   let candidate = base;
@@ -187,12 +195,12 @@ export async function allocateSlug(
 
 export async function assertSlugAvailable(
   slug: string,
-  excludeId?: string
+  excludeId?: string,
 ): Promise<string> {
   const value = slugify(slug);
   if (!isValidSlug(value)) {
     throw new Error(
-      "Domain must be 2–48 characters: lowercase letters, numbers, and hyphens."
+      "Domain must be 2–48 characters: lowercase letters, numbers, and hyphens.",
     );
   }
   const existing = await getInstitutionBySlug(value);
@@ -204,7 +212,7 @@ export async function assertSlugAvailable(
 
 export async function updateInstitution(
   id: string,
-  data: Partial<Institution>
+  data: Partial<Institution>,
 ) {
   await updateDoc(doc(db, COL.institutions, id), clean(data));
 }
@@ -218,7 +226,7 @@ export async function incrementAiUsage(institutionId: string) {
 export async function setInstitutionPlan(
   institutionId: string,
   plan: PlanId,
-  renewsAt: number
+  renewsAt: number,
 ) {
   await updateDoc(doc(db, COL.institutions, institutionId), {
     plan,
@@ -235,7 +243,9 @@ export async function setInstitutionPlan(
  *   so the admin sees an urgent upgrade banner.
  * Returns the (possibly updated) institution.
  */
-export async function checkAndExpirePlan(institution: Institution): Promise<Institution> {
+export async function checkAndExpirePlan(
+  institution: Institution,
+): Promise<Institution> {
   const now = Date.now();
 
   // Paid plan that has expired (manual monthly payments, no auto-renew)
@@ -252,7 +262,13 @@ export async function checkAndExpirePlan(institution: Institution): Promise<Inst
       planRenewsAt: null,
       aiGenerationsUsed: 0,
     });
-    return { ...institution, plan: "free", planStatus: "active", planRenewsAt: undefined, aiGenerationsUsed: 0 };
+    return {
+      ...institution,
+      plan: "free",
+      planStatus: "active",
+      planRenewsAt: undefined,
+      aiGenerationsUsed: 0,
+    };
   }
 
   // Free plan trial expired — flag as past_due so billing page shows upgrade CTA
@@ -279,7 +295,7 @@ export function membershipDocId(uid: string, institutionId: string): string {
 
 export function membershipFromProfile(
   profile: UserProfile,
-  institutionName?: string
+  institutionName?: string,
 ): Membership {
   return {
     id: membershipDocId(profile.uid, profile.institutionId),
@@ -303,7 +319,7 @@ export function membershipFromProfile(
 
 export function profileFromMembership(
   m: Membership,
-  identity?: UserProfile | null
+  identity?: UserProfile | null,
 ): UserProfile {
   return {
     uid: m.uid,
@@ -334,15 +350,19 @@ export async function saveMembership(m: Membership) {
 
 export async function getMembership(
   uid: string,
-  institutionId: string
+  institutionId: string,
 ): Promise<Membership | null> {
-  const snap = await getDoc(doc(db, COL.memberships, membershipDocId(uid, institutionId)));
+  const snap = await getDoc(
+    doc(db, COL.memberships, membershipDocId(uid, institutionId)),
+  );
   return snap.exists() ? (snap.data() as Membership) : null;
 }
 
-export async function listMembershipsForUser(uid: string): Promise<Membership[]> {
+export async function listMembershipsForUser(
+  uid: string,
+): Promise<Membership[]> {
   const snap = await getDocs(
-    query(collection(db, COL.memberships), where("uid", "==", uid))
+    query(collection(db, COL.memberships), where("uid", "==", uid)),
   );
   return snap.docs
     .map((d) => d.data() as Membership)
@@ -351,11 +371,13 @@ export async function listMembershipsForUser(uid: string): Promise<Membership[]>
 
 export async function listMembershipsForInstitution(
   institutionId: string,
-  role?: Role
+  role?: Role,
 ): Promise<Membership[]> {
   const constraints = [where("institutionId", "==", institutionId)];
   if (role) constraints.push(where("role", "==", role));
-  const snap = await getDocs(query(collection(db, COL.memberships), ...constraints));
+  const snap = await getDocs(
+    query(collection(db, COL.memberships), ...constraints),
+  );
   return snap.docs
     .map((d) => d.data() as Membership)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -363,7 +385,7 @@ export async function listMembershipsForInstitution(
 
 export async function ensureMembership(
   profile: UserProfile,
-  institutionName?: string
+  institutionName?: string,
 ): Promise<Membership> {
   const existing = await getMembership(profile.uid, profile.institutionId);
   if (existing) return existing;
@@ -374,7 +396,7 @@ export async function ensureMembership(
 
 export async function switchActiveInstitution(
   uid: string,
-  institutionId: string
+  institutionId: string,
 ): Promise<UserProfile> {
   const [user, membership] = await Promise.all([
     getUserProfile(uid),
@@ -398,7 +420,7 @@ export async function switchActiveInstitution(
       departmentName: membership.departmentName ?? null,
       externalId: membership.externalId ?? null,
       status: membership.status,
-    })
+    }),
   );
   const next = await getUserProfile(uid);
   if (!next) throw new Error("Couldn't switch institution.");
@@ -417,14 +439,15 @@ export async function joinInstitution(opts: {
 }): Promise<Membership> {
   const existing = await getMembership(opts.user.uid, opts.institution.id);
   if (existing) {
-    throw new Error(`You already belong to ${opts.institution.name}. Switch to it from the sidebar.`);
+    throw new Error(
+      `You already belong to ${opts.institution.name}. Switch to it from the sidebar.`,
+    );
   }
-  const classNames =
-    opts.classNames?.length
-      ? opts.classNames
-      : opts.className
-        ? [opts.className]
-        : opts.user.classNames ?? [];
+  const classNames = opts.classNames?.length
+    ? opts.classNames
+    : opts.className
+      ? [opts.className]
+      : (opts.user.classNames ?? []);
   const m: Membership = {
     id: membershipDocId(opts.user.uid, opts.institution.id),
     uid: opts.user.uid,
@@ -443,7 +466,11 @@ export async function joinInstitution(opts: {
   await saveMembership(m);
   if (opts.role === "admin") {
     const adminIds = Array.from(
-      new Set([...(opts.institution.adminIds ?? []), opts.institution.adminId, opts.user.uid])
+      new Set([
+        ...(opts.institution.adminIds ?? []),
+        opts.institution.adminId,
+        opts.user.uid,
+      ]),
     );
     await updateInstitution(opts.institution.id, { adminIds });
   }
@@ -458,9 +485,7 @@ export async function createUserProfile(profile: UserProfile) {
   await ensureMembership(profile);
 }
 
-export async function getUserProfile(
-  uid: string
-): Promise<UserProfile | null> {
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, COL.users, uid));
   return snap.exists() ? (snap.data() as UserProfile) : null;
 }
@@ -469,7 +494,7 @@ export async function getUserProfile(
 export async function waitForUserProfile(
   uid: string,
   attempts = 10,
-  delayMs = 300
+  delayMs = 300,
 ): Promise<UserProfile | null> {
   for (let i = 0; i < attempts; i++) {
     const profile = await getUserProfile(uid);
@@ -481,7 +506,7 @@ export async function waitForUserProfile(
 
 export async function updateUserProfile(
   uid: string,
-  data: Partial<UserProfile>
+  data: Partial<UserProfile>,
 ) {
   await updateDoc(doc(db, COL.users, uid), clean(data));
   const [user, memberships] = await Promise.all([
@@ -501,8 +526,10 @@ export async function updateUserProfile(
       if (data.classNames !== undefined) patch.classNames = data.classNames;
       if (data.classes !== undefined) patch.classes = data.classes;
       if (data.subjects !== undefined) patch.subjects = data.subjects;
-      if (data.departmentId !== undefined) patch.departmentId = data.departmentId;
-      if (data.departmentName !== undefined) patch.departmentName = data.departmentName;
+      if (data.departmentId !== undefined)
+        patch.departmentId = data.departmentId;
+      if (data.departmentName !== undefined)
+        patch.departmentName = data.departmentName;
       if (data.externalId !== undefined) patch.externalId = data.externalId;
     }
     if (Object.keys(patch).length) {
@@ -513,7 +540,7 @@ export async function updateUserProfile(
 
 export async function listUsers(
   institutionId: string,
-  role?: Role
+  role?: Role,
 ): Promise<UserProfile[]> {
   const [memberships, snap] = await Promise.all([
     listMembershipsForInstitution(institutionId, role),
@@ -521,9 +548,12 @@ export async function listUsers(
       query(
         collection(db, COL.users),
         ...(role
-          ? [where("institutionId", "==", institutionId), where("role", "==", role)]
-          : [where("institutionId", "==", institutionId)])
-      )
+          ? [
+              where("institutionId", "==", institutionId),
+              where("role", "==", role),
+            ]
+          : [where("institutionId", "==", institutionId)]),
+      ),
     ),
   ]);
   const legacy = snap.docs.map((d) => d.data() as UserProfile);
@@ -531,7 +561,10 @@ export async function listUsers(
   const byUid = new Map<string, UserProfile>();
   for (const u of legacy) byUid.set(u.uid, u);
   for (const m of memberships) {
-    byUid.set(m.uid, profileFromMembership(m, identityByUid.get(m.uid) ?? byUid.get(m.uid)));
+    byUid.set(
+      m.uid,
+      profileFromMembership(m, identityByUid.get(m.uid) ?? byUid.get(m.uid)),
+    );
   }
   return [...byUid.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -546,8 +579,8 @@ export async function listInvites(institutionId: string): Promise<Invite[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.invites),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Invite)
@@ -560,26 +593,27 @@ export async function deleteInvite(id: string) {
 
 export async function getPendingInviteByEmail(
   institutionId: string,
-  email: string
+  email: string,
 ): Promise<Invite | null> {
   const all = await listInvites(institutionId);
   const needle = email.toLowerCase().trim();
   return (
-    all.find((i) => i.email.toLowerCase() === needle && i.status === "pending") ??
-    null
+    all.find(
+      (i) => i.email.toLowerCase() === needle && i.status === "pending",
+    ) ?? null
   );
 }
 
 export async function getPendingInviteAnywhere(
-  email: string
+  email: string,
 ): Promise<Invite | null> {
   const snap = await getDocs(
     query(
       collection(db, COL.invites),
       where("email", "==", email.toLowerCase().trim()),
       where("status", "==", "pending"),
-      fbLimit(1)
-    )
+      fbLimit(1),
+    ),
   );
   return snap.empty ? null : (snap.docs[0].data() as Invite);
 }
@@ -600,17 +634,56 @@ export async function deleteQuestion(id: string) {
 
 export async function listQuestions(
   institutionId: string,
-  teacherId?: string
+  teacherId?: string,
 ): Promise<Question[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.questions),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   const all = snap.docs.map((d) => d.data() as Question);
   const filtered = teacherId
     ? all.filter((q) => q.teacherId === teacherId || q.shared)
+    : all;
+  return filtered.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+// ─── Question sets (subject folders of the question bank) ───
+
+export async function saveQuestionSet(s: QuestionSet) {
+  await setDoc(doc(db, COL.questionSets, s.id), clean(s));
+}
+
+export async function updateQuestionSet(
+  id: string,
+  data: Partial<QuestionSet>,
+) {
+  await updateDoc(doc(db, COL.questionSets, id), clean(data));
+}
+
+export async function deleteQuestionSet(id: string) {
+  await deleteDoc(doc(db, COL.questionSets, id));
+}
+
+export async function getQuestionSet(id: string): Promise<QuestionSet | null> {
+  const snap = await getDoc(doc(db, COL.questionSets, id));
+  return snap.exists() ? (snap.data() as QuestionSet) : null;
+}
+
+export async function listQuestionSets(
+  institutionId: string,
+  teacherId?: string,
+): Promise<QuestionSet[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.questionSets),
+      where("institutionId", "==", institutionId),
+    ),
+  );
+  const all = snap.docs.map((d) => d.data() as QuestionSet);
+  const filtered = teacherId
+    ? all.filter((s) => s.teacherId === teacherId || s.shared)
     : all;
   return filtered.sort((a, b) => b.createdAt - a.createdAt);
 }
@@ -636,14 +709,14 @@ export async function deleteAssessment(id: string) {
 
 export async function listAssessmentsByTeacher(
   institutionId: string,
-  teacherId: string
+  teacherId: string,
 ): Promise<Assessment[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.assessments),
       where("institutionId", "==", institutionId),
-      where("teacherId", "==", teacherId)
-    )
+      where("teacherId", "==", teacherId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Assessment)
@@ -652,14 +725,14 @@ export async function listAssessmentsByTeacher(
 
 export async function listAssessmentsForClass(
   institutionId: string,
-  className: string
+  className: string,
 ): Promise<Assessment[]> {
   return listAssessmentsForClasses(institutionId, [className]);
 }
 
 export async function listAssessmentsForClasses(
   institutionId: string,
-  classNames: string[]
+  classNames: string[],
 ): Promise<Assessment[]> {
   const all = await listAllAssessments(institutionId);
   return all.filter((a) => assessmentVisibleTo(a, classNames));
@@ -667,7 +740,7 @@ export async function listAssessmentsForClasses(
 
 export async function listAssessmentsForLearner(
   institutionId: string,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<Assessment[]> {
   const all = await listAllAssessments(institutionId);
   const classNames = learnerClassNames(profile);
@@ -675,13 +748,13 @@ export async function listAssessmentsForLearner(
 }
 
 export async function listAllAssessments(
-  institutionId: string
+  institutionId: string,
 ): Promise<Assessment[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.assessments),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Assessment)
@@ -700,14 +773,14 @@ export async function updateAttempt(id: string, data: Partial<Attempt>) {
 
 export async function listAttemptsByStudent(
   institutionId: string,
-  studentId: string
+  studentId: string,
 ): Promise<Attempt[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.attempts),
       where("institutionId", "==", institutionId),
-      where("studentId", "==", studentId)
-    )
+      where("studentId", "==", studentId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Attempt)
@@ -715,13 +788,13 @@ export async function listAttemptsByStudent(
 }
 
 export async function listAttemptsForAssessment(
-  assessmentId: string
+  assessmentId: string,
 ): Promise<Attempt[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.attempts),
-      where("assessmentId", "==", assessmentId)
-    )
+      where("assessmentId", "==", assessmentId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Attempt)
@@ -730,14 +803,14 @@ export async function listAttemptsForAssessment(
 
 export async function listAttemptsByTeacher(
   institutionId: string,
-  teacherId: string
+  teacherId: string,
 ): Promise<Attempt[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.attempts),
       where("institutionId", "==", institutionId),
-      where("teacherId", "==", teacherId)
-    )
+      where("teacherId", "==", teacherId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Attempt)
@@ -745,13 +818,13 @@ export async function listAttemptsByTeacher(
 }
 
 export async function listAllAttempts(
-  institutionId: string
+  institutionId: string,
 ): Promise<Attempt[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.attempts),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Attempt)
@@ -775,14 +848,29 @@ export async function getMaterial(id: string): Promise<Material | null> {
 
 export async function listMaterialsByTeacher(
   institutionId: string,
-  teacherId: string
+  teacherId: string,
 ): Promise<Material[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.materials),
       where("institutionId", "==", institutionId),
-      where("teacherId", "==", teacherId)
-    )
+      where("teacherId", "==", teacherId),
+    ),
+  );
+  return snap.docs
+    .map((d) => d.data() as Material)
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/** Every material in the institution — used by the admin materials workspace. */
+export async function listAllMaterials(
+  institutionId: string,
+): Promise<Material[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.materials),
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Material)
@@ -791,20 +879,20 @@ export async function listMaterialsByTeacher(
 
 export async function listMaterialsForClass(
   institutionId: string,
-  className: string
+  className: string,
 ): Promise<Material[]> {
   return listMaterialsForClasses(institutionId, [className]);
 }
 
 export async function listMaterialsForClasses(
   institutionId: string,
-  classNames: string[]
+  classNames: string[],
 ): Promise<Material[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.materials),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   const set = new Set(classNames);
   return snap.docs
@@ -815,9 +903,18 @@ export async function listMaterialsForClasses(
 
 export async function listMaterialsForLearner(
   institutionId: string,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<Material[]> {
-  return listMaterialsForClasses(institutionId, learnerClassNames(profile));
+  const all = await listMaterialsForClasses(
+    institutionId,
+    learnerClassNames(profile),
+  );
+  // Materials assigned to specific students are only visible to those students.
+  return all.filter(
+    (m) =>
+      !m.assignedStudentIds?.length ||
+      m.assignedStudentIds.includes(profile.uid),
+  );
 }
 
 export async function setMaterialProgress(p: MaterialProgress) {
@@ -826,26 +923,26 @@ export async function setMaterialProgress(p: MaterialProgress) {
 
 export async function listMaterialProgress(
   institutionId: string,
-  studentId: string
+  studentId: string,
 ): Promise<MaterialProgress[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.materialProgress),
       where("institutionId", "==", institutionId),
-      where("studentId", "==", studentId)
-    )
+      where("studentId", "==", studentId),
+    ),
   );
   return snap.docs.map((d) => d.data() as MaterialProgress);
 }
 
 export async function listProgressForMaterial(
-  materialId: string
+  materialId: string,
 ): Promise<MaterialProgress[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.materialProgress),
-      where("materialId", "==", materialId)
-    )
+      where("materialId", "==", materialId),
+    ),
   );
   return snap.docs.map((d) => d.data() as MaterialProgress);
 }
@@ -868,13 +965,13 @@ export async function markNotificationRead(id: string, uid: string) {
 export function subscribeToNotifications(
   institutionId: string,
   user: { uid: string; role: Role },
-  cb: (items: Notification[]) => void
+  cb: (items: Notification[]) => void,
 ): Unsubscribe {
   const q = query(
     collection(db, COL.notifications),
     where("institutionId", "==", institutionId),
     orderBy("createdAt", "desc"),
-    fbLimit(50)
+    fbLimit(50),
   );
   return onSnapshot(q, (snap) => {
     const all = snap.docs.map((d) => d.data() as Notification);
@@ -884,19 +981,19 @@ export function subscribeToNotifications(
         if (n.audience === "students") return user.role === "student";
         if (n.audience === "teachers") return user.role === "teacher";
         return n.targetUserId === user.uid;
-      })
+      }),
     );
   });
 }
 
 export async function listNotificationsSent(
-  institutionId: string
+  institutionId: string,
 ): Promise<Notification[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.notifications),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Notification)
@@ -910,13 +1007,13 @@ export async function savePayment(p: PaymentRecord) {
 }
 
 export async function listPayments(
-  institutionId: string
+  institutionId: string,
 ): Promise<PaymentRecord[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.payments),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as PaymentRecord)
@@ -926,7 +1023,10 @@ export async function listPayments(
 // ─── Audit ───
 
 export async function writeAudit(
-  event: Omit<AuditEvent, "id" | "createdAt"> & { id?: string; createdAt?: number }
+  event: Omit<AuditEvent, "id" | "createdAt"> & {
+    id?: string;
+    createdAt?: number;
+  },
 ) {
   const id = event.id ?? newId(COL.audit);
   const row: AuditEvent = {
@@ -945,13 +1045,13 @@ export async function writeAudit(
 
 export async function listAudit(
   institutionId: string,
-  limitN = 200
+  limitN = 200,
 ): Promise<AuditEvent[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.audit),
-      where("institutionId", "==", institutionId)
-    )
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as AuditEvent)
@@ -959,7 +1059,10 @@ export async function listAudit(
     .slice(0, limitN);
 }
 
-export async function appendAttemptEvent(attemptId: string, event: AttemptEvent) {
+export async function appendAttemptEvent(
+  attemptId: string,
+  event: AttemptEvent,
+) {
   const snap = await getDoc(doc(db, COL.attempts, attemptId));
   if (!snap.exists()) return;
   const att = snap.data() as Attempt;
@@ -977,9 +1080,14 @@ export async function deleteDepartment(id: string) {
   await deleteDoc(doc(db, COL.departments, id));
 }
 
-export async function listDepartments(institutionId: string): Promise<Department[]> {
+export async function listDepartments(
+  institutionId: string,
+): Promise<Department[]> {
   const snap = await getDocs(
-    query(collection(db, COL.departments), where("institutionId", "==", institutionId))
+    query(
+      collection(db, COL.departments),
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Department)
@@ -998,7 +1106,10 @@ export async function deleteTerm(id: string) {
 
 export async function listTerms(institutionId: string): Promise<Term[]> {
   const snap = await getDocs(
-    query(collection(db, COL.terms), where("institutionId", "==", institutionId))
+    query(
+      collection(db, COL.terms),
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Term)
@@ -1017,7 +1128,10 @@ export async function deleteCohort(id: string) {
 
 export async function listCohorts(institutionId: string): Promise<Cohort[]> {
   const snap = await getDocs(
-    query(collection(db, COL.cohorts), where("institutionId", "==", institutionId))
+    query(
+      collection(db, COL.cohorts),
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Cohort)
@@ -1026,7 +1140,7 @@ export async function listCohorts(institutionId: string): Promise<Cohort[]> {
 
 export async function getCohortByName(
   institutionId: string,
-  name: string
+  name: string,
 ): Promise<Cohort | null> {
   const all = await listCohorts(institutionId);
   return all.find((c) => c.name.toLowerCase() === name.toLowerCase()) ?? null;
@@ -1035,7 +1149,7 @@ export async function getCohortByName(
 export async function ensureCohort(
   institutionId: string,
   name: string,
-  extra?: Partial<Cohort>
+  extra?: Partial<Cohort>,
 ): Promise<Cohort> {
   const existing = await getCohortByName(institutionId, name);
   if (existing) return existing;
@@ -1051,7 +1165,10 @@ export async function ensureCohort(
   return c;
 }
 
-export async function syncInstitutionClasses(institutionId: string, names: string[]) {
+export async function syncInstitutionClasses(
+  institutionId: string,
+  names: string[],
+) {
   const unique = [...new Set(names.map((n) => n.trim()).filter(Boolean))];
   await updateInstitution(institutionId, { classes: unique });
   const existing = await listCohorts(institutionId);
@@ -1066,8 +1183,8 @@ export async function syncInstitutionClasses(institutionId: string, names: strin
           name,
           status: "open",
           createdAt: Date.now(),
-        })
-      )
+        }),
+      ),
   );
 }
 
@@ -1079,11 +1196,13 @@ export async function saveEnrollment(e: Enrollment) {
 
 export async function listEnrollments(
   institutionId: string,
-  userId?: string
+  userId?: string,
 ): Promise<Enrollment[]> {
   const constraints = [where("institutionId", "==", institutionId)];
   if (userId) constraints.push(where("userId", "==", userId));
-  const snap = await getDocs(query(collection(db, COL.enrollments), ...constraints));
+  const snap = await getDocs(
+    query(collection(db, COL.enrollments), ...constraints),
+  );
   return snap.docs
     .map((d) => d.data() as Enrollment)
     .sort((a, b) => b.startedAt - a.startedAt);
@@ -1091,14 +1210,14 @@ export async function listEnrollments(
 
 export async function listEnrollmentsForCohort(
   institutionId: string,
-  cohortId: string
+  cohortId: string,
 ): Promise<Enrollment[]> {
   const snap = await getDocs(
     query(
       collection(db, COL.enrollments),
       where("institutionId", "==", institutionId),
-      where("cohortId", "==", cohortId)
-    )
+      where("cohortId", "==", cohortId),
+    ),
   );
   return snap.docs.map((d) => d.data() as Enrollment);
 }
@@ -1115,8 +1234,13 @@ export async function enrollLearner(opts: {
 
   let status: EnrollmentStatus = "active";
   if (cohort.capacity && cohort.capacity > 0) {
-    const current = await listEnrollmentsForCohort(opts.institutionId, cohort.id);
-    const taken = current.filter((e) => e.status === "active" || e.status === "completed").length;
+    const current = await listEnrollmentsForCohort(
+      opts.institutionId,
+      cohort.id,
+    );
+    const taken = current.filter(
+      (e) => e.status === "active" || e.status === "completed",
+    ).length;
     if (taken >= cohort.capacity) status = "waitlist";
   }
   const row: Enrollment = {
@@ -1135,7 +1259,7 @@ export async function enrollLearner(opts: {
 
 export async function setEnrollmentStatus(
   id: string,
-  status: EnrollmentStatus
+  status: EnrollmentStatus,
 ) {
   const extra =
     status === "completed" || status === "dropped" || status === "alumni"
@@ -1156,7 +1280,10 @@ export async function deleteRubric(id: string) {
 
 export async function listRubrics(institutionId: string): Promise<Rubric[]> {
   const snap = await getDocs(
-    query(collection(db, COL.rubrics), where("institutionId", "==", institutionId))
+    query(
+      collection(db, COL.rubrics),
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as Rubric)
@@ -1178,9 +1305,14 @@ export async function deletePath(id: string) {
   await deleteDoc(doc(db, COL.paths, id));
 }
 
-export async function listPaths(institutionId: string): Promise<LearningPath[]> {
+export async function listPaths(
+  institutionId: string,
+): Promise<LearningPath[]> {
   const snap = await getDocs(
-    query(collection(db, COL.paths), where("institutionId", "==", institutionId))
+    query(
+      collection(db, COL.paths),
+      where("institutionId", "==", institutionId),
+    ),
   );
   return snap.docs
     .map((d) => d.data() as LearningPath)
@@ -1191,7 +1323,10 @@ export async function listPaths(institutionId: string): Promise<LearningPath[]> 
 
 export function generateVerifyCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return Array.from(
+    { length: 10 },
+    () => chars[Math.floor(Math.random() * chars.length)],
+  ).join("");
 }
 
 export async function saveCertificate(c: Certificate) {
@@ -1200,23 +1335,27 @@ export async function saveCertificate(c: Certificate) {
 
 export async function listCertificates(
   institutionId: string,
-  userId?: string
+  userId?: string,
 ): Promise<Certificate[]> {
   const constraints = [where("institutionId", "==", institutionId)];
   if (userId) constraints.push(where("userId", "==", userId));
-  const snap = await getDocs(query(collection(db, COL.certificates), ...constraints));
+  const snap = await getDocs(
+    query(collection(db, COL.certificates), ...constraints),
+  );
   return snap.docs
     .map((d) => d.data() as Certificate)
     .sort((a, b) => b.issuedAt - a.issuedAt);
 }
 
-export async function getCertificateByCode(code: string): Promise<Certificate | null> {
+export async function getCertificateByCode(
+  code: string,
+): Promise<Certificate | null> {
   const snap = await getDocs(
     query(
       collection(db, COL.certificates),
       where("verifyCode", "==", code.toUpperCase().trim()),
-      fbLimit(1)
-    )
+      fbLimit(1),
+    ),
   );
   return snap.empty ? null : (snap.docs[0].data() as Certificate);
 }
@@ -1244,7 +1383,9 @@ export async function issueCertificate(opts: {
   return c;
 }
 
-export async function listChildren(parent: UserProfile): Promise<UserProfile[]> {
+export async function listChildren(
+  parent: UserProfile,
+): Promise<UserProfile[]> {
   const ids = parent.linkedStudentIds ?? [];
   const rows = await Promise.all(ids.map((id) => getUserProfile(id)));
   return rows.filter((u): u is UserProfile => Boolean(u));
@@ -1252,8 +1393,191 @@ export async function listChildren(parent: UserProfile): Promise<UserProfile[]> 
 
 export async function listUsersByDepartment(
   institutionId: string,
-  departmentId: string
+  departmentId: string,
 ): Promise<UserProfile[]> {
   const all = await listUsers(institutionId);
   return all.filter((u) => u.departmentId === departmentId);
+}
+
+// ─── Learning Gaps ────────────────────────────────────────────────────────────
+
+export const COL_GAPS = "learningGaps";
+
+export async function upsertLearningGap(
+  institutionId: string,
+  studentId: string,
+  subject: string,
+  topic: string,
+  percent: number,
+): Promise<void> {
+  const id = `${studentId}_${institutionId}_${subject}_${topic}`.replace(
+    /[^a-zA-Z0-9_]/g,
+    "_",
+  );
+  const ref = doc(db, COL_GAPS, id);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    const existing = snap.data() as { accuracy: number; attemptCount: number };
+    const newCount = existing.attemptCount + 1;
+    // Running average
+    const newAccuracy = Math.round(
+      (existing.accuracy * existing.attemptCount + percent) / newCount,
+    );
+    await updateDoc(ref, {
+      accuracy: newAccuracy,
+      attemptCount: newCount,
+      updatedAt: Date.now(),
+    });
+  } else {
+    await setDoc(ref, {
+      id,
+      institutionId,
+      studentId,
+      subject,
+      topic,
+      accuracy: percent,
+      attemptCount: 1,
+      updatedAt: Date.now(),
+    });
+  }
+}
+
+export async function getLearningGaps(
+  institutionId: string,
+  studentId: string,
+) {
+  const snap = await getDocs(
+    query(
+      collection(db, COL_GAPS),
+      where("institutionId", "==", institutionId),
+      where("studentId", "==", studentId),
+    ),
+  );
+  return snap.docs
+    .map((d) => d.data())
+    .sort((a, b) => (a.accuracy as number) - (b.accuracy as number));
+}
+
+// ── attendance ──────────────────────────────────────────────────────────────
+// One doc per student per day, keyed `${uid}_${YYYY-MM-DD}` so repeat logins
+// the same day are idempotent. Recorded automatically when a student's
+// dashboard session loads (see auth-context). Also usable by staff on behalf
+// of a student (manual marking), hence the broader staff write rule.
+
+export function attendanceDocId(uid: string, date: string): string {
+  return `${uid}_${date}`;
+}
+
+export async function recordAttendance(
+  institutionId: string,
+  student: Pick<UserProfile, "uid" | "name">,
+  date = new Date().toISOString().slice(0, 10),
+): Promise<void> {
+  await setDoc(
+    doc(db, COL.attendance, attendanceDocId(student.uid, date)),
+    {
+      id: attendanceDocId(student.uid, date),
+      institutionId,
+      studentId: student.uid,
+      studentName: student.name,
+      date,
+      createdAt: Date.now(),
+    },
+    { merge: true },
+  );
+}
+
+/** Distinct attended days for one student, newest first. Pass sinceMs to
+ *  bound the window (e.g. last 30 days for list views). */
+export async function listAttendanceDays(
+  institutionId: string,
+  studentId: string,
+  sinceMs?: number,
+): Promise<string[]> {
+  const constraints = [
+    where("institutionId", "==", institutionId),
+    where("studentId", "==", studentId),
+  ];
+  if (sinceMs) {
+    constraints.push(where("createdAt", ">=", sinceMs));
+  }
+  const snap = await getDocs(
+    query(collection(db, COL.attendance), ...constraints),
+  );
+  return snap.docs
+    .map((d) => (d.data() as { date?: string }).date || "")
+    .filter(Boolean)
+    .sort((a, b) => b.localeCompare(a));
+}
+
+export interface AttendanceSummary {
+  total: number; // distinct days present
+  last30: number; // days present in the trailing 30 days
+  currentStreak: number; // consecutive days up to today/yesterday
+}
+
+export function summarizeAttendance(days: string[]): AttendanceSummary {
+  const set = new Set(days);
+  const key = (d: Date) => d.toISOString().slice(0, 10);
+  let streak = 0;
+  const cursor = new Date();
+  // A streak survives not having logged in yet today.
+  if (!set.has(key(cursor))) cursor.setDate(cursor.getDate() - 1);
+  while (set.has(key(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  const cutoff = key(new Date(Date.now() - 29 * 86400000));
+  return {
+    total: set.size,
+    last30: [...set].filter((d) => d >= cutoff).length,
+    currentStreak: streak,
+  };
+}
+
+/** Days present per student over a trailing window — for staff tables. */
+export async function attendanceCountsByStudent(
+  institutionId: string,
+  sinceDays = 30,
+): Promise<Record<string, number>> {
+  const sinceMs = Date.now() - (sinceDays - 1) * 86400000;
+  const snap = await getDocs(
+    query(
+      collection(db, COL.attendance),
+      where("institutionId", "==", institutionId),
+      where("createdAt", ">=", sinceMs),
+    ),
+  );
+  const counts: Record<string, number> = {};
+  for (const d of snap.docs) {
+    const rec = d.data() as AttendanceRecord;
+    counts[rec.studentId] = (counts[rec.studentId] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/**
+ * Full attendance ledger for an institution, grouped per student (newest day
+ * first). Powers the staff Attendance report; unbounded by date on purpose so
+ * totals and streaks are accurate.
+ */
+export async function attendanceByStudent(
+  institutionId: string,
+): Promise<Record<string, string[]>> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.attendance),
+      where("institutionId", "==", institutionId),
+    ),
+  );
+  const grouped: Record<string, string[]> = {};
+  for (const d of snap.docs) {
+    const rec = d.data() as AttendanceRecord;
+    if (!rec.studentId || !rec.date) continue;
+    (grouped[rec.studentId] ??= []).push(rec.date);
+  }
+  for (const list of Object.values(grouped)) {
+    list.sort((a, b) => b.localeCompare(a));
+  }
+  return grouped;
 }

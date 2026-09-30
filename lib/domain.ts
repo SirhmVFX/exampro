@@ -30,8 +30,31 @@ export const RESERVED_SLUGS = new Set([
   "mx",
 ]);
 
+/** Bare hostname used for subdomain matching, e.g. "exampro.io" or
+ *  "tryexampro.vercel.app". Tolerates env values that include a scheme
+ *  (https://) and/or a trailing slash. */
 export function rootDomain(): string {
-  return (process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost").replace(/^www\./, "");
+  const raw = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost").trim();
+  const host = raw
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "")
+    .replace(/^www\./i, "");
+  return host || "localhost";
+}
+
+/** Canonical public origin used for shareable links. Prefers an explicit
+ *  NEXT_PUBLIC_SITE_URL, then NEXT_PUBLIC_ROOT_DOMAIN. Returns "" in local
+ *  dev (no real domain) so callers fall back to the current window origin. */
+export function siteOrigin(): string {
+  const raw = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_ROOT_DOMAIN ||
+    ""
+  )
+    .trim()
+    .replace(/\/+$/, "");
+  if (!raw || /^localhost(?::\d+)?$/i.test(raw)) return "";
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
 }
 
 export function slugify(input: string): string {
@@ -71,47 +94,27 @@ export function slugFromHost(host: string, root = rootDomain()): string | null {
 }
 
 export function appOrigin(): string {
+  const configured = siteOrigin();
+  if (configured) return configured;
   if (typeof window !== "undefined") {
     const { protocol, hostname, port } = window.location;
-    const host = hostname === "localhost" || hostname.endsWith(".localhost")
-      ? `localhost${port ? `:${port}` : ""}`
-      : hostname.endsWith(`.${rootDomain()}`)
-        ? `${rootDomain()}`
-        : window.location.host;
     if (hostname === "localhost" || hostname.endsWith(".localhost")) {
       return `${protocol}//localhost${port ? `:${port}` : ""}`;
     }
-    if (hostname.endsWith(`.${rootDomain()}`) || hostname === rootDomain() || hostname === `www.${rootDomain()}`) {
-      const proto = rootDomain().includes("localhost") ? "http:" : protocol;
-      const apex = rootDomain() === "localhost" ? `localhost${port ? `:${port}` : ""}` : rootDomain();
-      return `${proto}//${apex}`;
-    }
-    return `${protocol}//${host}`;
+    return `${protocol}//${window.location.host}`;
   }
-  const root = rootDomain();
-  if (root === "localhost") return "http://localhost:3000";
-  return `https://${root}`;
+  return "http://localhost:3000";
 }
 
 /**
- * Public school URL. Production: https://slug.exampro.io
- * Local: http://localhost:3000/s/slug (no /etc/hosts needed)
+ * Public school URL. Tenancy is path-based (/s/{slug}) so it resolves on
+ * single-host deploys like *.vercel.app and on a custom apex alike. When a
+ * live domain is configured it is always used — never localhost.
+ * Local dev: http://localhost:3000/s/{slug}
  */
 export function institutionPublicUrl(slug: string, path = ""): string {
   const clean = !path || path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
-  const root = rootDomain();
-  if (typeof window !== "undefined") {
-    const local =
-      window.location.hostname === "localhost" ||
-      window.location.hostname.endsWith(".localhost");
-    if (local || root === "localhost") {
-      return `${appOrigin()}/s/${slug}${clean}`;
-    }
-  }
-  if (root === "localhost") {
-    return `http://localhost:3000/s/${slug}${clean}`;
-  }
-  return `https://${slug}.${root}${clean}`;
+  return `${appOrigin()}/s/${slug}${clean}`;
 }
 
 export function joinStudentUrl(slug: string): string {

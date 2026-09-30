@@ -122,6 +122,14 @@ service cloud.firestore {
       allow update, delete: if isStaff(resource.data.institutionId);
     }
 
+    // ── question sets (subject folders of the question bank) ──────────────
+
+    match /questionSets/{id} {
+      allow read: if isMember(resource.data.institutionId);
+      allow create: if isStaff(request.resource.data.institutionId);
+      allow update, delete: if isStaff(resource.data.institutionId);
+    }
+
     // ── assessments ────────────────────────────────────────────────────────
 
     match /assessments/{id} {
@@ -160,6 +168,23 @@ service cloud.firestore {
     match /materialProgress/{id} {
       allow read: if isMember(resource.data.institutionId);
       allow create, update: if signedIn() && request.auth.uid == request.resource.data.studentId;
+    }
+
+    // ── attendance ───────────────────────────────────────────────────────
+    // One doc per student per day, auto-written on the student's first
+    // dashboard session of the day (idempotent merge, so updates allowed).
+    // Staff may also record/mark attendance on behalf of a student.
+
+    match /attendance/{id} {
+      allow read: if isMember(resource.data.institutionId);
+      allow create, update: if signedIn() && (
+        request.auth.uid == request.resource.data.studentId ||
+        profileExists() && (
+          roleIn(request.resource.data.institutionId) == 'admin' ||
+          roleIn(request.resource.data.institutionId) == 'teacher' ||
+          roleIn(request.resource.data.institutionId) == 'manager'
+        )
+      );
     }
 
     // ── notifications ──────────────────────────────────────────────────────
