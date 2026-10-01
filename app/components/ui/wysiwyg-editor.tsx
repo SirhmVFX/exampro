@@ -25,6 +25,7 @@ export function WysiwygEditor({
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const editor = useEditor({
     extensions: [
@@ -63,12 +64,13 @@ export function WysiwygEditor({
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
+    setUploadError("");
     setUploading(true);
     try {
       const result = await uploadToCloudinary(file, "exampro/editor");
       editor.chain().focus().setImage({ src: result.url }).run();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Image upload failed.");
+      setUploadError(err instanceof Error ? err.message : "Image upload failed.");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -187,6 +189,9 @@ export function WysiwygEditor({
         </ToolBtn>
       </div>
       <EditorContent editor={editor} />
+      {uploadError && (
+        <p className="text-xs text-red-500 mt-1">{uploadError}</p>
+      )}
       <input
         ref={fileInputRef}
         type="file"

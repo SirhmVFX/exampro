@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
+import toast from "react-hot-toast";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { teacherNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -74,7 +75,10 @@ export default function GradeSubmissionPage() {
         needsManualGrading: false,
         status: "graded",
       });
+      toast.success("Grades saved");
       router.push("/dashboard/teacher/submissions");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save grades. Please try again.");
     } finally {
       setSaving(false);
     }
