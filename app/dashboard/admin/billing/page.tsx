@@ -41,6 +41,7 @@ function BillingInner() {
     );
   }, [institution]);
 
+  // Handle Paystack callback redirect (?provider=paystack&reference=xxx)
   useEffect(() => {
     if (!institution) return;
     const provider = search.get("provider");
@@ -48,10 +49,6 @@ function BillingInner() {
     if (canceled) {
       setNotice("Checkout was canceled. No charge was made.");
       return;
-    }
-    if (provider === "stripe") {
-      const sessionId = search.get("session_id");
-      if (sessionId) void verifyStripe(sessionId);
     }
     if (provider === "paystack") {
       const reference = search.get("reference") || search.get("trxref");
@@ -61,7 +58,6 @@ function BillingInner() {
   }, [institution, search]);
 
   const applySuccess = async (opts: {
-    provider: "paystack" | "stripe";
     reference: string;
     planId: PlanId;
     amount: number;
@@ -79,7 +75,7 @@ function BillingInner() {
     await savePayment({
       id: newId(COL.payments),
       institutionId: institution.id,
-      provider: opts.provider,
+      provider: "paystack",
       reference: opts.reference,
       plan: opts.planId,
       amount: opts.amount,
@@ -90,32 +86,7 @@ function BillingInner() {
     await setInstitutionPlan(institution.id, opts.planId, renewsAt);
     await refresh();
     setPayments(await listPayments(institution.id));
-    setNotice(`You're now on the ${getPlan(opts.planId).name} plan.`);
-  };
-
-  const verifyStripe = async (sessionId: string) => {
-    setError("");
-    try {
-      const res = await fetch("/api/payments/stripe/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.status !== "success") {
-        setError(data.error ?? "Stripe payment could not be verified.");
-        return;
-      }
-      await applySuccess({
-        provider: "stripe",
-        reference: data.reference,
-        planId: data.planId,
-        amount: data.amount,
-        currency: data.currency,
-      });
-    } catch {
-      setError("Could not verify Stripe payment.");
-    }
+    setNotice(`You're now on the ${getPlan(opts.planId).name} plan. 🎉`);
   };
 
   const verifyPaystack = async (reference: string) => {
@@ -128,24 +99,23 @@ function BillingInner() {
       });
       const data = await res.json();
       if (!res.ok || data.status !== "success") {
-        setError(data.error ?? "Paystack payment could not be verified.");
+        setError(data.error ?? "Payment could not be verified. Contact support if you were charged.");
         return;
       }
       await applySuccess({
-        provider: "paystack",
         reference: data.reference,
         planId: data.planId,
         amount: data.amount,
         currency: data.currency,
       });
     } catch {
-      setError("Could not verify Paystack payment.");
+      setError("Could not verify payment. Please contact support with your reference number.");
     }
   };
 
   const startPaystack = async (planId: PlanId) => {
     if (!institution || !profile) return;
-    setPaying(`paystack-${planId}`);
+    setPaying(planId);
     setError("");
     try {
       const res = await fetch("/api/payments/paystack/init", {
@@ -158,33 +128,10 @@ function BillingInner() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error ?? "Could not start payment.");
       window.location.href = data.authorizationUrl;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Paystack init failed");
-      setPaying(null);
-    }
-  };
-
-  const startStripe = async (planId: PlanId) => {
-    if (!institution || !profile) return;
-    setPaying(`stripe-${planId}`);
-    setError("");
-    try {
-      const res = await fetch("/api/payments/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          institutionId: institution.id,
-          planId,
-          email: profile.email,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      window.location.href = data.url;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Stripe checkout failed");
+      setError(e instanceof Error ? e.message : "Payment initiation failed. Try again.");
       setPaying(null);
     }
   };
@@ -198,7 +145,7 @@ function BillingInner() {
       title="Billing"
       subtitle="Manage your institution's ExamPro plan"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-4xl">
         {error && (
           <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -212,6 +159,7 @@ function BillingInner() {
           </div>
         )}
 
+        {/* Current plan card */}
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold">Current plan</h2>
@@ -226,10 +174,9 @@ function BillingInner() {
               </div>
               <p className="text-sm text-gray-500 mt-1">{current.tagline}</p>
               <p className="text-xs text-gray-400 mt-2">
-                Using {counts.students}/{current.maxStudents === -1 ? "∞" : current.maxStudents} students ·{" "}
-                {counts.teachers}/{current.maxTeachers === -1 ? "∞" : current.maxTeachers} teachers ·{" "}
-                {institution?.aiGenerationsUsed ?? 0}/
-                {current.aiGenerationsPerMonth === -1 ? "∞" : current.aiGenerationsPerMonth} AI gens
+                {counts.students} / {current.maxStudents === -1 ? "∞" : current.maxStudents} students ·{" "}
+                {counts.teachers} / {current.maxTeachers === -1 ? "∞" : current.maxTeachers} teachers ·{" "}
+                {institution?.aiGenerationsUsed ?? 0} / {current.aiGenerationsPerMonth === -1 ? "∞" : current.aiGenerationsPerMonth} AI generations
               </p>
               {institution?.planRenewsAt && (
                 <p className="text-xs text-gray-400 mt-1">
@@ -241,6 +188,7 @@ function BillingInner() {
           </CardBody>
         </Card>
 
+        {/* Plan cards */}
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
           {PLANS.map((plan) => {
             const isCurrent = institution?.plan === plan.id;
@@ -249,7 +197,7 @@ function BillingInner() {
                 key={plan.id}
                 className={plan.highlighted ? "ring-2 ring-[var(--dash-primary)]" : ""}
               >
-                <CardBody className="space-y-3">
+                <CardBody className="space-y-3 flex flex-col">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-gray-900">{plan.name}</h3>
                     {plan.highlighted && <Badge>Popular</Badge>}
@@ -265,30 +213,26 @@ function BillingInner() {
                       <span className="text-sm font-medium text-gray-400">/mo</span>
                     )}
                   </p>
-                  {plan.priceNgn > 0 && (
-                    <p className="text-xs text-gray-400">
-                      or ₦{plan.priceNgn.toLocaleString()}/mo
-                    </p>
-                  )}
-                  <ul className="text-xs text-gray-600 space-y-1">
+                  <ul className="text-xs text-gray-600 space-y-1 flex-1">
                     {plan.features.slice(0, 4).map((f) => (
                       <li key={f}>· {f}</li>
                     ))}
                   </ul>
                   {plan.id === "enterprise" ? (
-                    <a href="/contact">
+                    <a href="/contact" className="block mt-auto">
                       <Button variant="outline" fullWidth>
                         Contact sales
                       </Button>
                     </a>
                   ) : isCurrent ? (
-                    <Button variant="ghost" fullWidth disabled>
+                    <Button variant="ghost" fullWidth disabled className="mt-auto">
                       Current plan
                     </Button>
-                  ) : plan.priceUsd === 0 ? (
+                  ) : plan.priceNgn === 0 ? (
                     <Button
                       variant="outline"
                       fullWidth
+                      className="mt-auto"
                       onClick={async () => {
                         if (!institution) return;
                         await setInstitutionPlan(institution.id, "free", Date.now());
@@ -299,23 +243,14 @@ function BillingInner() {
                       Switch to Free
                     </Button>
                   ) : (
-                    <div className="space-y-2">
-                      <Button
-                        fullWidth
-                        loading={paying === `paystack-${plan.id}`}
-                        onClick={() => void startPaystack(plan.id)}
-                      >
-                        Pay with Paystack (₦)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        fullWidth
-                        loading={paying === `stripe-${plan.id}`}
-                        onClick={() => void startStripe(plan.id)}
-                      >
-                        Pay with Stripe ($)
-                      </Button>
-                    </div>
+                    <Button
+                      fullWidth
+                      className="mt-auto"
+                      loading={paying === plan.id}
+                      onClick={() => void startPaystack(plan.id)}
+                    >
+                      Upgrade — ${plan.priceUsd}/mo
+                    </Button>
                   )}
                 </CardBody>
               </Card>
@@ -323,23 +258,22 @@ function BillingInner() {
           })}
         </div>
 
+        {/* Payment history */}
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold">Payment history</h2>
           </CardHeader>
           <CardBody className="p-0">
             {payments.length === 0 ? (
-              <p className="px-6 py-8 text-sm text-gray-400 text-center">
-                No payments yet.
-              </p>
+              <p className="px-6 py-8 text-sm text-gray-400 text-center">No payments yet.</p>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase">
                   <tr>
                     <th className="px-6 py-3">Date</th>
                     <th className="px-6 py-3">Plan</th>
-                    <th className="px-6 py-3">Provider</th>
                     <th className="px-6 py-3">Amount</th>
+                    <th className="px-6 py-3">Reference</th>
                     <th className="px-6 py-3">Status</th>
                   </tr>
                 </thead>
@@ -348,10 +282,10 @@ function BillingInner() {
                     <tr key={p.id}>
                       <td className="px-6 py-3">{formatDate(p.createdAt)}</td>
                       <td className="px-6 py-3 capitalize">{p.plan}</td>
-                      <td className="px-6 py-3 capitalize">{p.provider}</td>
                       <td className="px-6 py-3">
                         {p.currency} {p.amount.toLocaleString()}
                       </td>
+                      <td className="px-6 py-3 font-mono text-xs text-gray-400">{p.reference}</td>
                       <td className="px-6 py-3">
                         <Badge variant={p.status === "success" ? "success" : "danger"}>
                           {p.status}
