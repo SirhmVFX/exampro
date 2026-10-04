@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen, CheckCircle2, ExternalLink } from "lucide-react";
+import { BookOpen, CheckCircle2, Download, ExternalLink } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { studentNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody } from "@/app/components/ui/card";
@@ -73,7 +73,10 @@ export default function StudentMaterialsPage() {
           {loading ? (
             <div className="p-6 space-y-3">
               {[0, 1].map((i) => (
-                <div key={i} className="h-12 bg-gray-50 animate-pulse rounded-lg" />
+                <div
+                  key={i}
+                  className="h-12 bg-gray-50 animate-pulse rounded-lg"
+                />
               ))}
             </div>
           ) : items.length === 0 ? (
@@ -94,11 +97,18 @@ export default function StudentMaterialsPage() {
                         <div className="flex gap-2 mb-1">
                           <Badge variant="info">{m.type}</Badge>
                           <Badge variant="outline">{m.subject}</Badge>
+                          {m.assignedStudentIds?.length ? (
+                            <Badge variant="warning">Assigned to you</Badge>
+                          ) : null}
                           {done && <Badge variant="success">Completed</Badge>}
                         </div>
                         <p className="font-medium">{m.title}</p>
                         {m.description && (
-                          <HtmlContent html={m.description} compact className="mt-0.5" />
+                          <HtmlContent
+                            html={m.description}
+                            compact
+                            className="mt-0.5"
+                          />
                         )}
                         <p className="text-xs text-gray-400 mt-1">
                           {m.teacherName} · {formatDate(m.createdAt)}
@@ -119,18 +129,55 @@ export default function StudentMaterialsPage() {
                             <HtmlContent html={m.content} />
                           </div>
                         )}
-                        {m.url && m.type !== "note" && (
+                        {m.type === "pdf" && m.url && (
+                          <div className="space-y-2">
+                            {m.fileName && (
+                              <p className="text-xs text-gray-500">
+                                File: {m.fileName}
+                              </p>
+                            )}
+                            <iframe
+                              src={m.url}
+                              title={m.title}
+                              className="w-full h-[480px] border border-gray-200 rounded-lg bg-gray-50"
+                            />
+                            <div className="flex flex-wrap gap-3">
+                              <a
+                                href={m.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-sm text-[var(--dash-primary)]"
+                              >
+                                Open in new tab{" "}
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                              <a
+                                href={m.url}
+                                download={m.fileName || m.title}
+                                className="inline-flex items-center gap-1 text-sm text-[var(--dash-primary)]"
+                              >
+                                Download <Download className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                        {m.url && m.type !== "note" && m.type !== "pdf" && (
                           <a
                             href={m.url}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-sm text-[var(--dash-primary)]"
                           >
-                            Open resource <ExternalLink className="w-3.5 h-3.5" />
+                            Open resource{" "}
+                            <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         )}
                         {m.type === "video" && m.url && (
-                          <video src={m.url} controls className="w-full rounded-xl max-h-80" />
+                          <video
+                            src={m.url}
+                            controls
+                            className="w-full rounded-xl max-h-80"
+                          />
                         )}
                         <div className="flex flex-wrap gap-2">
                           {!done && (
@@ -142,7 +189,9 @@ export default function StudentMaterialsPage() {
                             <Link
                               href={`/dashboard/student/assessments/${m.linkedAssessmentId}/take`}
                             >
-                              <Button size="sm">Take follow-up assessment</Button>
+                              <Button size="sm">
+                                Take follow-up assessment
+                              </Button>
                             </Link>
                           )}
                         </div>

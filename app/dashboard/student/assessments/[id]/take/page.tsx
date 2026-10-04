@@ -115,7 +115,7 @@ function CodingPlayground({
         </pre>
       )}
       {q.testCases && q.testCases.length > 0 && lang === "javascript" && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-[var(--dash-text-faint)]">
           {q.testCases.length} hidden/visible test cases. Define <code>solve(...)</code>.
         </p>
       )}
@@ -150,7 +150,7 @@ function WebcamBanner({ attemptId }: { attemptId: string | null }) {
   return (
     <div className="flex items-center gap-3 border border-gray-200 rounded-xl p-3">
       <video ref={videoRef} autoPlay muted playsInline className="w-28 h-20 bg-black object-cover" />
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-[var(--dash-text-muted)]">
         Camera preview is on for this exam. Video is not uploaded — presence is logged.
       </p>
     </div>
@@ -460,12 +460,12 @@ export default function TakeAssessmentPage() {
         {questions.map((q, i) => (
           <Card key={q.id}>
             <CardHeader>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-[var(--dash-text)]">
                 {i + 1}.{" "}
                 <span className="font-normal">
                   <HtmlContent html={q.text} className="inline" />
                 </span>{" "}
-                <span className="text-xs font-normal text-gray-400">({q.points} pts)</span>
+                <span className="text-xs font-normal text-[var(--dash-text-faint)]">({q.points} pts)</span>
               </p>
             </CardHeader>
             <CardBody>

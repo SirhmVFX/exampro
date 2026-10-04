@@ -78,7 +78,7 @@ export default function StudentResultsPage() {
                         </Badge>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-gray-500">
+                    <td className="px-6 py-3 text-[var(--dash-text-muted)]">
                       {formatDateTime(a.submittedAt)}
                     </td>
                     <td className="px-6 py-3 text-right">

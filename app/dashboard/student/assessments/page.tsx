@@ -84,9 +84,9 @@ export default function StudentAssessmentsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge>{KIND_LABEL[a.kind]}</Badge>
-                        <span className="text-xs text-gray-400">{a.subject}</span>
+                        <span className="text-xs text-[var(--dash-text-faint)]">{a.subject}</span>
                       </div>
-                      <p className="font-medium text-gray-900">{a.title}</p>
+                      <p className="font-medium text-[var(--dash-text)]">{a.title}</p>
                       {a.description && (
                         <HtmlContent html={a.description} compact className="mt-0.5" />
                       )}
