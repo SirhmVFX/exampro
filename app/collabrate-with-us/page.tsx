@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Redirect old ThinkTank URL to the new contact page
-export default function CollaboratePage() {
-  redirect("/");
+// Fix for typo in old URL — permanently redirect to the correctly-spelled page
+export default function CollabratePage() {
+  redirect("/collaborate-with-us");
 }

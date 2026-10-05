@@ -1,41 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { MarketingShell, PageHero } from "@/app/components/marketing/shell";
-
-const posts = [
-  {
-    title: "How to design assessments that actually measure skill",
-    excerpt:
-      "Mixing MCQ, short answer, essay, and coding so a paper isn't just recall.",
-    category: "Practice",
-    date: "May 8, 2026",
-    readTime: "6 min",
-  },
-  {
-    title: "Multi-tenancy: how ExamPro isolates institution data",
-    excerpt:
-      "institutionId on every document, join codes, and Firestore rules that match the product.",
-    category: "Engineering",
-    date: "Apr 28, 2026",
-    readTime: "8 min",
-  },
-  {
-    title: "Computer-based testing in African institutions",
-    excerpt:
-      "Why local payments, join codes, and offline-tolerant UX matter more than another feature.",
-    category: "Industry",
-    date: "Apr 15, 2026",
-    readTime: "5 min",
-  },
-  {
-    title: "A JavaScript exam sandbox in the browser",
-    excerpt:
-      "Web Workers, test cases, and what we refuse to let student code touch.",
-    category: "Engineering",
-    date: "Apr 2, 2026",
-    readTime: "10 min",
-  },
-];
+import { posts } from "./posts";
 
 export default function BlogPage() {
   return (
@@ -49,8 +15,8 @@ export default function BlogPage() {
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-3">
           {posts.map((post) => (
             <Link
-              key={post.title}
-              href="/blog"
+              key={post.slug}
+              href={`/blog/${post.slug}`}
               className="group rounded-2xl border border-white/10 p-7 hover:bg-white hover:text-black transition-colors"
             >
               <p className="text-[11px] uppercase tracking-[0.18em] text-white/35 group-hover:text-black/40 mb-4">
