@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, GraduationCap, Ban, CheckCircle, Link2, Mail } from "lucide-react";
+import {
+  Search,
+  GraduationCap,
+  Ban,
+  CheckCircle,
+  Link2,
+  Mail,
+} from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { adminNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -17,6 +24,7 @@ import {
   createInvite,
   deleteInvite,
   updateUserProfile,
+  attendanceCountsByStudent,
   newId,
   COL,
 } from "@/lib/db";
@@ -29,6 +37,7 @@ export default function AdminStudentsPage() {
   const { institution } = useAuth();
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
+  const [attendance, setAttendance] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [classFilter, setClassFilter] = useState("all");
@@ -39,12 +48,14 @@ export default function AdminStudentsPage() {
 
   const reload = async () => {
     if (!institution) return;
-    const [users, inv] = await Promise.all([
+    const [users, inv, attCounts] = await Promise.all([
       listUsers(institution.id, "student"),
       listInvites(institution.id),
+      attendanceCountsByStudent(institution.id, 30),
     ]);
     setStudents(users);
     setInvites(inv.filter((i) => i.role === "student"));
+    setAttendance(attCounts);
   };
 
   useEffect(() => {
@@ -53,9 +64,7 @@ export default function AdminStudentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [institution]);
 
-  const joinLink = institution
-    ? institutionJoinLinks(institution).student
-    : "";
+  const joinLink = institution ? institutionJoinLinks(institution).student : "";
 
   const filtered = students.filter((s) => {
     const matchQ =
@@ -82,7 +91,7 @@ export default function AdminStudentsPage() {
     });
     if (!allowed.students) {
       setError(
-        `Your ${plan.name} plan allows up to ${plan.maxStudents} students. Upgrade in Billing.`
+        `Your ${plan.name} plan allows up to ${plan.maxStudents} students. Upgrade in Billing.`,
       );
       return;
     }
@@ -98,8 +107,8 @@ export default function AdminStudentsPage() {
             role: "student",
             status: "pending",
             createdAt: Date.now(),
-          })
-        )
+          }),
+        ),
       );
       setEmails("");
       setInviteOpen(false);
@@ -121,7 +130,7 @@ export default function AdminStudentsPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[var(--dash-text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -134,7 +143,9 @@ export default function AdminStudentsPage() {
             onChange={(e) => setClassFilter(e.target.value)}
             className={`${inputClass} w-auto`}
           >
-            <option value="all">All {institution?.classLabel ?? "classes"}</option>
+            <option value="all">
+              All {institution?.classLabel ?? "classes"}
+            </option>
             {(institution?.classes ?? []).map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -150,19 +161,21 @@ export default function AdminStudentsPage() {
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-[var(--dash-text)]">
                   Student invite link
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--dash-text-muted)]">
                   Join code:{" "}
                   <span className="font-mono font-semibold tracking-widest text-[var(--dash-primary)]">
                     {institution?.code}
                   </span>
                 </p>
               </div>
-              <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 min-w-0">
-                <Link2 className="w-4 h-4 text-gray-400 shrink-0" />
-                <span className="text-xs text-gray-500 truncate">{joinLink}</span>
+              <div className="flex items-center gap-2 bg-[var(--dash-surface-alt)] border border-[var(--dash-border)] rounded-lg px-3 py-2 min-w-0">
+                <Link2 className="w-4 h-4 text-[var(--dash-text-muted)] shrink-0" />
+                <span className="text-xs text-[var(--dash-text-muted)] truncate">
+                  {joinLink}
+                </span>
                 <CopyButton text={joinLink} />
               </div>
             </div>
@@ -171,7 +184,7 @@ export default function AdminStudentsPage() {
 
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-[var(--dash-text)]">
               Enrolled students ({students.length})
             </h2>
           </CardHeader>
@@ -179,7 +192,10 @@ export default function AdminStudentsPage() {
             {loading ? (
               <div className="p-6 space-y-3">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-12 bg-gray-50 rounded-lg animate-pulse" />
+                  <div
+                    key={i}
+                    className="h-12 bg-[var(--dash-surface-alt)] rounded-lg animate-pulse"
+                  />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
@@ -191,16 +207,19 @@ export default function AdminStudentsPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <thead className="bg-[var(--dash-surface-alt)] text-left text-xs font-semibold text-[var(--dash-text-muted)] uppercase">
                     <tr>
                       <th className="px-6 py-3">Student</th>
-                      <th className="px-6 py-3">{institution?.classLabel ?? "Class"}</th>
+                      <th className="px-6 py-3">
+                        {institution?.classLabel ?? "Class"}
+                      </th>
                       <th className="px-6 py-3">Joined</th>
+                      <th className="px-6 py-3">Attendance (30d)</th>
                       <th className="px-6 py-3">Status</th>
                       <th className="px-6 py-3" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-[var(--dash-border)]">
                     {filtered.map((s) => (
                       <tr key={s.uid}>
                         <td className="px-6 py-3">
@@ -209,19 +228,30 @@ export default function AdminStudentsPage() {
                               {initials(s.name)}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{s.name}</p>
-                              <p className="text-xs text-gray-500">{s.email}</p>
+                              <p className="font-medium text-[var(--dash-text)]">
+                                {s.name}
+                              </p>
+                              <p className="text-xs text-[var(--dash-text-muted)]">
+                                {s.email}
+                              </p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-3 text-gray-600">
+                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
                           {s.className || "—"}
                         </td>
-                        <td className="px-6 py-3 text-gray-500">
+                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
                           {formatDate(s.createdAt)}
                         </td>
+                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
+                          {attendance[s.uid] ?? 0} days
+                        </td>
                         <td className="px-6 py-3">
-                          <Badge variant={s.status === "active" ? "success" : "danger"}>
+                          <Badge
+                            variant={
+                              s.status === "active" ? "success" : "danger"
+                            }
+                          >
                             {s.status}
                           </Badge>
                         </td>
@@ -229,11 +259,14 @@ export default function AdminStudentsPage() {
                           <button
                             onClick={async () => {
                               await updateUserProfile(s.uid, {
-                                status: s.status === "active" ? "suspended" : "active",
+                                status:
+                                  s.status === "active"
+                                    ? "suspended"
+                                    : "active",
                               });
                               await reload();
                             }}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
                           >
                             {s.status === "active" ? (
                               <>
@@ -258,23 +291,30 @@ export default function AdminStudentsPage() {
         {invites.filter((i) => i.status === "pending").length > 0 && (
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold text-gray-900">Pending invites</h2>
+              <h2 className="text-lg font-semibold text-[var(--dash-text)]">
+                Pending invites
+              </h2>
             </CardHeader>
-            <CardBody className="divide-y divide-gray-50 p-0">
+            <CardBody className="divide-y divide-[var(--dash-border)] p-0">
               {invites
                 .filter((i) => i.status === "pending")
                 .map((i) => (
-                  <div key={i.id} className="flex items-center justify-between px-6 py-3">
+                  <div
+                    key={i.id}
+                    className="flex items-center justify-between px-6 py-3"
+                  >
                     <div>
                       <p className="text-sm font-medium">{i.email}</p>
-                      <p className="text-xs text-gray-400">Invited {formatDate(i.createdAt)}</p>
+                      <p className="text-xs text-[var(--dash-text-faint)]">
+                        Invited {formatDate(i.createdAt)}
+                      </p>
                     </div>
                     <button
                       onClick={async () => {
                         await deleteInvite(i.id);
                         await reload();
                       }}
-                      className="text-xs text-red-600"
+                      className="text-xs text-red-500"
                     >
                       Revoke
                     </button>
@@ -300,7 +340,7 @@ export default function AdminStudentsPage() {
           </>
         }
       >
-        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+        {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
         <textarea
           rows={5}
           value={emails}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, CalendarCheck } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { studentNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -13,6 +13,8 @@ import {
   listMaterialProgress,
   listMaterialsForLearner,
   listEnrollments,
+  listAttendanceDays,
+  summarizeAttendance,
 } from "@/lib/db";
 import type { Attempt, Enrollment } from "@/lib/types";
 import { averagePercent, passRate } from "@/lib/utils";
@@ -24,21 +26,28 @@ export default function StudentProgressPage() {
   const [matTotal, setMatTotal] = useState(0);
   const [matDone, setMatDone] = useState(0);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [attendance, setAttendance] = useState({
+    total: 0,
+    last30: 0,
+    currentStreak: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!profile || !institution) return;
     (async () => {
-      const [atts, mats, prog, ens] = await Promise.all([
+      const [atts, mats, prog, ens, attDays] = await Promise.all([
         listAttemptsByStudent(institution.id, profile.uid),
         listMaterialsForLearner(institution.id, profile),
         listMaterialProgress(institution.id, profile.uid),
         listEnrollments(institution.id, profile.uid),
+        listAttendanceDays(institution.id, profile.uid),
       ]);
       setAttempts(atts.filter((a) => a.status !== "in_progress"));
       setMatTotal(mats.length);
       setMatDone(prog.filter((p) => p.completed).length);
       setEnrollments(ens);
+      setAttendance(summarizeAttendance(attDays));
       setLoading(false);
     })();
   }, [profile, institution]);
@@ -87,7 +96,7 @@ export default function StudentProgressPage() {
               </CardBody>
             </Card>
           )}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-4 gap-6">
             <StatCard
               label="Average score"
               value={avg === null ? "—" : `${avg}%`}
@@ -107,7 +116,44 @@ export default function StudentProgressPage() {
               trendLabel={`${matDone} of ${matTotal}`}
               trend="neutral"
             />
+            <StatCard
+              label="Days attended"
+              value={String(attendance.total)}
+              icon={<CalendarCheck className="w-5 h-5" />}
+              color="amber"
+              trendLabel={`${attendance.last30} in the last 30 days`}
+              trend="neutral"
+            />
           </div>
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold">Attendance</h2>
+            </CardHeader>
+            <CardBody className="flex flex-wrap gap-x-10 gap-y-3 text-sm">
+              <p>
+                <span className="text-[var(--dash-text-muted)]">Present </span>
+                <strong>{attendance.total}</strong> day
+                {attendance.total === 1 ? "" : "s"} in total
+              </p>
+              <p>
+                <span className="text-[var(--dash-text-muted)]">
+                  Last 30 days{" "}
+                </span>
+                <strong>{attendance.last30}</strong>
+              </p>
+              <p>
+                <span className="text-[var(--dash-text-muted)]">
+                  Current streak{" "}
+                </span>
+                <strong>{attendance.currentStreak}</strong> day
+                {attendance.currentStreak === 1 ? "" : "s"}
+              </p>
+              <p className="w-full text-xs text-[var(--dash-text-muted)]">
+                You&apos;re marked present automatically on every day you log
+                in.
+              </p>
+            </CardBody>
+          </Card>
           {attempts.length === 0 ? (
             <Card>
               <EmptyState
@@ -130,7 +176,7 @@ export default function StudentProgressPage() {
                         avg {r.avg}% · pass {r.pass}% · {r.n} attempts
                       </span>
                     </div>
-                    <div className="h-2.5 bg-gray-100">
+                    <div className="h-2.5 bg-[var(--dash-surface-alt)]">
                       <div
                         className="h-full bg-[var(--dash-primary-soft)]"
                         style={{ width: `${r.avg}%` }}

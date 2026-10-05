@@ -8,7 +8,11 @@ import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { EmptyState } from "@/app/components/ui/empty";
 import { useAuth } from "@/lib/auth-context";
-import { listAttemptsByTeacher, listUsers } from "@/lib/db";
+import {
+  listAttemptsByTeacher,
+  listUsers,
+  attendanceCountsByStudent,
+} from "@/lib/db";
 import type { Attempt, UserProfile } from "@/lib/types";
 import { averagePercent, initials, inputClass } from "@/lib/utils";
 
@@ -16,23 +20,26 @@ export default function TeacherStudentsPage() {
   const { profile, institution } = useAuth();
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [attendance, setAttendance] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [classFilter, setClassFilter] = useState("all");
 
   useEffect(() => {
     if (!institution || !profile) return;
     (async () => {
-      const [users, atts] = await Promise.all([
+      const [users, atts, attCounts] = await Promise.all([
         listUsers(institution.id, "student"),
         listAttemptsByTeacher(institution.id, profile.uid),
+        attendanceCountsByStudent(institution.id, 30),
       ]);
       const myClasses = profile.classes ?? [];
       setStudents(
         myClasses.length
           ? users.filter((u) => u.className && myClasses.includes(u.className))
-          : users
+          : users,
       );
       setAttempts(atts);
+      setAttendance(attCounts);
       setLoading(false);
     })();
   }, [institution, profile]);
@@ -55,10 +62,14 @@ export default function TeacherStudentsPage() {
           onChange={(e) => setClassFilter(e.target.value)}
           className={`${inputClass} w-auto`}
         >
-          <option value="all">All {institution?.classLabel ?? "classes"}</option>
-          {[...new Set(students.map((s) => s.className).filter(Boolean))].map((c) => (
-            <option key={c}>{c}</option>
-          ))}
+          <option value="all">
+            All {institution?.classLabel ?? "classes"}
+          </option>
+          {[...new Set(students.map((s) => s.className).filter(Boolean))].map(
+            (c) => (
+              <option key={c}>{c}</option>
+            ),
+          )}
         </select>
         <Card>
           <CardHeader>
@@ -68,7 +79,10 @@ export default function TeacherStudentsPage() {
             {loading ? (
               <div className="p-6 space-y-3">
                 {[0, 1].map((i) => (
-                  <div key={i} className="h-12 bg-gray-50 animate-pulse rounded-lg" />
+                  <div
+                    key={i}
+                    className="h-12 bg-gray-50 animate-pulse rounded-lg"
+                  />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
@@ -81,16 +95,20 @@ export default function TeacherStudentsPage() {
                 <thead className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase">
                   <tr>
                     <th className="px-6 py-3">Student</th>
-                    <th className="px-6 py-3">{institution?.classLabel ?? "Class"}</th>
+                    <th className="px-6 py-3">
+                      {institution?.classLabel ?? "Class"}
+                    </th>
                     <th className="px-6 py-3">Attempts</th>
                     <th className="px-6 py-3">Avg score</th>
+                    <th className="px-6 py-3">Attendance (30d)</th>
                     <th className="px-6 py-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filtered.map((s) => {
                     const mine = attempts.filter(
-                      (a) => a.studentId === s.uid && a.status !== "in_progress"
+                      (a) =>
+                        a.studentId === s.uid && a.status !== "in_progress",
                     );
                     const avg = averagePercent(mine);
                     return (
@@ -102,15 +120,26 @@ export default function TeacherStudentsPage() {
                             </div>
                             <div>
                               <p className="font-medium">{s.name}</p>
-                              <p className="text-xs text-gray-500">{s.email}</p>
+                              <p className="text-xs text-[var(--dash-text-muted)]">
+                                {s.email}
+                              </p>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-3">{s.className || "—"}</td>
                         <td className="px-6 py-3">{mine.length}</td>
-                        <td className="px-6 py-3">{avg === null ? "—" : `${avg}%`}</td>
                         <td className="px-6 py-3">
-                          <Badge variant={s.status === "active" ? "success" : "danger"}>
+                          {avg === null ? "—" : `${avg}%`}
+                        </td>
+                        <td className="px-6 py-3">
+                          {attendance[s.uid] ?? 0} days
+                        </td>
+                        <td className="px-6 py-3">
+                          <Badge
+                            variant={
+                              s.status === "active" ? "success" : "danger"
+                            }
+                          >
                             {s.status}
                           </Badge>
                         </td>
