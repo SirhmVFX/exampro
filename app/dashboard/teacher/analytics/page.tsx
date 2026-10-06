@@ -103,7 +103,7 @@ export default function TeacherAnalyticsPage() {
                         <span>{r.label}</span>
                         <span className="font-semibold">{r.value}%</span>
                       </div>
-                      <div className="h-2 bg-gray-100">
+                      <div className="h-2 bg-[var(--dash-surface-alt)]">
                         <div
                           className="h-full bg-[var(--dash-primary-soft)]"
                           style={{ width: `${r.value}%` }}

@@ -119,7 +119,7 @@ export default function TeacherOverviewPage() {
             {recent.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-12">
                 <Inbox className="w-10 h-10 text-gray-300" />
-                <p className="text-sm text-gray-500">No submissions yet</p>
+                <p className="text-sm text-[var(--dash-text-muted)]">No submissions yet</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-50">
