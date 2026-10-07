@@ -2,22 +2,22 @@ import Link from "next/link";
 
 const footerLinks = {
   Product: [
-    { label: "Features", href: "/#features" },
-    { label: "How it works", href: "/#how" },
+    { label: "Features", href: "/features" },
+    { label: "Product overview", href: "/product" },
     { label: "Pricing", href: "/pricing" },
-    { label: "FAQ", href: "/#faq" },
+    { label: "Solutions", href: "/solutions" },
   ],
-  Solutions: [
-    { label: "Institutions", href: "/#roles" },
-    { label: "Teachers", href: "/#product" },
-    { label: "Students", href: "/#product" },
-    { label: "Enterprise", href: "/pricing" },
+  Resources: [
+    { label: "Documentation", href: "/docs/introduction" },
+    { label: "Quick start", href: "/docs/quick-start" },
+    { label: "Blog", href: "/blog" },
+    { label: "Changelog", href: "/blog" },
   ],
   Company: [
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
-    { label: "Blog", href: "/blog" },
     { label: "Careers", href: "/career" },
+    { label: "Collaborate", href: "/collaborate-with-us" },
   ],
 };
 

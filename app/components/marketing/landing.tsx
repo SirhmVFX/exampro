@@ -10,12 +10,20 @@ import {
 import {
   ArrowRight,
   ArrowUpRight,
+  BarChart3,
+  Bell,
   Check,
   ChevronDown,
+  ClipboardList,
   Code2,
+  FileText,
   GraduationCap,
+  Globe,
+  LayoutDashboard,
   Library,
   Play,
+  Shield,
+  Award,
   Sparkles,
   Timer,
   Users,
@@ -55,9 +63,8 @@ function Reveal({
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${
-        show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      } ${className}`}
+      className={`transition-all duration-700 ease-out ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        } ${className}`}
     >
       {children}
     </div>
@@ -80,6 +87,183 @@ function useCountUp(target: number, active: boolean, duration = 1200) {
     return () => cancelAnimationFrame(raf);
   }, [target, active, duration]);
   return n;
+}
+
+/* ─── Animated dashboard preview (hero right panel) ────────────────────── */
+
+const SLIDES = [
+  {
+    role: "Admin",
+    color: "#6366f1",
+    screen: (
+      <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-2">
+          {[["Students", "248"], ["Teachers", "18"], ["Pass rate", "87%"]].map(([l, v]) => (
+            <div key={l} className="rounded-lg border border-white/10 bg-white/5 p-3">
+              <p className="text-[10px] text-white/40 mb-1">{l}</p>
+              <p className="text-lg font-semibold text-white">{v}</p>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <p className="text-[10px] text-white/40 mb-2">Attempts this week</p>
+          <div className="flex items-end gap-1 h-14">
+            {[42, 68, 51, 88, 73, 95, 80].map((h, i) => (
+              <div key={i} className="flex-1 rounded-sm bg-indigo-400/80" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-white/40 mb-0.5">Join code</p>
+            <p className="text-base font-mono tracking-[0.25em] text-white">K7MQ2P</p>
+          </div>
+          <div className="text-[10px] px-2 py-1 border border-white/15 text-white/50 rounded-md">Copy</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    role: "Teacher",
+    color: "#10b981",
+    screen: (
+      <div className="space-y-3">
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] text-white/40">Question library</p>
+            <div className="flex items-center gap-1 text-[10px] px-2 py-1 bg-emerald-500/20 text-emerald-300 rounded-md">
+              <Sparkles className="w-2.5 h-2.5" /> AI Generate
+            </div>
+          </div>
+          <p className="text-xs text-white leading-relaxed">Which HTTP status code means a resource was created successfully?</p>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {["MCQ", "Essay", "Coding", "Short"].map((t) => (
+              <span key={t} className="text-[9px] px-1.5 py-0.5 border border-white/10 text-white/40 rounded">{t}</span>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <p className="text-[10px] text-white/40 mb-2">Submissions</p>
+          {[["Amara O.", "94%", true], ["Tunde A.", "61%", true], ["Kemi F.", "Needs grading", false]].map(([n, s, g]) => (
+            <div key={String(n)} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
+              <span className="text-xs text-white/70">{n}</span>
+              <span className={`text-[10px] font-medium ${g ? (Number(String(s).replace('%', '')) >= 70 ? "text-emerald-400" : "text-amber-400") : "text-white/40"}`}>{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    role: "Student",
+    color: "#f59e0b",
+    screen: (
+      <div className="space-y-3">
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider">Exam · Computer Science</p>
+              <p className="text-sm font-medium text-white">HTTP Fundamentals</p>
+            </div>
+            <div className="flex items-center gap-1 text-xs font-mono text-white border border-white/15 rounded-md px-2 py-1">
+              <Timer className="w-3 h-3" />12:48
+            </div>
+          </div>
+          <p className="text-xs text-white mb-2">1. Which status code means a resource was created?</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {["200 OK", "201 Created", "204 No Content", "301 Moved"].map((opt, i) => (
+              <div key={opt} className={`text-[10px] px-2 py-1.5 rounded-md border ${i === 1 ? "border-white bg-white text-black font-semibold" : "border-white/10 text-white/50"}`}>
+                {opt}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {[["Avg score", "84%"], ["Attempts", "12"], ["Certificates", "2"]].map(([l, v]) => (
+            <div key={l} className="rounded-lg border border-white/10 bg-white/5 p-2.5 text-center">
+              <p className="text-[9px] text-white/35">{l}</p>
+              <p className="text-sm font-semibold text-white mt-0.5">{v}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+];
+
+function HeroDashboard() {
+  const [idx, setIdx] = useState(0);
+  const [animating, setAnimating] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setAnimating(true);
+      setTimeout(() => {
+        setIdx((i) => (i + 1) % SLIDES.length);
+        setAnimating(false);
+      }, 350);
+    }, 3200);
+    return () => clearInterval(id);
+  }, []);
+
+  const slide = SLIDES[idx];
+
+  return (
+    <div className="relative w-full h-full select-none pointer-events-none">
+      {/* Browser chrome */}
+      <div className="rounded-2xl border border-white/10 bg-zinc-950 overflow-hidden shadow-2xl shadow-black/60">
+        {/* Titlebar */}
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 bg-black/40">
+          <span className="w-2 h-2 rounded-full bg-white/15" />
+          <span className="w-2 h-2 rounded-full bg-white/15" />
+          <span className="w-2 h-2 rounded-full bg-white/15" />
+          <div className="ml-2 flex-1 h-5 rounded bg-white/5 flex items-center px-2 text-[10px] text-white/25 font-mono">
+            app.exampro.io/dashboard/{slide.role.toLowerCase()}
+          </div>
+        </div>
+
+        {/* Sidebar + content */}
+        <div className="flex h-[340px]">
+          {/* Mini sidebar */}
+          <div className="w-10 bg-black/60 border-r border-white/10 flex flex-col items-center py-3 gap-3">
+            <div className="w-6 h-6 rounded border border-white/20 flex items-center justify-center text-[8px] font-bold text-white">EP</div>
+            {[LayoutDashboard, FileText, BarChart3, Users, Bell].map((Icon, i) => (
+              <div key={i} className={`w-6 h-6 rounded flex items-center justify-center ${i === 0 ? "bg-white/10" : ""}`}>
+                <Icon className="w-3 h-3 text-white/40" />
+              </div>
+            ))}
+          </div>
+
+          {/* Main content */}
+          <div
+            className={`flex-1 p-3 overflow-hidden transition-all duration-350 ${animating ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"}`}
+            style={{ transition: "opacity 0.35s ease, transform 0.35s ease" }}
+          >
+            {/* Role badge */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: slide.color }} />
+              <p className="text-[10px] font-medium text-white/50 uppercase tracking-wider">{slide.role} Dashboard</p>
+            </div>
+            {slide.screen}
+          </div>
+        </div>
+      </div>
+
+      {/* Role indicator dots */}
+      <div className="flex justify-center gap-1.5 mt-4">
+        {SLIDES.map((s, i) => (
+          <div
+            key={s.role}
+            className="h-1 rounded-full transition-all duration-300"
+            style={{
+              width: i === idx ? "20px" : "6px",
+              background: i === idx ? slide.color : "rgba(255,255,255,0.15)",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /* ─── Hero ─────────────────────────────────────────────────────────────── */
@@ -125,71 +309,80 @@ function Hero({
       />
 
       <div className="relative max-w-6xl mx-auto px-6">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 border border-white/15 px-3 py-1 text-xs text-white/60 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            Now in public beta · Free plan included
+        {/* Two-column layout: copy left, dashboard right */}
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left — copy */}
+          <div>
+            <div className="inline-flex items-center gap-2 border border-white/15 px-3 py-1 text-xs text-white/60 mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              Now in public beta · Free plan included
+            </div>
+
+            <h1 className="text-5xl sm:text-6xl font-semibold tracking-tight text-white leading-[1.05]">
+              Assessment software
+              <br />
+              for institutions.
+              <br />
+              <span className="text-white/35">Run </span>
+              <span className="relative inline-block min-w-[10ch] text-white">
+                {CYCLE[word]}
+                <span className="lp-caret inline-block w-[2px] h-[0.8em] bg-white ml-1 align-[-0.1em]" />
+              </span>
+            </h1>
+
+            <p className="mt-6 text-lg text-white/50 max-w-xl leading-relaxed">
+              One workspace per school. Super admins run the institution, teachers
+              set work with AI, students take it — scored instantly, including
+              coding playgrounds.
+            </p>
+
+            <div className="mt-10 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/auth/register/institution"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition"
+              >
+                Start free
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a
+                href="#product"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/15 text-white text-sm font-medium hover:bg-white/5 transition"
+              >
+                <Play className="w-3.5 h-3.5" />
+                See the product
+              </a>
+            </div>
+
+            <p className="mt-5 text-xs text-white/35">
+              No card required · Plans from $29/mo · Cancel anytime
+            </p>
+
+            <div className="mt-10 flex flex-wrap gap-2">
+              {(
+                [
+                  ["admin", "Admin"],
+                  ["teacher", "Teacher"],
+                  ["student", "Student"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => {
+                    onPreviewRole(id);
+                    document.getElementById("product")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="text-xs px-3 py-1.5 border border-white/10 text-white/50 hover:text-white hover:border-white/30 transition"
+                >
+                  Preview {label} →
+                </button>
+              ))}
+            </div>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-white leading-[1.05]">
-            Assessment software
-            <br />
-            for institutions.
-            <br />
-            <span className="text-white/35">Run </span>
-            <span className="relative inline-block min-w-[10ch] text-white">
-              {CYCLE[word]}
-              <span className="lp-caret inline-block w-[2px] h-[0.8em] bg-white ml-1 align-[-0.1em]" />
-            </span>
-          </h1>
-
-          <p className="mt-6 text-lg text-white/50 max-w-xl leading-relaxed">
-            One workspace per school. Super admins run the institution, teachers
-            set work with AI, students take it — scored instantly, including
-            coding playgrounds.
-          </p>
-
-          <div className="mt-10 flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/auth/register/institution"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition"
-            >
-              Start free
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="#product"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/15 text-white text-sm font-medium hover:bg-white/5 transition"
-            >
-              <Play className="w-3.5 h-3.5" />
-              See the product
-            </a>
+          {/* Right — animated dashboard */}
+          <div className="hidden lg:block">
+            <HeroDashboard />
           </div>
-
-          <p className="mt-5 text-xs text-white/35">
-            No card required · Paystack & Stripe when you upgrade · Cancel anytime
-          </p>
-        </div>
-
-        <div className="mt-16 flex flex-wrap gap-2">
-          {(
-            [
-              ["admin", "Admin"],
-              ["teacher", "Teacher"],
-              ["student", "Student"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => {
-                onPreviewRole(id);
-                document.getElementById("product")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="text-xs px-3 py-1.5 border border-white/10 text-white/50 hover:text-white hover:border-white/30 transition"
-            >
-              Preview {label} →
-            </button>
-          ))}
         </div>
       </div>
     </section>
@@ -292,11 +485,10 @@ function ProductPreview({
             <button
               key={t.id}
               onClick={() => setRole(t.id)}
-              className={`px-4 py-2.5 rounded-lg text-sm transition border ${
-                role === t.id
-                  ? "bg-white text-black border-white"
-                  : "border-white/10 text-white/55 hover:text-white hover:border-white/25"
-              }`}
+              className={`px-4 py-2.5 rounded-lg text-sm transition border ${role === t.id
+                ? "bg-white text-black border-white"
+                : "border-white/10 text-white/55 hover:text-white hover:border-white/25"
+                }`}
             >
               <span className="font-medium">{t.label}</span>
               <span className={`ml-2 text-xs ${role === t.id ? "text-black/50" : "text-white/30"}`}>
@@ -363,7 +555,7 @@ function ProductPreview({
                         </span>
                         <button
                           onClick={() => {
-                            navigator.clipboard.writeText("K7MQ2P").catch(() => {});
+                            navigator.clipboard.writeText("K7MQ2P").catch(() => { });
                             setCopied(true);
                             setTimeout(() => setCopied(false), 1600);
                           }}
@@ -469,13 +661,12 @@ function ProductPreview({
                           <button
                             key={opt}
                             onClick={() => setPicked(i)}
-                            className={`text-left text-sm px-4 py-3 rounded-xl border transition ${
-                              on
-                                ? correct
-                                  ? "border-white bg-white text-black"
-                                  : "border-white/40 bg-white/10 text-white"
-                                : "border-white/10 text-white/70 hover:border-white/30"
-                            }`}
+                            className={`text-left text-sm px-4 py-3 rounded-xl border transition ${on
+                              ? correct
+                                ? "border-white bg-white text-black"
+                                : "border-white/40 bg-white/10 text-white"
+                              : "border-white/10 text-white/70 hover:border-white/30"
+                              }`}
                           >
                             {opt}
                             {on && correct && (
@@ -503,28 +694,71 @@ function ProductPreview({
 /* ─── Bento features ───────────────────────────────────────────────────── */
 
 function Features() {
+  // Bento grid: wide items span 2 columns, narrow span 1
   const items = [
     {
-      title: "AI question library",
-      desc: "Teachers generate MCQ, true/false, short, essay, and coding items with Gemini — then assign them as a quiz, test, exam, or assignment.",
+      title: "AI question generation",
+      desc: "Describe a topic and difficulty. Gemini drafts MCQ, true/false, short answer, essay, or coding questions in seconds. Edit every line before saving — AI does the first draft, you have final say.",
       icon: Sparkles,
       wide: true,
     },
     {
-      title: "Instant grading",
-      desc: "Auto-score objective items. JavaScript playgrounds run in a sandboxed worker against test cases.",
+      title: "Instant auto-grading",
+      desc: "MCQ, true/false, and short-answer questions grade the moment a student submits. No waiting.",
       icon: Check,
     },
     {
-      title: "Learning paths",
-      desc: "Upload materials via Cloudinary. Gate the exam until students mark the lesson complete.",
+      title: "Coding playground",
+      desc: "Students write JavaScript in the browser. A sandboxed Web Worker runs their code against your test cases and returns pass/fail — instantly, with partial credit.",
+      icon: Code2,
+    },
+    {
+      title: "6 question types",
+      desc: "MCQ · True/False · Short answer · Essay · Coding playground · Project upload. Mix them in one assessment.",
       icon: Library,
     },
     {
-      title: "School analytics",
-      desc: "Pass rates by class and subject. Admins see the whole institution; teachers see their rooms.",
+      title: "Learning materials & paths",
+      desc: "Upload PDFs, paste YouTube links, or write rich-text notes. Sequence them into a learning path and gate the exam — students must complete materials before the assessment unlocks.",
       icon: GraduationCap,
       wide: true,
+    },
+    {
+      title: "Exam integrity",
+      desc: "Tab-switch detection, webcam presence logging, confirm-on-leave dialogs. Every event is timestamped so teachers see exactly what happened during the exam.",
+      icon: Shield,
+    },
+    {
+      title: "Certificates",
+      desc: "Issue completion certificates with a unique public verify link. Students share them with employers; anyone can confirm authenticity at exampro.io/verify/code.",
+      icon: Award,
+      wide: true,
+    },
+    {
+      title: "Institution analytics",
+      desc: "Pass rates by class and subject. Teacher performance table. Admins see the whole institution; teachers see only their rooms.",
+      icon: BarChart3,
+    },
+    {
+      title: "Announcements",
+      desc: "Send rich-text messages to everyone, all students, all teachers, or one specific person. Read counts show who has seen what.",
+      icon: Bell,
+    },
+    {
+      title: "Custom school portal",
+      desc: "Every institution gets a branded portal at their-school.exampro.io with their logo and colours. One subdomain, zero extra setup.",
+      icon: Globe,
+    },
+    {
+      title: "Roster import & roles",
+      desc: "Bulk-import students and teachers from a CSV. Five roles — admin, teacher, student, parent, manager — each with a tailored dashboard and scoped access.",
+      icon: Users,
+      wide: true,
+    },
+    {
+      title: "Rubrics",
+      desc: "Build multi-criterion rubrics for essays and projects. Teachers score each criterion separately; feedback appears per question in the student result.",
+      icon: ClipboardList,
     },
   ];
 
@@ -538,17 +772,20 @@ function Features() {
           <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white">
             Everything after signup
           </h2>
+          <p className="mt-4 text-white/45 max-w-xl">
+            Every tool in the assessment lifecycle — from writing the first question to handing out a certificate.
+          </p>
         </Reveal>
         <div className="mt-12 grid md:grid-cols-3 gap-3">
           {items.map((item, i) => (
             <Reveal
               key={item.title}
-              delay={i * 70}
-              className={item.wide ? "md:col-span-2" : ""}
+              delay={i * 50}
+              className={(item as { wide?: boolean }).wide ? "md:col-span-2" : ""}
             >
-              <div className="group h-full rounded-2xl border border-white/10 p-7 hover:border-white/25 hover:bg-white/[0.02] transition">
-                <item.icon className="w-5 h-5 text-white mb-6" />
-                <h3 className="text-lg font-medium text-white mb-2">
+              <div className="group h-full rounded-2xl border border-white/10 p-7 hover:border-white/25 hover:bg-white/[0.02] transition-all">
+                <item.icon className="w-5 h-5 text-white mb-5 opacity-70" />
+                <h3 className="text-base font-semibold text-white mb-2">
                   {item.title}
                 </h3>
                 <p className="text-sm text-white/45 leading-relaxed">
@@ -711,7 +948,6 @@ function Stats() {
 /* ─── Pricing teaser ───────────────────────────────────────────────────── */
 
 function PricingTeaser() {
-  const [usd, setUsd] = useState(true);
   return (
     <section className="py-24">
       <div className="max-w-6xl mx-auto px-6">
@@ -724,30 +960,16 @@ function PricingTeaser() {
               Start free. Scale the school.
             </h2>
           </div>
-          <div className="inline-flex border border-white/15 p-1 self-start">
-            <button
-              onClick={() => setUsd(true)}
-              className={`px-4 py-1.5 text-xs ${usd ? "bg-white text-black" : "text-white/50"}`}
-            >
-              USD · Stripe
-            </button>
-            <button
-              onClick={() => setUsd(false)}
-              className={`px-4 py-1.5 text-xs ${!usd ? "bg-white text-black" : "text-white/50"}`}
-            >
-              NGN · Paystack
-            </button>
-          </div>
+          <p className="text-sm text-white/35 self-start md:self-end">All prices in USD · Billed monthly</p>
         </Reveal>
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {PLANS.map((p, i) => (
             <Reveal key={p.id} delay={i * 60}>
               <div
-                className={`h-full rounded-2xl border p-6 flex flex-col ${
-                  p.highlighted
-                    ? "border-white bg-white text-black"
-                    : "border-white/10 text-white"
-                }`}
+                className={`h-full rounded-2xl border p-6 flex flex-col ${p.highlighted
+                  ? "border-white bg-white text-black"
+                  : "border-white/10 text-white"
+                  }`}
               >
                 <p className="text-sm font-medium">{p.name}</p>
                 <p className={`text-3xl font-semibold mt-4 tabular-nums ${p.highlighted ? "text-black" : "text-white"}`}>
@@ -755,9 +977,7 @@ function PricingTeaser() {
                     ? "Custom"
                     : p.priceUsd === 0
                       ? "Free"
-                      : usd
-                        ? `$${p.priceUsd}`
-                        : `₦${p.priceNgn.toLocaleString()}`}
+                      : `$${p.priceUsd}`}
                 </p>
                 <p className={`text-xs mt-1 ${p.highlighted ? "text-black/50" : "text-white/35"}`}>
                   {p.priceUsd > 0 ? "per month" : p.tagline}
@@ -774,11 +994,10 @@ function PricingTeaser() {
                 </ul>
                 <Link
                   href={p.id === "enterprise" ? "/contact" : "/auth/register/institution"}
-                  className={`mt-6 text-center text-sm py-2.5 rounded-lg font-medium transition ${
-                    p.highlighted
-                      ? "bg-black text-white hover:bg-zinc-800"
-                      : "border border-white/15 hover:bg-white hover:text-black"
-                  }`}
+                  className={`mt-6 text-center text-sm py-2.5 rounded-lg font-medium transition ${p.highlighted
+                    ? "bg-black text-white hover:bg-zinc-800"
+                    : "border border-white/15 hover:bg-white hover:text-black"
+                    }`}
                 >
                   {p.id === "enterprise" ? "Talk to us" : "Get started"}
                 </Link>
