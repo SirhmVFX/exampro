@@ -16,7 +16,7 @@ function BarRow({ label, value, max }: { label: string; value: number; max: numb
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs text-gray-600">
+      <div className="flex justify-between text-xs text-[var(--dash-text-muted)]">
         <span className="truncate pr-2">{label}</span>
         <span className="font-semibold">{value}%</span>
       </div>
@@ -160,7 +160,7 @@ export default function AdminAnalyticsPage() {
                 </CardHeader>
                 <CardBody className="space-y-4">
                   {byClass.length === 0 ? (
-                    <p className="text-sm text-gray-400">No data</p>
+                    <p className="text-sm text-[var(--dash-text-faint)]">No data</p>
                   ) : (
                     byClass.map((r) => (
                       <BarRow key={r.label} label={r.label} value={r.value} max={maxBar} />

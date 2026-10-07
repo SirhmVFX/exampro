@@ -100,7 +100,7 @@ export default function AdminAnnouncementsPage() {
       <div className="grid lg:grid-cols-5 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">New announcement</h2>
+            <h2 className="text-lg font-semibold text-[var(--dash-text)]">New announcement</h2>
           </CardHeader>
           <CardBody>
             <form onSubmit={send} className="space-y-4">
@@ -175,7 +175,7 @@ export default function AdminAnnouncementsPage() {
 
         <Card className="lg:col-span-3">
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Sent</h2>
+            <h2 className="text-lg font-semibold text-[var(--dash-text)]">Sent</h2>
           </CardHeader>
           <CardBody className="p-0">
             {loading ? (
@@ -199,7 +199,7 @@ export default function AdminAnnouncementsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-gray-900">{n.title}</p>
+                        <p className="text-sm font-semibold text-[var(--dash-text)]">{n.title}</p>
                         <Badge variant="info">{AUDIENCE_LABEL[n.audience]}</Badge>
                       </div>
                       <HtmlContent html={n.body} compact className="mt-1" />

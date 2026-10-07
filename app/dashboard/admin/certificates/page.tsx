@@ -125,7 +125,7 @@ export default function CertificatesAdminPage() {
           </CardHeader>
           <CardBody className="p-0">
             {certs.length === 0 ? (
-              <p className="px-6 py-8 text-sm text-gray-400">None issued yet.</p>
+              <p className="px-6 py-8 text-sm text-[var(--dash-text-faint)]">None issued yet.</p>
             ) : (
               <div className="divide-y">
                 {certs.map((c) => {

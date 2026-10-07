@@ -254,7 +254,7 @@ function BillingInner() {
           <CardBody className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-2xl font-bold text-gray-900">{current.name}</p>
+                <p className="text-2xl font-bold text-[var(--dash-text)]">{current.name}</p>
                 <Badge variant={statusVariant}>
                   {institution?.planStatus === "past_due"
                     ? "Trial ended"
@@ -303,24 +303,24 @@ function BillingInner() {
               >
                 <CardBody className="space-y-3 flex flex-col">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900">{plan.name}</h3>
+                    <h3 className="font-bold text-[var(--dash-text)]">{plan.name}</h3>
                     {plan.highlighted && <Badge>Popular</Badge>}
                   </div>
                   <p className="text-sm text-gray-500 min-h-10">{plan.tagline}</p>
 
                   {/* Price */}
-                  <p className="text-2xl font-extrabold text-gray-900">
+                  <p className="text-2xl font-extrabold text-[var(--dash-text)]">
                     {plan.priceUsd < 0
                       ? "Custom"
                       : plan.priceUsd === 0
                         ? "Free"
                         : `$${plan.priceUsd}`}
                     {plan.priceUsd > 0 && (
-                      <span className="text-sm font-medium text-gray-400">/mo</span>
+                      <span className="text-sm font-medium text-[var(--dash-text-faint)]">/mo</span>
                     )}
                   </p>
                   {plan.priceNgn > 0 && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-[var(--dash-text-faint)]">
                       ≈ ₦{plan.priceNgn.toLocaleString()} via Paystack
                     </p>
                   )}
@@ -365,7 +365,7 @@ function BillingInner() {
                         <Zap className="w-3.5 h-3.5" />
                         Upgrade — ${plan.priceUsd}/mo
                       </Button>
-                      <p className="text-[10px] text-center text-gray-400">
+                      <p className="text-[10px] text-center text-[var(--dash-text-faint)]">
                         Paid via Paystack · ≈ ₦{plan.priceNgn.toLocaleString()} · no auto-renew
                       </p>
                     </div>
@@ -402,7 +402,7 @@ function BillingInner() {
           <CardBody className="p-0">
             {payments.length === 0 ? (
               <div className="px-6 py-10 text-center">
-                <p className="text-sm text-gray-400">No payments yet.</p>
+                <p className="text-sm text-[var(--dash-text-faint)]">No payments yet.</p>
                 <p className="text-xs text-gray-400 mt-1">
                   Your payment history appears here after your first upgrade.
                 </p>
@@ -426,7 +426,7 @@ function BillingInner() {
                       <td className="px-6 py-3">
                         {p.currency} {p.amount.toLocaleString()}
                       </td>
-                      <td className="px-6 py-3 font-mono text-xs text-gray-400">
+                      <td className="px-6 py-3 font-mono text-xs text-[var(--dash-text-faint)]">
                         {p.reference}
                       </td>
                       <td className="px-6 py-3">

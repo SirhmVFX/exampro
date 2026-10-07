@@ -106,7 +106,7 @@ export default function ExportPage() {
               <h2 className="font-semibold">{c.title}</h2>
             </CardHeader>
             <CardBody className="space-y-4">
-              <p className="text-sm text-gray-500">{c.body}</p>
+              <p className="text-sm text-[var(--dash-text-muted)]">{c.body}</p>
               <Button
                 variant="outline"
                 loading={busy === c.id}

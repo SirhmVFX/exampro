@@ -30,7 +30,7 @@ export default function AuditLogPage() {
       <Card>
         <CardBody className="p-0">
           {loading ? (
-            <div className="h-32 animate-pulse bg-gray-50" />
+            <div className="h-32 animate-pulse bg-[var(--dash-surface-alt)]" />
           ) : items.length === 0 ? (
             <p className="px-6 py-10 text-sm text-gray-400 text-center">
               No events yet. Imports, certificates, and settings changes appear here.
