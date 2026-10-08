@@ -149,16 +149,16 @@ export default function AdminTeachersPage() {
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-[var(--dash-text)]">
                   Teacher invite link
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--dash-text-muted)]">
                   Share this so teachers can sign up to {institution?.name}
                 </p>
               </div>
-              <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 min-w-0">
-                <Link2 className="w-4 h-4 text-gray-400 shrink-0" />
-                <span className="text-xs text-gray-500 truncate">{joinLink}</span>
+              <div className="flex items-center gap-2 bg-[var(--dash-surface-alt)] border border-[var(--dash-border)] rounded-lg px-3 py-2 min-w-0">
+                <Link2 className="w-4 h-4 text-[var(--dash-text-muted)] shrink-0" />
+                <span className="text-xs text-[var(--dash-text-muted)] truncate">{joinLink}</span>
                 <CopyButton text={joinLink} />
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function AdminTeachersPage() {
 
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-[var(--dash-text)]">
               Faculty ({teachers.length})
             </h2>
           </CardHeader>
@@ -211,18 +211,18 @@ export default function AdminTeachersPage() {
                               {initials(t.name)}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{t.name}</p>
-                              <p className="text-xs text-gray-500">{t.email}</p>
+                              <p className="font-medium text-[var(--dash-text)]">{t.name}</p>
+                              <p className="text-xs text-[var(--dash-text-muted)]">{t.email}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-3 text-gray-600">
+                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
                           {t.subjects?.length ? t.subjects.join(", ") : "—"}
                         </td>
-                        <td className="px-6 py-3 text-gray-600">
+                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
                           {t.classes?.length ? t.classes.join(", ") : "—"}
                         </td>
-                        <td className="px-6 py-3 text-gray-500">
+                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
                           {formatDate(t.createdAt)}
                         </td>
                         <td className="px-6 py-3">
@@ -258,7 +258,7 @@ export default function AdminTeachersPage() {
         {invites.filter((i) => i.status === "pending").length > 0 && (
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-[var(--dash-text)]">
                 Pending invites
               </h2>
             </CardHeader>
@@ -272,10 +272,10 @@ export default function AdminTeachersPage() {
                       className="flex items-center justify-between px-6 py-3"
                     >
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-[var(--dash-text)]">
                           {i.email}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-[var(--dash-text-faint)]">
                           Invited {formatDate(i.createdAt)}
                         </p>
                       </div>

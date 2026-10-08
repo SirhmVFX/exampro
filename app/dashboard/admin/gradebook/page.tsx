@@ -76,10 +76,10 @@ export default function GradebookPage() {
           </CardHeader>
           <CardBody className="p-0 overflow-x-auto">
             {loading ? (
-              <div className="h-32 animate-pulse bg-gray-50" />
+              <div className="h-32 animate-pulse bg-[var(--dash-surface-alt)]" />
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-gray-50 text-left text-xs uppercase text-[var(--dash-text-muted)]">
                   <tr>
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">{v.class}</th>
@@ -97,7 +97,7 @@ export default function GradebookPage() {
                     return (
                       <tr key={student.uid}>
                         <td className="px-4 py-3 font-medium">{student.name}</td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-[var(--dash-text-muted)]">
                           {learnerClassNames(student).join(", ") || "—"}
                         </td>
                         {subjects.map((s) => (

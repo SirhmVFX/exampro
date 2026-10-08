@@ -164,7 +164,7 @@ export default function PathsPage() {
                   <span className="text-gray-400">{i + 1}.</span>
                   <span className="flex-1">
                     {it.title}{" "}
-                    <span className="text-xs text-gray-400">({it.type})</span>
+                    <span className="text-xs text-[var(--dash-text-faint)]">({it.type})</span>
                   </span>
                   <label className="text-xs flex items-center gap-1">
                     <input
@@ -194,7 +194,7 @@ export default function PathsPage() {
           </CardHeader>
           <CardBody className="space-y-4">
             {paths.length === 0 && (
-              <p className="text-sm text-gray-400">No paths yet.</p>
+              <p className="text-sm text-[var(--dash-text-faint)]">No paths yet.</p>
             )}
             {paths.map((p) => (
               <div key={p.id} className="border border-gray-200 rounded-xl p-4">
@@ -204,7 +204,7 @@ export default function PathsPage() {
                     {p.description && (
                       <HtmlContent html={p.description} compact className="mt-1" />
                     )}
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[var(--dash-text-muted)]">
                       {p.className || "All"} · {p.items.length} items
                     </p>
                   </div>

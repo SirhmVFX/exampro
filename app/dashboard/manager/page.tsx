@@ -39,11 +39,11 @@ export default function ManagerDashboardPage() {
         </CardHeader>
         <CardBody className="p-0">
           {!profile?.departmentId ? (
-            <p className="px-6 py-8 text-sm text-gray-400">
+            <p className="px-6 py-8 text-sm text-[var(--dash-text-faint)]">
               Your admin has not assigned you a department yet.
             </p>
           ) : people.length === 0 ? (
-            <p className="px-6 py-8 text-sm text-gray-400">No people in this department.</p>
+            <p className="px-6 py-8 text-sm text-[var(--dash-text-faint)]">No people in this department.</p>
           ) : (
             people.map((p) => {
               const mine = attempts.filter(
@@ -57,7 +57,7 @@ export default function ManagerDashboardPage() {
                 >
                   <div>
                     <p className="font-medium">{p.name}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-[var(--dash-text-faint)]">
                       {learnerClassNames(p).join(", ") || "—"} · {mine.length} attempts
                     </p>
                   </div>

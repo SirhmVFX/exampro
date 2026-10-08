@@ -59,7 +59,7 @@ export default function ParentDashboardPage() {
     >
       <div className="space-y-6 max-w-3xl">
         {children.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[var(--dash-text-muted)]">
             No {v.students.toLowerCase()} linked yet. Ask the admin to add your
             email as a parent on the roster.
           </p>
@@ -85,7 +85,7 @@ export default function ParentDashboardPage() {
           </CardHeader>
           <CardBody className="p-0">
             {upcoming.length === 0 ? (
-              <p className="px-6 py-8 text-sm text-gray-400">Nothing scheduled.</p>
+              <p className="px-6 py-8 text-sm text-[var(--dash-text-faint)]">Nothing scheduled.</p>
             ) : (
               upcoming.map((a) => (
                 <div key={a.id} className="px-6 py-3 flex justify-between text-sm border-t border-gray-50">
@@ -113,7 +113,7 @@ export default function ParentDashboardPage() {
               </div>
             ))}
             {attempts.length === 0 && (
-              <p className="px-6 py-8 text-sm text-gray-400">No results yet.</p>
+              <p className="px-6 py-8 text-sm text-[var(--dash-text-faint)]">No results yet.</p>
             )}
           </CardBody>
         </Card>
