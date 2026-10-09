@@ -317,7 +317,7 @@ export default function AdminOverviewPage() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="flex flex-col items-center gap-3 p-4 border border-gray-200 hover:border-black transition"
+                  className="flex flex-col items-center gap-3 p-4 border border-gray-200 rounded-xl hover:border-black transition"
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${action.color}`}>
                     {action.icon}

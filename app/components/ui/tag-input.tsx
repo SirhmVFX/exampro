@@ -49,11 +49,10 @@ export function TagInput({
       {values.map((v) => (
         <span
           key={v}
-          className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 ${
-            dark
+          className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${dark
               ? "bg-white text-black"
               : "bg-[var(--dash-primary-soft)] text-[var(--dash-primary)]"
-          }`}
+            }`}
         >
           {v}
           <button
@@ -72,9 +71,8 @@ export function TagInput({
         onKeyDown={onKey}
         onBlur={() => add(draft)}
         placeholder={values.length ? "" : placeholder}
-        className={`flex-1 min-w-32 outline-none text-sm bg-transparent ${
-          dark ? "text-white placeholder:text-white/30" : ""
-        }`}
+        className={`flex-1 min-w-32 outline-none text-sm bg-transparent ${dark ? "text-white placeholder:text-white/30" : ""
+          }`}
       />
     </div>
   );

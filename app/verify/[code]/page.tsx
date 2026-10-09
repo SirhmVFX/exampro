@@ -34,7 +34,7 @@ export default function VerifyCertificatePage({
           </p>
         </div>
       ) : (
-        <div className="max-w-lg w-full border border-white/15 p-10 text-center">
+        <div className="max-w-lg w-full border border-white/15 rounded-2xl p-10 text-center">
           <p className="text-[11px] uppercase tracking-[0.25em] text-white/35">
             Verified credential
           </p>

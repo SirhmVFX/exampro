@@ -94,7 +94,7 @@ export default function StudentProfilePage() {
                 {v.classes}
               </label>
               {(institution?.classes.length ?? 0) > 0 ? (
-                <div className="space-y-2 border border-gray-200 p-3">
+                <div className="space-y-2 border border-gray-200 rounded-xl p-3">
                   {institution!.classes.map((c) => (
                     <label key={c} className="flex items-center gap-2 text-sm">
                       <input

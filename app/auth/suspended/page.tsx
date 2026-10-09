@@ -13,7 +13,7 @@ export default function SuspendedPage() {
     <AuthFrame>
       <AuthCard>
         <div className="text-center">
-          <div className="w-14 h-14 border border-white/20 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-2xl border border-white/20 flex items-center justify-center mx-auto mb-4">
             <ShieldOff className="w-7 h-7" />
           </div>
           <h1 className="text-xl font-semibold mb-2">Account suspended</h1>

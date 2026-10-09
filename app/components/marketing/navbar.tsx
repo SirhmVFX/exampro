@@ -290,7 +290,7 @@ export default function MarketingNavbar() {
 
           {/* Wordmark */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-8 h-8 border border-white/80 flex items-center justify-center text-white text-[11px] font-bold tracking-tight group-hover:bg-white group-hover:text-black transition-colors">
+            <div className="w-8 h-8 rounded-lg border border-white/80 flex items-center justify-center text-white text-[11px] font-bold tracking-tight group-hover:bg-white group-hover:text-black transition-colors">
               EP
             </div>
             <span className="text-base font-semibold text-white tracking-tight">ExamPro</span>

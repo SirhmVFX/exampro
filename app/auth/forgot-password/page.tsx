@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
       <AuthCard>
         {sent ? (
           <div className="text-center py-4">
-            <div className="w-12 h-12 border border-white/20 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 rounded-2xl border border-white/20 flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-6 h-6" />
             </div>
             <h1 className="text-xl font-semibold mb-2">Check your inbox</h1>

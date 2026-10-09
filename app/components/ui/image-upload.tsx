@@ -45,7 +45,7 @@ export function ImageUpload({
         </label>
       )}
       {value ? (
-        <div className="relative border border-gray-200 inline-block">
+        <div className="relative border border-gray-200 rounded-xl inline-block overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
@@ -55,7 +55,7 @@ export function ImageUpload({
           <button
             type="button"
             onClick={() => onChange("")}
-            className="absolute top-1 right-1 bg-black/60 text-white p-1"
+            className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-md"
             title="Remove image"
           >
             <X className="w-3.5 h-3.5" />
@@ -65,7 +65,7 @@ export function ImageUpload({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="w-full border border-dashed border-gray-300 p-8 text-center hover:border-black transition-colors"
+          className="w-full border border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-black transition-colors"
         >
           <Upload className="w-6 h-6 mx-auto text-gray-400 mb-2" />
           <p className="text-sm text-gray-500">Click to upload image</p>
@@ -80,7 +80,7 @@ export function ImageUpload({
         type="url"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-2 w-full px-3 py-2 border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+        className="mt-2 w-full px-3 py-2 rounded-lg border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
         placeholder="Or paste image URL"
       />
 

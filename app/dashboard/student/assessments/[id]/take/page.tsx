@@ -148,7 +148,7 @@ function WebcamBanner({ attemptId }: { attemptId: string | null }) {
     };
   }, [attemptId]);
   return (
-    <div className="flex items-center gap-3 border border-gray-200 p-3">
+    <div className="flex items-center gap-3 border border-gray-200 rounded-xl p-3">
       <video ref={videoRef} autoPlay muted playsInline className="w-28 h-20 bg-black object-cover" />
       <p className="text-xs text-gray-500">
         Camera preview is on for this exam. Video is not uploaded — presence is logged.
@@ -431,7 +431,7 @@ export default function TakeAssessmentPage() {
     >
       <div className={`max-w-3xl mx-auto space-y-4 ${profile?.accommodations?.largerText ? "text-lg" : ""}`}>
         {assessment.description && (
-          <div className="border border-gray-200 bg-white p-4">
+          <div className="border border-gray-200 rounded-xl bg-white p-4">
             <HtmlContent html={assessment.description} />
           </div>
         )}

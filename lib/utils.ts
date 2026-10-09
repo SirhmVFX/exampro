@@ -1,7 +1,7 @@
 import type { Assessment, Attempt, MaterialProgress } from "./types";
 
 export const inputClass =
-  "w-full px-4 py-2.5 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-white";
+  "w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-white";
 
 export function formatDate(ts?: number): string {
   if (!ts) return "—";

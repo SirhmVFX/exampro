@@ -148,7 +148,7 @@ function JoinForm() {
         schools — pick this workspace from the sidebar after you join.
       </p>
       {error && (
-        <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm px-4 py-3">
+        <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 rounded-xl text-white/80 text-sm px-4 py-3">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -194,7 +194,7 @@ function JoinForm() {
         </form>
       ) : (
         <form onSubmit={join} className="space-y-5">
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-3">
+          <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
             <Building2 className="w-5 h-5" />
             <div>
               <p className="text-sm font-semibold">{institution.name}</p>
@@ -207,7 +207,7 @@ function JoinForm() {
                 <label className="block text-sm font-medium text-white/70 mb-1.5">
                   {institution.classLabel || vocab(institution).class}
                 </label>
-                <div className="space-y-2 max-h-40 overflow-y-auto border border-white/10 p-3">
+                <div className="space-y-2 max-h-40 overflow-y-auto border border-white/10 rounded-xl p-3">
                   {institution.classes.map((c) => (
                     <label key={c} className="flex items-center gap-2 text-sm text-white/80">
                       <input

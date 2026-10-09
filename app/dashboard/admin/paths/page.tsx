@@ -160,7 +160,7 @@ export default function PathsPage() {
             </div>
             <ol className="space-y-2 text-sm">
               {items.map((it, i) => (
-                <li key={it.id} className="flex items-center gap-2 border border-gray-200 px-3 py-2">
+                <li key={it.id} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
                   <span className="text-gray-400">{i + 1}.</span>
                   <span className="flex-1">
                     {it.title}{" "}
@@ -197,7 +197,7 @@ export default function PathsPage() {
               <p className="text-sm text-gray-400">No paths yet.</p>
             )}
             {paths.map((p) => (
-              <div key={p.id} className="border border-gray-200 p-4">
+              <div key={p.id} className="border border-gray-200 rounded-xl p-4">
                 <div className="flex justify-between gap-2">
                   <div>
                     <p className="font-medium">{p.title}</p>

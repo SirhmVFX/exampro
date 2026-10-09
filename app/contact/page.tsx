@@ -126,7 +126,7 @@ export default function ContactPage() {
           <div className="rounded-2xl border border-white/10 bg-zinc-950 p-8">
             {submitted ? (
               <div className="py-10 text-center">
-                <div className="w-12 h-12 border border-white/20 flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 rounded-2xl border border-white/20 flex items-center justify-center mx-auto mb-4">
                   <Check className="w-5 h-5" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Sent</h3>

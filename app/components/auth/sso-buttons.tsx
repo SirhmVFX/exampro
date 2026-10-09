@@ -106,7 +106,7 @@ export function SsoButtons({
         type="button"
         disabled={disabled || Boolean(busy)}
         onClick={() => void run("google")}
-        className="w-full py-2.5 text-sm font-medium border border-white/15 hover:bg-white/5 disabled:opacity-50"
+        className="w-full py-2.5 rounded-xl text-sm font-medium border border-white/15 hover:bg-white/5 disabled:opacity-50"
       >
         {busy === "google" ? "Connecting…" : "Continue with Google"}
       </button>
@@ -114,7 +114,7 @@ export function SsoButtons({
         type="button"
         disabled={disabled || Boolean(busy)}
         onClick={() => void run("microsoft")}
-        className="w-full py-2.5 text-sm font-medium border border-white/15 hover:bg-white/5 disabled:opacity-50"
+        className="w-full py-2.5 rounded-xl text-sm font-medium border border-white/15 hover:bg-white/5 disabled:opacity-50"
       >
         {busy === "microsoft" ? "Connecting…" : "Continue with Microsoft"}
       </button>

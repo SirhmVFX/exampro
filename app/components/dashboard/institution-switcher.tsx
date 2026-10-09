@@ -30,7 +30,7 @@ export function InstitutionSwitcher({ collapsed }: { collapsed?: boolean }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         title={collapsed ? institution?.name ?? "Workspace" : undefined}
-        className="w-full flex items-center gap-2 px-2 py-2 text-left text-sm transition-colors"
+        className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left text-sm transition-colors"
         style={{ color: "var(--dash-sidebar-fg)" }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = "var(--dash-sidebar-hover)";
@@ -58,7 +58,7 @@ export function InstitutionSwitcher({ collapsed }: { collapsed?: boolean }) {
             onClick={() => setOpen(false)}
           />
           <div
-            className="absolute left-2 right-2 z-50 mt-1 border py-1 max-h-80 overflow-y-auto"
+            className="absolute left-2 right-2 z-50 mt-1 border rounded-xl py-1 max-h-80 overflow-y-auto shadow-lg"
             style={{
               background: "var(--dash-sidebar)",
               borderColor: "var(--dash-sidebar-border)",

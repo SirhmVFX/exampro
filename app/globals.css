@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --radius-xs: 0;
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
-  --radius-2xl: 0;
-  --radius-3xl: 0;
-  --radius-4xl: 0;
-  --radius: 0;
+  /* Restore Tailwind v4 default radius scale.
+     The previous zero-radius theme was causing every rounded-* class
+     to resolve to border-radius: 0 across the entire app. */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-4xl: 32px;
+  --radius: 6px;
 }
 
 :root {
@@ -51,12 +54,15 @@ body {
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
@@ -76,50 +82,89 @@ body {
 }
 
 @keyframes lp-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
+
 .lp-marquee {
   animation: lp-marquee 36s linear infinite;
 }
+
 .lp-marquee:hover {
   animation-play-state: paused;
 }
 
 @keyframes lp-caret {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
+
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
 }
+
 .lp-caret {
   animation: lp-caret 1s step-end infinite;
 }
 
 @keyframes lp-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
+
 .lp-float {
   animation: lp-float 6s ease-in-out infinite;
 }
 
 @keyframes lp-shimmer {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 @keyframes lp-bar {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
 }
 
 @keyframes lp-spin-slow {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── TipTap WYSIWYG ─────────────────────────────────────────────────────── */
 .tiptap-editor {
   border: 1px solid #d1d5db;
   background: #fff;
+  border-radius: 0.75rem;
+  /* rounded-xl */
+  overflow: hidden;
 }
 
 .tiptap-toolbar {
@@ -140,6 +185,8 @@ body {
   cursor: pointer;
   color: #374151;
   min-width: 28px;
+  border-radius: 0.375rem;
+  /* rounded-md */
 }
 
 .tiptap-toolbar button:hover,

@@ -9,7 +9,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`bg-white border border-gray-200 ${className}`}
+      className={`bg-white border border-gray-200 rounded-xl overflow-hidden ${className}`}
     >
       {children}
     </div>
@@ -49,7 +49,7 @@ export function CardFooter({
 }) {
   return (
     <div
-      className={`px-6 py-4 border-t border-gray-100 bg-gray-50 ${className}`}
+      className={`px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl ${className}`}
     >
       {children}
     </div>

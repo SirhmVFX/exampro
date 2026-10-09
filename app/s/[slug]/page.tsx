@@ -66,7 +66,7 @@ export default function SchoolPortalPage({
           <Wordmark />
         </Link>
         <div
-          className="border border-white/10 p-8"
+          className="border border-white/10 rounded-2xl p-8"
           style={{ borderTop: `4px solid ${sidebar}` }}
         >
           <div className="flex items-center gap-4 mb-6">
@@ -109,7 +109,7 @@ export default function SchoolPortalPage({
               href={authPath(
                 `/auth/register/student?school=${institution.slug ?? slug}`
               )}
-              className="flex items-center justify-center gap-2 w-full py-3 text-sm font-medium border border-white/15 hover:bg-white/5"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-medium border border-white/15 hover:bg-white/5"
             >
               <GraduationCap className="w-4 h-4" /> Join as student
             </Link>
@@ -117,7 +117,7 @@ export default function SchoolPortalPage({
               href={authPath(
                 `/auth/register/teacher?school=${institution.slug ?? slug}`
               )}
-              className="flex items-center justify-center gap-2 w-full py-3 text-sm font-medium border border-white/15 hover:bg-white/5"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-medium border border-white/15 hover:bg-white/5"
             >
               <Users className="w-4 h-4" /> Join as teacher
             </Link>

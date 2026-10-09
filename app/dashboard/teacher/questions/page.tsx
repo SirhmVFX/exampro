@@ -402,7 +402,7 @@ function AssignBlock({
   }) => void;
 }) {
   return (
-    <div className="border border-gray-200 p-3 space-y-3">
+    <div className="border border-gray-200 rounded-xl p-3 space-y-3">
       <p className="text-sm font-medium">What to do with these questions</p>
       <label className="flex items-center gap-2 text-sm">
         <input
@@ -1002,7 +1002,7 @@ export default function TeacherQuestionsPage() {
             >
               Download CSV template
             </Button>
-            <div className="border border-gray-200 bg-gray-50 p-4 text-xs text-gray-700 space-y-2">
+            <div className="border border-gray-200 rounded-xl bg-gray-50 p-4 text-xs text-gray-700 space-y-2">
               <p className="font-semibold text-gray-900">Required columns</p>
               <p>
                 <code>type,text,option_a,option_b,option_c,option_d,correct,points,explanation,subject,class,topic,skill</code>

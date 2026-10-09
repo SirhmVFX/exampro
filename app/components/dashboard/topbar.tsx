@@ -71,7 +71,7 @@ export default function DashboardTopbar({
     <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
         <button
-          className="lg:hidden p-2 hover:bg-gray-100 transition"
+          className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition"
           onClick={onMobileMenuToggle}
           aria-label="Toggle menu"
         >
@@ -86,20 +86,20 @@ export default function DashboardTopbar({
       <div className="flex items-center gap-3">
         <div className="relative" ref={panelRef}>
           <button
-            className="relative p-2 hover:bg-gray-100 transition"
+            className="relative p-2 rounded-lg hover:bg-gray-100 transition"
             aria-label="Notifications"
             onClick={() => setOpen(!open)}
           >
             <Bell className="w-5 h-5 text-gray-600" />
             {unread.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 px-1 bg-black text-white text-[10px] font-bold flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-black text-white text-[10px] font-bold flex items-center justify-center rounded-full">
                 {unread.length > 9 ? "9+" : unread.length}
               </span>
             )}
           </button>
 
           {open && (
-            <div className="absolute right-0 mt-2 w-90 max-w-[90vw] bg-white border border-gray-200 z-50 overflow-hidden">
+            <div className="absolute right-0 mt-2 w-90 max-w-[90vw] bg-white border border-gray-200 rounded-xl z-50 overflow-hidden shadow-lg">
               <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <p className="text-sm font-semibold text-gray-900">
                   Notifications
@@ -131,9 +131,8 @@ export default function DashboardTopbar({
                         onClick={() =>
                           profile && markNotificationRead(n.id, profile.uid)
                         }
-                        className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition ${
-                          isUnread ? "bg-gray-50" : ""
-                        }`}
+                        className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition ${isUnread ? "bg-gray-50" : ""
+                          }`}
                       >
                         <div className="flex items-start gap-2">
                           {isUnread && (
@@ -160,7 +159,7 @@ export default function DashboardTopbar({
           )}
         </div>
 
-        <div className="w-8 h-8 bg-black text-white flex items-center justify-center text-sm font-semibold">
+        <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-semibold">
           {initial}
         </div>
       </div>

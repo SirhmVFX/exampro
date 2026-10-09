@@ -24,10 +24,10 @@ export function StatCard({
   const trendIcon = trend === "up" ? "↑" : trend === "down" ? "↓" : "→";
 
   return (
-    <div className="bg-white border border-gray-200 p-6">
+    <div className="bg-white border border-gray-200 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-medium text-gray-500">{label}</span>
-        <div className="p-2 bg-[var(--dash-primary-soft)] text-[var(--dash-primary)]">
+        <div className="p-2 rounded-lg bg-[var(--dash-primary-soft)] text-[var(--dash-primary)]">
           {icon}
         </div>
       </div>

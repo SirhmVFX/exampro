@@ -220,7 +220,7 @@ export default function AdminStructurePage() {
               </Button>
             </div>
             {terms.map((t) => (
-              <div key={t.id} className="flex items-center justify-between text-sm border border-gray-200 px-3 py-2">
+              <div key={t.id} className="flex items-center justify-between text-sm border border-gray-200 rounded-lg px-3 py-2">
                 <span>
                   {t.name}{" "}
                   <span className="text-gray-400">· {t.status}</span>
@@ -253,7 +253,7 @@ export default function AdminStructurePage() {
               </Button>
             </div>
             {departments.map((d) => (
-              <div key={d.id} className="flex items-center justify-between text-sm border border-gray-200 px-3 py-2">
+              <div key={d.id} className="flex items-center justify-between text-sm border border-gray-200 rounded-lg px-3 py-2">
                 <span>{d.name}</span>
                 <Button
                   variant="ghost"
@@ -278,7 +278,7 @@ export default function AdminStructurePage() {
               const wait = enrolled.filter((e) => e.status === "waitlist").length;
               const dropped = enrolled.filter((e) => e.status === "dropped").length;
               return (
-                <div key={c.id} className="border border-gray-200 p-4 space-y-3">
+                <div key={c.id} className="border border-gray-200 rounded-xl p-4 space-y-3">
                   <div className="flex justify-between gap-2">
                     <p className="font-medium">{c.name}</p>
                     <Button

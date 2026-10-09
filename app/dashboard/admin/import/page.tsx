@@ -147,7 +147,7 @@ export default function RosterImportPage() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="name,email,class,id&#10;Ada Okonkwo,ada@school.edu,Cohort 12,STU-001"
-              className="w-full px-4 py-2.5 border border-gray-300 text-sm font-mono"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-mono"
             />
             <Button loading={saving} onClick={() => void run()}>
               Import roster

@@ -80,7 +80,7 @@ function ColorField({
           type="color"
           value={normalizeHex(value)}
           onChange={(e) => onChange(e.target.value)}
-          className="w-12 h-10 border border-gray-200 cursor-pointer bg-transparent"
+          className="w-12 h-10 rounded-lg border border-gray-200 cursor-pointer bg-transparent"
         />
         <input
           value={value}
@@ -230,7 +230,7 @@ export default function AdminSettingsPage() {
     >
       <div className="max-w-2xl space-y-6">
         {error && (
-          <div className="border border-red-200 bg-red-50 text-red-800 text-sm px-4 py-3">
+          <div className="border border-red-200 bg-red-50 rounded-xl text-red-800 text-sm px-4 py-3">
             {error}
           </div>
         )}
@@ -317,7 +317,7 @@ export default function AdminSettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Subdomain
               </label>
-              <div className="flex items-center border border-gray-300 bg-white">
+              <div className="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden">
                 <input
                   value={form.slug}
                   onChange={(e) =>
@@ -430,7 +430,7 @@ export default function AdminSettingsPage() {
             <h2 className="text-lg font-semibold">Join code</h2>
           </CardHeader>
           <CardBody className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 bg-[var(--dash-primary-soft)] px-4 py-3">
+            <div className="flex items-center gap-2 bg-[var(--dash-primary-soft)] rounded-xl px-4 py-3">
               <span className="text-xl font-bold tracking-[0.3em] text-[var(--dash-primary)]">
                 {institution?.code}
               </span>

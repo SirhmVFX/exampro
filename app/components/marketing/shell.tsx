@@ -41,7 +41,7 @@ export function PageHero({
 export function Wordmark() {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-8 h-8 border border-white/80 flex items-center justify-center text-white text-[11px] font-bold">
+      <div className="w-8 h-8 rounded-lg border border-white/80 flex items-center justify-center text-white text-[11px] font-bold">
         EP
       </div>
       <span className="text-lg font-semibold text-white">ExamPro</span>

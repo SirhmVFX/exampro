@@ -60,7 +60,7 @@ export default function GradebookPage() {
           <select
             value={termId}
             onChange={(e) => setTermId(e.target.value)}
-            className="border border-gray-300 px-3 py-2 text-sm bg-white"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
           >
             <option value="all">All terms</option>
             {terms.map((t) => (

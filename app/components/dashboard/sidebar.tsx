@@ -44,9 +44,8 @@ export default function DashboardSidebar({
 
   return (
     <aside
-      className={`relative flex flex-col transition-all duration-300 ${
-        collapsed ? "w-16" : "w-64"
-      } min-h-screen shrink-0`}
+      className={`relative flex flex-col transition-all duration-300 ${collapsed ? "w-16" : "w-64"
+        } min-h-screen shrink-0`}
       style={{
         background: "var(--dash-sidebar)",
         color: "var(--dash-sidebar-fg)",
@@ -62,12 +61,12 @@ export default function DashboardSidebar({
           <img
             src={logoUrl}
             alt=""
-            className="w-8 h-8 object-cover shrink-0"
+            className="w-8 h-8 rounded-lg object-cover shrink-0"
             style={{ border: "1px solid var(--dash-sidebar-border)" }}
           />
         ) : (
           <div
-            className="w-8 h-8 flex items-center justify-center shrink-0 text-[11px] font-bold tracking-tight"
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold tracking-tight"
             style={{ border: "1px solid var(--dash-sidebar-fg)" }}
           >
             EP
@@ -96,13 +95,13 @@ export default function DashboardSidebar({
               key={item.href}
               href={item.href}
               title={collapsed ? item.label : undefined}
-              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
               style={
                 isActive
                   ? {
-                      background: "var(--dash-nav-active)",
-                      color: "var(--dash-nav-active-fg)",
-                    }
+                    background: "var(--dash-nav-active)",
+                    color: "var(--dash-nav-active-fg)",
+                  }
                   : { color: "var(--dash-sidebar-muted)" }
               }
               onMouseEnter={(e) => {
@@ -122,17 +121,17 @@ export default function DashboardSidebar({
                   <span className="flex-1 truncate">{item.label}</span>
                   {item.badge !== undefined && (
                     <span
-                      className="text-xs px-1.5 py-0.5"
+                      className="text-xs px-1.5 py-0.5 rounded-md"
                       style={
                         isActive
                           ? {
-                              background: "var(--dash-nav-active-fg)",
-                              color: "var(--dash-nav-active)",
-                            }
+                            background: "var(--dash-nav-active-fg)",
+                            color: "var(--dash-nav-active)",
+                          }
                           : {
-                              background: "var(--dash-sidebar-hover)",
-                              color: "var(--dash-sidebar-fg)",
-                            }
+                            background: "var(--dash-sidebar-hover)",
+                            color: "var(--dash-sidebar-fg)",
+                          }
                       }
                     >
                       {item.badge}
@@ -163,7 +162,7 @@ export default function DashboardSidebar({
         <button
           onClick={handleSignOut}
           title={collapsed ? "Sign out" : undefined}
-          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
           style={{ color: "var(--dash-sidebar-muted)" }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = "var(--dash-sidebar-hover)";
@@ -181,7 +180,7 @@ export default function DashboardSidebar({
 
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 w-6 h-6 flex items-center justify-center transition"
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full flex items-center justify-center transition"
         style={{
           background: "var(--dash-sidebar)",
           color: "var(--dash-sidebar-fg)",

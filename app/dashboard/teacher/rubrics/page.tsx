@@ -112,7 +112,7 @@ export default function RubricsPage() {
           </CardHeader>
           <CardBody className="space-y-3">
             {items.map((r) => (
-              <div key={r.id} className="border border-gray-200 p-3 flex justify-between gap-2">
+              <div key={r.id} className="border border-gray-200 rounded-lg p-3 flex justify-between gap-2">
                 <div>
                   <p className="font-medium text-sm">{r.name}</p>
                   <p className="text-xs text-gray-500">
