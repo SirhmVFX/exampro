@@ -24,7 +24,7 @@ import {
   darkInput,
   PasswordToggle,
 } from "@/app/components/marketing/auth-frame";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, postAuthPath } from "@/lib/auth-context";
 
 const steps = [
   { id: 1, label: "Your account" },
@@ -81,7 +81,7 @@ function normaliseUrl(raw: string): string {
 
 export default function InstitutionRegisterPage() {
   const router = useRouter();
-  const { refresh, firebaseUser, profile, loading: authLoading } = useAuth();
+  const { refresh, firebaseUser, profile, institution, loading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -99,8 +99,11 @@ export default function InstitutionRegisterPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (firebaseUser && profile) router.replace("/dashboard/org/new");
-  }, [authLoading, firebaseUser, profile, router]);
+    // Already logged in — send to their actual dashboard, not the "add institution" page
+    if (firebaseUser && profile) {
+      router.replace(postAuthPath(profile, institution));
+    }
+  }, [authLoading, firebaseUser, profile, institution, router]);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
