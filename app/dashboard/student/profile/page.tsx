@@ -146,7 +146,7 @@ export default function StudentProfilePage() {
               />
               Larger text during assessments
             </label>
-            <p className="text-xs text-gray-400">Institution: {institution?.name}</p>
+            <p className="text-xs text-[var(--dash-text-faint)]">Institution: {institution?.name}</p>
             <div className="flex items-center gap-3">
               <Button loading={saving} onClick={() => void save()}>
                 <Save className="w-4 h-4" /> Save

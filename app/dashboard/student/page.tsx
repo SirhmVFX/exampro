@@ -108,7 +108,7 @@ export default function StudentOverviewPage() {
                   <div key={a.id} className="flex items-center gap-4 px-6 py-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{a.title}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-[var(--dash-text-muted)]">
                         {KIND_LABEL[a.kind]} · {a.subject} · {a.questions.length} questions
                       </p>
                     </div>

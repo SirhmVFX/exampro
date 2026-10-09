@@ -101,7 +101,7 @@ export default function ContactPage() {
               },
             ].map((item) => (
               <div key={item.label} className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg border border-white/15 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-lg border border-white/15 rounded-xl flex items-center justify-center shrink-0">
                   <item.icon className="w-4 h-4" />
                 </div>
                 <div>

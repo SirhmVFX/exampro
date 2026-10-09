@@ -38,7 +38,7 @@ export default function StudentCertificatesPage() {
                 <div key={c.id} className="px-6 py-4 flex items-center gap-3 border-t border-gray-50">
                   <div className="flex-1">
                     <p className="font-medium">{c.title}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[var(--dash-text-muted)]">
                       {formatDate(c.issuedAt)} · {c.verifyCode}
                     </p>
                   </div>

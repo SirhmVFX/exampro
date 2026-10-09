@@ -16,7 +16,13 @@ import { getInstitutionByCode, getInstitutionBySlug, createUserProfile, listUser
 import { getPlan, planAllows } from "@/lib/plans";
 import type { Institution } from "@/lib/types";
 import { Button } from "@/app/components/ui/button";
-import { AuthCard, AuthFrame, darkInput, PasswordToggle } from "@/app/components/marketing/auth-frame";
+import {
+  AuthCard,
+  AuthFrame,
+  darkInput,
+  PasswordToggle,
+} from "@/app/components/marketing/auth-frame";
+import { ImageUpload } from "@/app/components/ui/image-upload";
 import { useAuth } from "@/lib/auth-context";
 import { canSelfJoin, joinRequiresCode } from "@/lib/join-policy";
 import { vocab } from "@/lib/vocab";
@@ -56,6 +62,10 @@ function StudentRegisterForm() {
     password: "",
     className: "",
     classNames: [] as string[],
+    phone: "",
+    gender: "" as "" | "male" | "female" | "other" | "prefer_not_to_say",
+    dateOfBirth: "",
+    avatarUrl: "",
   });
 
   useEffect(() => {
@@ -171,6 +181,10 @@ function StudentRegisterForm() {
           role: "student",
           name: form.name.trim(),
           email: form.email.trim(),
+          phone: form.phone.trim() || undefined,
+          gender: form.gender || undefined,
+          dateOfBirth: form.dateOfBirth || undefined,
+          avatarUrl: form.avatarUrl || undefined,
           className: classNames[0],
           classNames,
           status: "active",
@@ -348,6 +362,32 @@ function StudentRegisterForm() {
                   value={form.password}
                   onChange={(v) => setForm({ ...form, password: v })}
                 />
+              </div>
+              {/* Additional profile fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-white/70 mb-1.5">Gender</label>
+                  <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as typeof form.gender })}
+                    className={`${darkInput} bg-zinc-950`}>
+                    <option value="">Prefer not to say</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer_not_to_say">Prefer not to say</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/70 mb-1.5">Date of birth</label>
+                  <input type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className={darkInput} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Phone <span className="text-white/30 font-normal">(optional)</span></label>
+                <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+234 800 000 0000" className={darkInput} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Profile picture <span className="text-white/30 font-normal">(optional)</span></label>
+                <ImageUpload value={form.avatarUrl} onChange={(url) => setForm({ ...form, avatarUrl: url })} folder="exampro/avatars" />
               </div>
             </>
           )}

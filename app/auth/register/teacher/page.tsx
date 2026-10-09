@@ -26,6 +26,7 @@ import {
   darkInput,
   PasswordToggle,
 } from "@/app/components/marketing/auth-frame";
+import { ImageUpload } from "@/app/components/ui/image-upload";
 import { useAuth } from "@/lib/auth-context";
 
 function friendlyAuthError(err: unknown): string {
@@ -63,6 +64,10 @@ function TeacherRegisterForm() {
     password: "",
     subjects: [] as string[],
     classes: [] as string[],
+    phone: "",
+    gender: "" as "" | "male" | "female" | "other" | "prefer_not_to_say",
+    dateOfBirth: "",
+    avatarUrl: "",
   });
 
   useEffect(() => {
@@ -156,6 +161,10 @@ function TeacherRegisterForm() {
           role: "teacher",
           name: form.name.trim(),
           email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim() || undefined,
+          gender: form.gender || undefined,
+          dateOfBirth: form.dateOfBirth || undefined,
+          avatarUrl: form.avatarUrl || undefined,
           subjects: form.subjects,
           classes: form.classes,
           status: "active",
@@ -323,6 +332,30 @@ function TeacherRegisterForm() {
                   value={form.password}
                   onChange={(v) => setForm({ ...form, password: v })}
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-white/70 mb-1.5">Gender</label>
+                  <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as typeof form.gender })}
+                    className={`${darkInput} bg-zinc-950`}>
+                    <option value="">Prefer not to say</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/70 mb-1.5">Date of birth</label>
+                  <input type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className={darkInput} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Phone <span className="text-white/30 font-normal">(optional)</span></label>
+                <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+234 800 000 0000" className={darkInput} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Profile picture <span className="text-white/30 font-normal">(optional)</span></label>
+                <ImageUpload value={form.avatarUrl} onChange={(url) => setForm({ ...form, avatarUrl: url })} folder="exampro/avatars" />
               </div>
             </>
           )}
