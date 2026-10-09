@@ -18,7 +18,12 @@ import {
 import type { Institution } from "@/lib/types";
 import { defaultVocabulary } from "@/lib/vocab";
 import { Button } from "@/app/components/ui/button";
-import { AuthCard, AuthFrame, darkInput } from "@/app/components/marketing/auth-frame";
+import {
+  AuthCard,
+  AuthFrame,
+  darkInput,
+  PasswordToggle,
+} from "@/app/components/marketing/auth-frame";
 import { useAuth } from "@/lib/auth-context";
 
 const steps = [
@@ -50,12 +55,29 @@ function friendlyAuthError(err: unknown): string {
         return "Password is too weak. Use at least 8 characters.";
       case "auth/network-request-failed":
         return "Network error. Check your connection and try again.";
+      case "auth/configuration-not-found":
+      case "auth/internal-error":
+        return "Firebase Authentication isn't fully set up. Go to Firebase Console → Authentication → Sign-in method and enable Email/Password.";
+      case "auth/admin-restricted-operation":
+        return "Sign-ups are restricted. Enable Email/Password in Firebase Console → Authentication → Sign-in method.";
     }
   }
-  return "Something went wrong creating your account. Please try again.";
+  if (err instanceof Error) {
+    if (err.message.includes("Missing or insufficient permissions")) {
+      return "Account created but profile setup failed. Firestore rules may not be deployed yet — run: firebase deploy --only firestore:rules";
+    }
+    return err.message;
+  }
+  return "Something went wrong. Please try again or contact support if it persists.";
 }
 
-const inputClass = darkInput;
+/** Auto-prefix https:// if the user typed a URL without a scheme */
+function normaliseUrl(raw: string): string {
+  const v = raw.trim();
+  if (!v) return v;
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
 
 export default function InstitutionRegisterPage() {
   const router = useRouter();
@@ -64,12 +86,10 @@ export default function InstitutionRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
-    // Step 1
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    // Step 2
     institutionName: "",
     institutionType: "" as "" | Institution["type"],
     country: "",
@@ -79,17 +99,14 @@ export default function InstitutionRegisterPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (firebaseUser && profile) {
-      router.replace("/dashboard/org/new");
-    }
+    if (firebaseUser && profile) router.replace("/dashboard/org/new");
   }, [authLoading, firebaseUser, profile, router]);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const typeLabel =
-    INSTITUTION_TYPES.find((t) => t.value === form.institutionType)?.label ??
-    "—";
+    INSTITUTION_TYPES.find((t) => t.value === form.institutionType)?.label ?? "—";
 
   const handleCreate = async () => {
     setError("");
@@ -101,6 +118,11 @@ export default function InstitutionRegisterPage() {
         form.password
       );
       const uid = cred.user.uid;
+
+      // Force the SDK to attach the new auth token before any Firestore write.
+      // Without this, the token hasn't propagated yet and rules block the write.
+      await cred.user.getIdToken(true);
+
       const instId = newId(COL.institutions);
       const slug = await allocateSlug(form.institutionName.trim());
       await createInstitution({
@@ -112,7 +134,7 @@ export default function InstitutionRegisterPage() {
         email: form.email.trim(),
         phone: form.phone.trim() || undefined,
         country: form.country.trim() || undefined,
-        website: form.website.trim() || undefined,
+        website: normaliseUrl(form.website) || undefined,
         classLabel: defaultVocabulary(form.institutionType as Institution["type"]).class,
         classes: [],
         subjects: [],
@@ -126,7 +148,7 @@ export default function InstitutionRegisterPage() {
         primaryColor: "#000000",
         accentColor: "#000000",
         aiGenerationsUsed: 0,
-        trialEndsAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30-day free trial
+        trialEndsAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
         createdAt: Date.now(),
       });
       await createUserProfile({
@@ -150,14 +172,8 @@ export default function InstitutionRegisterPage() {
     e.preventDefault();
     setError("");
     if (step === 1) {
-      if (form.password.length < 8) {
-        setError("Password must be at least 8 characters.");
-        return;
-      }
-      if (form.password !== form.confirmPassword) {
-        setError("Passwords do not match.");
-        return;
-      }
+      if (form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
+      if (form.password !== form.confirmPassword) { setError("Passwords do not match."); return; }
       setStep(2);
     } else if (step === 2) {
       setStep(3);
@@ -181,232 +197,150 @@ export default function InstitutionRegisterPage() {
           {steps.map((s, i) => (
             <div key={s.id} className="flex items-center gap-2 flex-1">
               <div
-                className={`w-8 h-8 flex items-center justify-center text-sm font-semibold shrink-0 transition-colors ${step > s.id
-                    ? "bg-white text-black"
-                    : step === s.id
-                      ? "bg-white text-black"
-                      : "bg-white/10 text-white/30"
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-colors ${step >= s.id ? "bg-white text-black" : "bg-white/10 text-white/30"
                   }`}
               >
                 {step > s.id ? <Check className="w-4 h-4" /> : s.id}
               </div>
-              <span
-                className={`text-xs font-medium ${step === s.id ? "text-white" : "text-white/30"
-                  }`}
-              >
+              <span className={`text-xs font-medium ${step === s.id ? "text-white" : "text-white/30"}`}>
                 {s.label}
               </span>
               {i < steps.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 ${step > s.id ? "bg-white" : "bg-white/10"
-                    }`}
-                />
+                <div className={`flex-1 h-0.5 ${step > s.id ? "bg-white" : "bg-white/10"}`} />
               )}
             </div>
           ))}
         </div>
 
         {error && (
-          <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
+          <div className="mb-5 flex items-start gap-2 bg-red-500/10 border border-red-500/20 text-red-300 text-sm rounded-xl px-4 py-3">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleNext} className="space-y-5">
-          {/* Step 1: Your account */}
+
+          {/* ── Step 1: Account ─────────────────────────────────────────── */}
           {step === 1 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Full name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Full name</label>
+                <input type="text" required value={form.name}
                   onChange={(e) => update("name", e.target.value)}
-                  placeholder="John Doe"
-                  className={inputClass}
-                />
+                  placeholder="John Doe" className={darkInput} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Work email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Work email</label>
+                <input type="email" required value={form.email}
                   onChange={(e) => update("email", e.target.value)}
-                  placeholder="admin@institution.com"
-                  className={inputClass}
-                />
+                  placeholder="admin@institution.com" className={darkInput} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Password</label>
+                <PasswordToggle
                   value={form.password}
-                  onChange={(e) => update("password", e.target.value)}
-                  placeholder="Min. 8 characters"
-                  className={inputClass}
+                  onChange={(v) => update("password", v)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Confirm password
-                </label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Confirm password</label>
+                <PasswordToggle
                   value={form.confirmPassword}
-                  onChange={(e) => update("confirmPassword", e.target.value)}
+                  onChange={(v) => update("confirmPassword", v)}
                   placeholder="Re-enter your password"
-                  className={inputClass}
                 />
               </div>
             </>
           )}
 
-          {/* Step 2: Institution */}
+          {/* ── Step 2: Institution ──────────────────────────────────────── */}
           {step === 2 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Institution name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.institutionName}
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Institution name</label>
+                <input type="text" required value={form.institutionName}
                   onChange={(e) => update("institutionName", e.target.value)}
-                  placeholder="TechBridge Academy"
-                  className={inputClass}
-                />
+                  placeholder="TechBridge Academy" className={darkInput} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Institution type
-                </label>
-                <select
-                  required
-                  value={form.institutionType}
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Institution type</label>
+                <select required value={form.institutionType}
                   onChange={(e) => update("institutionType", e.target.value)}
-                  className={`${inputClass} bg-zinc-950`}
-                >
+                  className={`${darkInput} bg-zinc-950`}>
                   <option value="">Select type</option>
                   {INSTITUTION_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
+                    <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Country
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.country}
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Country</label>
+                <input type="text" required value={form.country}
                   onChange={(e) => update("country", e.target.value)}
-                  placeholder="Nigeria"
-                  className={inputClass}
-                />
+                  placeholder="Nigeria" className={darkInput} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Phone{" "}
-                  <span className="text-white/30 font-normal">(optional)</span>
+                  Phone <span className="text-white/30 font-normal">(optional)</span>
                 </label>
-                <input
-                  type="tel"
-                  value={form.phone}
+                <input type="tel" value={form.phone}
                   onChange={(e) => update("phone", e.target.value)}
-                  placeholder="+234 800 000 0000"
-                  className={inputClass}
-                />
+                  placeholder="+234 800 000 0000" className={darkInput} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Website{" "}
-                  <span className="text-white/30 font-normal">(optional)</span>
+                  Website <span className="text-white/30 font-normal">(optional)</span>
                 </label>
-                <input
-                  type="url"
-                  value={form.website}
+                {/* type="text" so bare domains like "myschool.com" are accepted */}
+                <input type="text" value={form.website}
                   onChange={(e) => update("website", e.target.value)}
-                  placeholder="https://institution.com"
-                  className={inputClass}
-                />
+                  placeholder="myschool.com" className={darkInput} />
               </div>
             </>
           )}
 
-          {/* Step 3: Review & create */}
+          {/* ── Step 3: Review ───────────────────────────────────────────── */}
           {step === 3 && (
             <>
               <div className="bg-white/5 rounded-xl p-5 space-y-3">
-                <h2 className="text-sm font-semibold text-white">
-                  Your account
-                </h2>
+                <h2 className="text-sm font-semibold text-white">Your account</h2>
                 <dl className="space-y-1.5 text-sm">
                   <div className="flex justify-between gap-4">
                     <dt className="text-white/45">Admin name</dt>
-                    <dd className="text-white font-medium text-right">
-                      {form.name}
-                    </dd>
+                    <dd className="text-white font-medium text-right">{form.name}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt className="text-white/45">Email</dt>
-                    <dd className="text-white font-medium text-right">
-                      {form.email}
-                    </dd>
+                    <dd className="text-white font-medium text-right">{form.email}</dd>
                   </div>
                 </dl>
                 <div className="border-t border-white/10 pt-3">
-                  <h2 className="text-sm font-semibold text-white mb-1.5">
-                    Institution
-                  </h2>
+                  <h2 className="text-sm font-semibold text-white mb-1.5">Institution</h2>
                   <dl className="space-y-1.5 text-sm">
                     <div className="flex justify-between gap-4">
                       <dt className="text-white/45">Name</dt>
-                      <dd className="text-white font-medium text-right">
-                        {form.institutionName}
-                      </dd>
+                      <dd className="text-white font-medium text-right">{form.institutionName}</dd>
                     </div>
                     <div className="flex justify-between gap-4">
                       <dt className="text-white/45">Type</dt>
-                      <dd className="text-white font-medium text-right">
-                        {typeLabel}
-                      </dd>
+                      <dd className="text-white font-medium text-right">{typeLabel}</dd>
                     </div>
                     <div className="flex justify-between gap-4">
                       <dt className="text-white/45">Country</dt>
-                      <dd className="text-white font-medium text-right">
-                        {form.country}
-                      </dd>
+                      <dd className="text-white font-medium text-right">{form.country}</dd>
                     </div>
                     {form.phone && (
                       <div className="flex justify-between gap-4">
                         <dt className="text-white/45">Phone</dt>
-                        <dd className="text-white font-medium text-right">
-                          {form.phone}
-                        </dd>
+                        <dd className="text-white font-medium text-right">{form.phone}</dd>
                       </div>
                     )}
                     {form.website && (
                       <div className="flex justify-between gap-4">
                         <dt className="text-white/45">Website</dt>
-                        <dd className="text-white font-medium text-right">
-                          {form.website}
+                        <dd className="text-white font-medium text-right truncate max-w-[200px]">
+                          {normaliseUrl(form.website)}
                         </dd>
                       </div>
                     )}
@@ -414,43 +348,29 @@ export default function InstitutionRegisterPage() {
                 </div>
               </div>
               <div className="bg-white/5 rounded-xl p-4 text-sm text-white/50">
-                After creating your workspace, you&apos;ll be guided through a
-                quick setup to add your classes, subjects, and invite your
-                teachers and students.
+                After creating your workspace you&apos;ll be guided through a quick setup
+                to add your classes, subjects, and invite your teachers and students.
               </div>
             </>
           )}
 
           <div className="flex gap-3 pt-2">
             {step > 1 && (
-              <Button
-                type="button"
-                variant="ghost"
-                className="flex-1 text-white/70 hover:bg-white/10"
-                onClick={() => setStep(step - 1)}
-                disabled={loading}
-              >
+              <Button type="button" variant="ghost"
+                className="flex-1 text-white/70 hover:bg-white/10 rounded-xl"
+                onClick={() => setStep(step - 1)} disabled={loading}>
                 Back
               </Button>
             )}
-            <Button type="submit" variant="inverse" loading={loading} className="flex-1">
-              {step < 3 ? (
-                <>
-                  Continue <ArrowRight className="w-4 h-4" />
-                </>
-              ) : (
-                "Create Workspace"
-              )}
+            <Button type="submit" variant="inverse" loading={loading} className="flex-1 rounded-xl">
+              {step < 3 ? <><span>Continue</span> <ArrowRight className="w-4 h-4" /></> : "Create Workspace"}
             </Button>
           </div>
         </form>
 
         <p className="mt-6 text-center text-sm text-white/40">
           Already have an account?{" "}
-          <Link
-            href="/auth/login"
-            className="text-white font-medium hover:underline"
-          >
+          <Link href="/auth/login" className="text-white font-medium hover:underline">
             Sign in
           </Link>
         </p>

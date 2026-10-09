@@ -1,39 +1,54 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ── helpers ────────────────────────────────────────────────────────────
+
     function signedIn() {
       return request.auth != null;
     }
+
+    // Safe profile read — returns null instead of crashing if the doc
+    // doesn't exist yet (new user who just signed up has no profile doc).
+    function profileExists() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     function profile() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
+
     function membershipId(instId) {
       return request.auth.uid + '_' + instId;
     }
+
     function hasMembership(instId) {
-      return exists(/databases/$(database)/documents/memberships/$(membershipId(instId)));
+      return signedIn() &&
+        exists(/databases/$(database)/documents/memberships/$(membershipId(instId)));
     }
+
     function membership(instId) {
       return get(/databases/$(database)/documents/memberships/$(membershipId(instId))).data;
     }
+
     function isMember(instId) {
       return signedIn() && (
-        profile().institutionId == instId ||
+        (profileExists() && profile().institutionId == instId) ||
         hasMembership(instId)
       );
     }
+
     function roleIn(instId) {
-      return hasMembership(instId) ? membership(instId).role : profile().role;
+      return hasMembership(instId)
+        ? membership(instId).role
+        : (profileExists() ? profile().role : '');
     }
-    function sameTenant(instId) {
-      return isMember(instId);
-    }
+
     function isAdmin(instId) {
       return isMember(instId) && roleIn(instId) == 'admin';
     }
-    function isTeacher(instId) {
-      return isMember(instId) && roleIn(instId) == 'teacher';
-    }
+
     function isStaff(instId) {
       return isMember(instId) && (
         roleIn(instId) == 'admin' ||
@@ -42,103 +57,149 @@ service cloud.firestore {
       );
     }
 
+    // ── institutions ───────────────────────────────────────────────────────
+
     match /institutions/{id} {
       allow read: if true;
+      // Any authenticated user can create an institution (new admin signup).
+      // The user writes their institution first, then their user profile.
       allow create: if signedIn();
       allow update, delete: if isAdmin(id);
     }
 
+    // ── users ──────────────────────────────────────────────────────────────
+
     match /users/{uid} {
       allow read: if signedIn() && (
         request.auth.uid == uid ||
-        sameTenant(resource.data.institutionId)
+        (profileExists() && isMember(resource.data.institutionId))
       );
+      // New user creates their own profile doc immediately after signup.
       allow create: if signedIn() && request.auth.uid == uid;
       allow update: if signedIn() && (
         request.auth.uid == uid ||
-        isAdmin(resource.data.institutionId)
+        (profileExists() && isAdmin(resource.data.institutionId))
       );
-      allow delete: if isAdmin(resource.data.institutionId);
+      allow delete: if profileExists() && isAdmin(resource.data.institutionId);
     }
+
+    // ── memberships ────────────────────────────────────────────────────────
+
+    match /memberships/{id} {
+      allow read: if signedIn() && (
+        resource.data.uid == request.auth.uid ||
+        isMember(resource.data.institutionId)
+      );
+      // New users create their first membership doc during signup
+      // (no prior membership exists). Also admins can create for others.
+      allow create: if signedIn() && (
+        request.resource.data.uid == request.auth.uid ||
+        (profileExists() && isAdmin(request.resource.data.institutionId))
+      );
+      allow update: if signedIn() && (
+        resource.data.uid == request.auth.uid ||
+        (profileExists() && isAdmin(resource.data.institutionId))
+      );
+      allow delete: if signedIn() && (
+        resource.data.uid == request.auth.uid ||
+        (profileExists() && isAdmin(resource.data.institutionId))
+      );
+    }
+
+    // ── invites ────────────────────────────────────────────────────────────
 
     match /invites/{id} {
       allow read: if true;
-      allow create: if isAdmin(request.resource.data.institutionId);
-      allow update, delete: if isAdmin(resource.data.institutionId);
+      allow create: if profileExists() && isAdmin(request.resource.data.institutionId);
+      allow update, delete: if profileExists() && isAdmin(resource.data.institutionId);
     }
+
+    // ── questions ──────────────────────────────────────────────────────────
 
     match /questions/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create: if isStaff(request.resource.data.institutionId);
       allow update, delete: if isStaff(resource.data.institutionId);
     }
 
+    // ── assessments ────────────────────────────────────────────────────────
+
     match /assessments/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create: if isStaff(request.resource.data.institutionId);
       allow update, delete: if isStaff(resource.data.institutionId);
     }
+
+    // ── attempts ───────────────────────────────────────────────────────────
 
     match /attempts/{id} {
       allow read: if signedIn() && (
         request.auth.uid == resource.data.studentId ||
         request.auth.uid == resource.data.teacherId ||
-        isAdmin(resource.data.institutionId) ||
-        (sameTenant(resource.data.institutionId) && profile().role == 'manager') ||
-        (profile().role == 'parent' &&
+        (profileExists() && isAdmin(resource.data.institutionId)) ||
+        (profileExists() && isMember(resource.data.institutionId) && profile().role == 'manager') ||
+        (profileExists() && profile().role == 'parent' &&
           request.auth.uid in get(/databases/$(database)/documents/users/$(resource.data.studentId)).data.get('parentIds', []))
       );
       allow create: if signedIn() && request.auth.uid == request.resource.data.studentId;
       allow update: if signedIn() && (
         request.auth.uid == resource.data.studentId ||
         request.auth.uid == resource.data.teacherId ||
-        isAdmin(resource.data.institutionId)
+        (profileExists() && isAdmin(resource.data.institutionId))
       );
     }
 
+    // ── materials ──────────────────────────────────────────────────────────
+
     match /materials/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create: if isStaff(request.resource.data.institutionId);
       allow update, delete: if isStaff(resource.data.institutionId);
     }
 
     match /materialProgress/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create, update: if signedIn() && request.auth.uid == request.resource.data.studentId;
     }
 
+    // ── notifications ──────────────────────────────────────────────────────
+
     match /notifications/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create: if isStaff(request.resource.data.institutionId);
-      allow update: if sameTenant(resource.data.institutionId);
+      allow update: if isMember(resource.data.institutionId);
       allow delete: if isAdmin(resource.data.institutionId);
     }
 
+    // ── payments ───────────────────────────────────────────────────────────
+
     match /payments/{id} {
-      allow read: if isAdmin(resource.data.institutionId);
-      allow create: if isAdmin(request.resource.data.institutionId);
+      allow read: if profileExists() && isAdmin(resource.data.institutionId);
+      allow create: if profileExists() && isAdmin(request.resource.data.institutionId);
     }
 
+    // ── structure ──────────────────────────────────────────────────────────
+
     match /departments/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create, update, delete: if isAdmin(resource.data.institutionId) ||
         isAdmin(request.resource.data.institutionId);
     }
 
     match /terms/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create, update, delete: if isAdmin(resource.data.institutionId) ||
         isAdmin(request.resource.data.institutionId);
     }
 
     match /cohorts/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create, update, delete: if isStaff(resource.data.institutionId) ||
         isStaff(request.resource.data.institutionId);
     }
 
     match /enrollments/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create: if signedIn() && (
         request.auth.uid == request.resource.data.userId ||
         isStaff(request.resource.data.institutionId)
@@ -146,17 +207,21 @@ service cloud.firestore {
       allow update, delete: if isStaff(resource.data.institutionId);
     }
 
+    // ── rubrics / paths ────────────────────────────────────────────────────
+
     match /rubrics/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create, update, delete: if isStaff(resource.data.institutionId) ||
         isStaff(request.resource.data.institutionId);
     }
 
     match /paths/{id} {
-      allow read: if sameTenant(resource.data.institutionId);
+      allow read: if isMember(resource.data.institutionId);
       allow create, update, delete: if isStaff(resource.data.institutionId) ||
         isStaff(request.resource.data.institutionId);
     }
+
+    // ── certificates ───────────────────────────────────────────────────────
 
     match /certificates/{id} {
       allow read: if true;
@@ -164,28 +229,11 @@ service cloud.firestore {
         isStaff(request.resource.data.institutionId);
     }
 
-    match /audit/{id} {
-      allow read: if isAdmin(resource.data.institutionId);
-      allow create: if signedIn() && sameTenant(request.resource.data.institutionId);
-    }
+    // ── audit log ──────────────────────────────────────────────────────────
 
-    match /memberships/{id} {
-      allow read: if signedIn() && (
-        resource.data.uid == request.auth.uid ||
-        isMember(resource.data.institutionId)
-      );
-      allow create: if signedIn() && (
-        request.resource.data.uid == request.auth.uid ||
-        isAdmin(request.resource.data.institutionId)
-      );
-      allow update: if signedIn() && (
-        resource.data.uid == request.auth.uid ||
-        isAdmin(resource.data.institutionId)
-      );
-      allow delete: if signedIn() && (
-        resource.data.uid == request.auth.uid ||
-        isAdmin(resource.data.institutionId)
-      );
+    match /audit/{id} {
+      allow read: if profileExists() && isAdmin(resource.data.institutionId);
+      allow create: if signedIn() && isMember(request.resource.data.institutionId);
     }
   }
 }

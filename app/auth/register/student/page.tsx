@@ -16,7 +16,7 @@ import { getInstitutionByCode, getInstitutionBySlug, createUserProfile, listUser
 import { getPlan, planAllows } from "@/lib/plans";
 import type { Institution } from "@/lib/types";
 import { Button } from "@/app/components/ui/button";
-import { AuthCard, AuthFrame, darkInput } from "@/app/components/marketing/auth-frame";
+import { AuthCard, AuthFrame, darkInput, PasswordToggle } from "@/app/components/marketing/auth-frame";
 import { useAuth } from "@/lib/auth-context";
 import { canSelfJoin, joinRequiresCode } from "@/lib/join-policy";
 import { vocab } from "@/lib/vocab";
@@ -147,13 +147,16 @@ function StudentRegisterForm() {
       }
       const uid = firebaseUser
         ? firebaseUser.uid
-        : (
-            await createUserWithEmailAndPassword(
-              auth,
-              form.email.trim(),
-              form.password
-            )
-          ).user.uid;
+        : await (async () => {
+          const cred = await createUserWithEmailAndPassword(
+            auth,
+            form.email.trim(),
+            form.password
+          );
+          // Force token propagation before Firestore writes
+          await cred.user.getIdToken(true);
+          return cred.user.uid;
+        })();
       if (profile && firebaseUser) {
         await joinInstitution({
           user: profile,
@@ -206,232 +209,224 @@ function StudentRegisterForm() {
 
   return (
     <AuthCard>
-        {/* Step indicator */}
-        <div className="flex items-center gap-3 mb-6">
-          {[
-            { id: 1, label: "Join code" },
-            { id: 2, label: "Your details" },
-          ].map((s, i) => (
-            <div key={s.id} className="flex items-center gap-2 flex-1">
-              <div
-                className={`w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0 ${
-                  step > s.id
-                    ? "bg-white text-black"
-                    : step === s.id
-                    ? "bg-white text-black"
-                    : "bg-white/10 text-white/30"
+      {/* Step indicator */}
+      <div className="flex items-center gap-3 mb-6">
+        {[
+          { id: 1, label: "Join code" },
+          { id: 2, label: "Your details" },
+        ].map((s, i) => (
+          <div key={s.id} className="flex items-center gap-2 flex-1">
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${step > s.id
+                ? "bg-white text-black"
+                : step === s.id
+                  ? "bg-white text-black"
+                  : "bg-white/10 text-white/30"
                 }`}
-              >
-                {step > s.id ? <Check className="w-3.5 h-3.5" /> : s.id}
-              </div>
-              <span
-                className={`text-xs font-medium ${
-                  step === s.id ? "text-white" : "text-white/30"
-                }`}
-              >
-                {s.label}
-              </span>
-              {i === 0 && (
-                <div
-                  className={`flex-1 h-0.5 ${
-                    step > 1 ? "bg-white" : "bg-white/10"
-                  }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {error && (
-          <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {step === 1 && (
-          <form onSubmit={handleVerifyCode} className="space-y-5">
-            <div>
-              <h1 className="text-xl font-bold text-white mb-1">
-                Join your institution
-              </h1>
-              <p className="text-sm text-white/45 mb-5">
-                Enter the 6-character join code your school gave you.
-              </p>
-              <label className="block text-sm font-medium text-white/70 mb-1.5">
-                Institution join code
-              </label>
-              <input
-                type="text"
-                required
-                minLength={6}
-                maxLength={6}
-                value={code}
-                onChange={(e) =>
-                  setCode(
-                    e.target.value
-                      .toUpperCase()
-                      .replace(/[^A-Z0-9]/g, "")
-                      .slice(0, 6)
-                  )
-                }
-                placeholder="ABC123"
-                className={`${inputClass} font-mono tracking-[0.3em] text-center text-lg uppercase`}
-              />
-            </div>
-            <Button
-              type="submit"
-              fullWidth
-              size="lg"
-              variant="inverse"
-              loading={loading}
-              disabled={code.length !== 6}
             >
-              Verify code <ChevronRight className="w-4 h-4" />
-            </Button>
-          </form>
-        )}
-
-        {step === 2 && institution && (
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-              <div className="w-9 h-9 border border-white/20 rounded-lg flex items-center justify-center shrink-0">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  {institution.name}
-                </p>
-                <p className="text-xs text-white/45">
-                  You&apos;re joining as a student
-                </p>
-              </div>
+              {step > s.id ? <Check className="w-3.5 h-3.5" /> : s.id}
             </div>
-
-            <h1 className="text-xl font-bold text-white">
-              {firebaseUser ? "Join as a student" : "Create your student account"}
-            </h1>
-
-            {!firebaseUser && (
-            <>
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-1.5">
-                Full name
-              </label>
-              <input
-                type="text"
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Jane Smith"
-                className={inputClass}
+            <span
+              className={`text-xs font-medium ${step === s.id ? "text-white" : "text-white/30"
+                }`}
+            >
+              {s.label}
+            </span>
+            {i === 0 && (
+              <div
+                className={`flex-1 h-0.5 ${step > 1 ? "bg-white" : "bg-white/10"
+                  }`}
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-1.5">
-                Email address
-              </label>
-              <input
-                type="email"
-                required
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="jane@example.com"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-1.5">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                placeholder="Min. 8 characters"
-                className={inputClass}
-              />
-            </div>
-            </>
             )}
+          </div>
+        ))}
+      </div>
 
+      {error && (
+        <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
+          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {step === 1 && (
+        <form onSubmit={handleVerifyCode} className="space-y-5">
+          <div>
+            <h1 className="text-xl font-bold text-white mb-1">
+              Join your institution
+            </h1>
+            <p className="text-sm text-white/45 mb-5">
+              Enter the 6-character join code your school gave you.
+            </p>
+            <label className="block text-sm font-medium text-white/70 mb-1.5">
+              Institution join code
+            </label>
+            <input
+              type="text"
+              required
+              minLength={6}
+              maxLength={6}
+              value={code}
+              onChange={(e) =>
+                setCode(
+                  e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, "")
+                    .slice(0, 6)
+                )
+              }
+              placeholder="ABC123"
+              className={`${inputClass} font-mono tracking-[0.3em] text-center text-lg uppercase`}
+            />
+          </div>
+          <Button
+            type="submit"
+            fullWidth
+            size="lg"
+            variant="inverse"
+            loading={loading}
+            disabled={code.length !== 6}
+          >
+            Verify code <ChevronRight className="w-4 h-4" />
+          </Button>
+        </form>
+      )}
+
+      {step === 2 && institution && (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+            <div className="w-9 h-9 border border-white/20 rounded-lg flex items-center justify-center shrink-0">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-1.5">
-                {institution.classLabel || vocab(institution).class}
-                {" "}(you can join more than one)
-              </label>
-              {institution.classes.length > 0 ? (
-                <div className="space-y-2 max-h-40 overflow-y-auto border border-white/10 p-3">
-                  {institution.classes.map((c) => (
-                    <label key={c} className="flex items-center gap-2 text-sm text-white/80">
-                      <input
-                        type="checkbox"
-                        checked={form.classNames.includes(c)}
-                        onChange={() =>
-                          setForm((prev) => ({
-                            ...prev,
-                            classNames: prev.classNames.includes(c)
-                              ? prev.classNames.filter((x) => x !== c)
-                              : [...prev.classNames, c],
-                            className: prev.classNames.includes(c)
-                              ? prev.classNames.filter((x) => x !== c)[0] ?? ""
-                              : prev.className || c,
-                          }))
-                        }
-                      />
-                      {c}
-                    </label>
-                  ))}
-                </div>
-              ) : (
+              <p className="text-sm font-semibold text-white">
+                {institution.name}
+              </p>
+              <p className="text-xs text-white/45">
+                You&apos;re joining as a student
+              </p>
+            </div>
+          </div>
+
+          <h1 className="text-xl font-bold text-white">
+            {firebaseUser ? "Join as a student" : "Create your student account"}
+          </h1>
+
+          {!firebaseUser && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Full name
+                </label>
                 <input
                   type="text"
                   required
-                  value={form.className}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      className: e.target.value,
-                      classNames: e.target.value ? [e.target.value] : [],
-                    })
-                  }
-                  placeholder={`e.g. ${institution.classLabel || "Class"} 1`}
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Jane Smith"
                   className={inputClass}
                 />
-              )}
-            </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="jane@example.com"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Password
+                </label>
+                <PasswordToggle
+                  value={form.password}
+                  onChange={(v) => setForm({ ...form, password: v })}
+                />
+              </div>
+            </>
+          )}
 
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                className="flex-1 text-white/70 hover:bg-white/10"
-                onClick={() => {
-                  setStep(1);
-                  setError("");
-                }}
-                disabled={loading}
-              >
-                Back
-              </Button>
-              <Button type="submit" variant="inverse" loading={loading} className="flex-1">
-                {firebaseUser ? "Join institution" : "Create Account"}
-              </Button>
-            </div>
-          </form>
-        )}
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-1.5">
+              {institution.classLabel || vocab(institution).class}
+              {" "}(you can join more than one)
+            </label>
+            {institution.classes.length > 0 ? (
+              <div className="space-y-2 max-h-40 overflow-y-auto border border-white/10 p-3">
+                {institution.classes.map((c) => (
+                  <label key={c} className="flex items-center gap-2 text-sm text-white/80">
+                    <input
+                      type="checkbox"
+                      checked={form.classNames.includes(c)}
+                      onChange={() =>
+                        setForm((prev) => ({
+                          ...prev,
+                          classNames: prev.classNames.includes(c)
+                            ? prev.classNames.filter((x) => x !== c)
+                            : [...prev.classNames, c],
+                          className: prev.classNames.includes(c)
+                            ? prev.classNames.filter((x) => x !== c)[0] ?? ""
+                            : prev.className || c,
+                        }))
+                      }
+                    />
+                    {c}
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <input
+                type="text"
+                required
+                value={form.className}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    className: e.target.value,
+                    classNames: e.target.value ? [e.target.value] : [],
+                  })
+                }
+                placeholder={`e.g. ${institution.classLabel || "Class"} 1`}
+                className={inputClass}
+              />
+            )}
+          </div>
 
-        <p className="mt-6 text-center text-sm text-white/40">
-          Already have an account?{" "}
-          <Link
-            href={`/auth/login?next=${encodeURIComponent(`/auth/join?role=student&code=${code}`)}`}
-            className="text-white font-medium hover:underline"
-          >
-            Sign in to join another school
-          </Link>
-        </p>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex-1 text-white/70 hover:bg-white/10"
+              onClick={() => {
+                setStep(1);
+                setError("");
+              }}
+              disabled={loading}
+            >
+              Back
+            </Button>
+            <Button type="submit" variant="inverse" loading={loading} className="flex-1">
+              {firebaseUser ? "Join institution" : "Create Account"}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      <p className="mt-6 text-center text-sm text-white/40">
+        Already have an account?{" "}
+        <Link
+          href={`/auth/login?next=${encodeURIComponent(`/auth/join?role=student&code=${code}`)}`}
+          className="text-white font-medium hover:underline"
+        >
+          Sign in to join another school
+        </Link>
+      </p>
     </AuthCard>
   );
 }

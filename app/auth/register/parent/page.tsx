@@ -14,7 +14,12 @@ import {
   joinInstitution,
 } from "@/lib/db";
 import { Button } from "@/app/components/ui/button";
-import { AuthCard, AuthFrame, darkInput } from "@/app/components/marketing/auth-frame";
+import {
+  AuthCard,
+  AuthFrame,
+  darkInput,
+  PasswordToggle,
+} from "@/app/components/marketing/auth-frame";
 import { useAuth } from "@/lib/auth-context";
 import { SsoButtons } from "@/app/components/auth/sso-buttons";
 
@@ -45,17 +50,15 @@ function ParentRegisterForm() {
           router.replace("/dashboard/parent");
           return;
         }
-        await joinInstitution({
-          user: profile,
-          institution: inst,
-          role: "parent",
-        });
+        await joinInstitution({ user: profile, institution: inst, role: "parent" });
       } else {
         const cred = await createUserWithEmailAndPassword(
           auth,
           form.email.trim(),
           form.password
         );
+        // Force token propagation before Firestore writes
+        await cred.user.getIdToken(true);
         await createUserProfile({
           uid: cred.user.uid,
           institutionId: inst.id,
@@ -75,7 +78,7 @@ function ParentRegisterForm() {
       setError(
         err instanceof Error
           ? err.message
-          : "Couldn't join that institution. Try a different email."
+          : "Couldn't join that institution. Check your details and try again."
       );
       setLoading(false);
     }
@@ -85,43 +88,43 @@ function ParentRegisterForm() {
     <AuthCard>
       <h1 className="text-2xl font-semibold mb-1">Parent / guardian</h1>
       <p className="text-sm text-white/45 mb-6">
-        Read-only results and upcoming exams. Use the school join code.
+        Read-only results and upcoming exams for your child. Use your school&apos;s join code.
       </p>
-      {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
+      {error && (
+        <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/20 text-red-300 text-sm rounded-xl px-4 py-3 mb-4">
+          <span>{error}</span>
+        </div>
+      )}
       <form onSubmit={submit} className="space-y-4">
         <input
           required
           value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
-          className={`${darkInput} font-mono tracking-[0.3em] text-center`}
+          onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6))}
+          className={`${darkInput} font-mono tracking-[0.3em] text-center uppercase`}
           placeholder="JOIN CODE"
         />
         {!firebaseUser && (
           <>
-        <input
-          required
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className={darkInput}
-          placeholder="Your name"
-        />
-        <input
-          required
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className={darkInput}
-          placeholder="Email"
-        />
-        <input
-          required
-          type="password"
-          minLength={8}
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className={darkInput}
-          placeholder="Password"
-        />
+            <input
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className={darkInput}
+              placeholder="Your full name"
+            />
+            <input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className={darkInput}
+              placeholder="Email address"
+            />
+            <PasswordToggle
+              value={form.password}
+              onChange={(v) => setForm({ ...form, password: v })}
+              placeholder="Password (min. 8 characters)"
+            />
           </>
         )}
         <Button type="submit" variant="inverse" fullWidth loading={loading}>
@@ -137,7 +140,11 @@ function ParentRegisterForm() {
         }}
       />
       <p className="mt-6 text-center text-sm text-white/40">
-        <Link href={`/auth/login?next=${encodeURIComponent(`/auth/join?role=parent&code=${code}`)}`} className="text-white underline">
+        Already have an account?{" "}
+        <Link
+          href={`/auth/login?next=${encodeURIComponent(`/auth/join?role=parent&code=${code}`)}`}
+          className="text-white underline"
+        >
           Sign in
         </Link>
       </p>

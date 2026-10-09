@@ -24,6 +24,7 @@ import {
   AuthCard,
   AuthFrame,
   darkInput,
+  PasswordToggle,
 } from "@/app/components/marketing/auth-frame";
 import { useAuth } from "@/lib/auth-context";
 
@@ -147,6 +148,8 @@ function TeacherRegisterForm() {
           form.email.trim(),
           form.password
         );
+        // Force token propagation before Firestore writes
+        await cred.user.getIdToken(true);
         await createUserProfile({
           uid: cred.user.uid,
           institutionId: institution.id,
@@ -177,10 +180,9 @@ function TeacherRegisterForm() {
   };
 
   const chipClass = (active: boolean) =>
-    `px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-      active
-        ? "bg-white text-black border-white"
-        : "bg-transparent text-white/60 border-white/15 hover:border-white/40"
+    `px-3 py-1.5 rounded-lg text-xs font-medium border transition ${active
+      ? "bg-white text-black border-white"
+      : "bg-transparent text-white/60 border-white/15 hover:border-white/40"
     }`;
 
   return (
@@ -192,26 +194,23 @@ function TeacherRegisterForm() {
         ].map((s, i) => (
           <div key={s.id} className="flex items-center gap-2 flex-1">
             <div
-              className={`w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0 ${
-                step >= s.id
-                  ? "bg-white text-black"
-                  : "bg-white/10 text-white/30"
-              }`}
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${step >= s.id
+                ? "bg-white text-black"
+                : "bg-white/10 text-white/30"
+                }`}
             >
               {step > s.id ? <Check className="w-3.5 h-3.5" /> : s.id}
             </div>
             <span
-              className={`text-xs font-medium ${
-                step === s.id ? "text-white" : "text-white/30"
-              }`}
+              className={`text-xs font-medium ${step === s.id ? "text-white" : "text-white/30"
+                }`}
             >
               {s.label}
             </span>
             {i === 0 && (
               <div
-                className={`flex-1 h-0.5 ${
-                  step > 1 ? "bg-white" : "bg-white/10"
-                }`}
+                className={`flex-1 h-0.5 ${step > 1 ? "bg-white" : "bg-white/10"
+                  }`}
               />
             )}
           </div>
@@ -289,48 +288,43 @@ function TeacherRegisterForm() {
           </h1>
 
           {!firebaseUser && (
-          <>
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-1.5">
-              Full name
-            </label>
-            <input
-              type="text"
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Ada Lovelace"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-1.5">
-              Email address
-            </label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="ada@school.edu"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-1.5">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Min. 8 characters"
-              className={inputClass}
-            />
-          </div>
-          </>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Full name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Ada Lovelace"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="ada@school.edu"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Password
+                </label>
+                <PasswordToggle
+                  value={form.password}
+                  onChange={(v) => setForm({ ...form, password: v })}
+                />
+              </div>
+            </>
           )}
 
           {institution.subjects.length > 0 && (

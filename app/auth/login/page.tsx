@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import {
   signInWithEmailAndPassword,
   browserLocalPersistence,
@@ -15,7 +15,7 @@ import { auth } from "@/lib/firebase";
 import { getInstitution, waitForUserProfile } from "@/lib/db";
 import { postAuthPath, useAuth } from "@/lib/auth-context";
 import { Button } from "@/app/components/ui/button";
-import { AuthCard, AuthFrame, darkInput } from "@/app/components/marketing/auth-frame";
+import { AuthCard, AuthFrame, darkInput, PasswordToggle } from "@/app/components/marketing/auth-frame";
 import { SsoButtons } from "@/app/components/auth/sso-buttons";
 
 function friendlyAuthError(err: unknown): string {
@@ -48,7 +48,6 @@ function safeNext(raw: string | null): string | null {
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ email: "", password: "", remember: false });
@@ -103,7 +102,7 @@ export default function LoginPage() {
         </p>
 
         {error && (
-          <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
+          <div className="mb-5 flex items-start gap-2 bg-red-500/10 border border-red-500/20 text-red-300 text-sm rounded-xl px-4 py-3">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -136,30 +135,12 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                value={form.password}
-                onChange={(e) =>
-                  setForm({ ...form, password: e.target.value })
-                }
-                placeholder="••••••••"
-                className={`${darkInput} pr-10`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
+            <PasswordToggle
+              value={form.password}
+              onChange={(v) => setForm({ ...form, password: v })}
+              placeholder="••••••••"
+              minLength={6}
+            />
           </div>
 
           <div className="flex items-center gap-2">
