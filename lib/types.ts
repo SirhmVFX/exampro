@@ -54,6 +54,7 @@ export interface Institution {
   plan: PlanId;
   planStatus: "active" | "past_due" | "canceled";
   planRenewsAt?: number;
+  trialEndsAt?: number;        // ms timestamp — set 30 days after creation; absent = no trial
   aiGenerationsUsed: number;
   createdAt: number;
 }
@@ -337,15 +338,15 @@ export interface PerQuestionResult {
 
 export interface AttemptEvent {
   type:
-    | "start"
-    | "resume"
-    | "autosave"
-    | "tab_blur"
-    | "tab_focus"
-    | "leave_attempt"
-    | "webcam_on"
-    | "webcam_off"
-    | "submit";
+  | "start"
+  | "resume"
+  | "autosave"
+  | "tab_blur"
+  | "tab_focus"
+  | "leave_attempt"
+  | "webcam_on"
+  | "webcam_off"
+  | "submit";
   at: number;
   detail?: string;
 }

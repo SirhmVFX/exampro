@@ -354,7 +354,7 @@ function Hero({
             </div>
 
             <p className="mt-5 text-xs text-white/35">
-              No card required · Plans from $29/mo · Cancel anytime
+              No card required · 30-day free trial · Plans from $29/mo · Cancel anytime
             </p>
 
             <div className="mt-10 flex flex-wrap gap-2">
@@ -999,7 +999,7 @@ function PricingTeaser() {
                     : "border border-white/15 hover:bg-white hover:text-black"
                     }`}
                 >
-                  {p.id === "enterprise" ? "Talk to us" : "Get started"}
+                  {p.id === "enterprise" ? "Talk to us" : p.priceUsd === 0 ? "Start free" : "Start free trial"}
                 </Link>
               </div>
             </Reveal>

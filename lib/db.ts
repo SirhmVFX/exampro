@@ -228,6 +228,49 @@ export async function setInstitutionPlan(
   });
 }
 
+/**
+ * Call this on every billing page load.
+ * - If the institution is on a paid plan whose renewsAt has passed, reverts to Free.
+ * - If it's still on Free and trialEndsAt has passed, marks planStatus "past_due"
+ *   so the admin sees an urgent upgrade banner.
+ * Returns the (possibly updated) institution.
+ */
+export async function checkAndExpirePlan(institution: Institution): Promise<Institution> {
+  const now = Date.now();
+
+  // Paid plan that has expired (manual monthly payments, no auto-renew)
+  if (
+    institution.plan !== "free" &&
+    institution.plan !== "enterprise" &&
+    institution.planRenewsAt &&
+    now > institution.planRenewsAt &&
+    institution.planStatus === "active"
+  ) {
+    await updateDoc(doc(db, COL.institutions, institution.id), {
+      plan: "free",
+      planStatus: "active",
+      planRenewsAt: null,
+      aiGenerationsUsed: 0,
+    });
+    return { ...institution, plan: "free", planStatus: "active", planRenewsAt: undefined, aiGenerationsUsed: 0 };
+  }
+
+  // Free plan trial expired — flag as past_due so billing page shows upgrade CTA
+  if (
+    institution.plan === "free" &&
+    institution.trialEndsAt &&
+    now > institution.trialEndsAt &&
+    institution.planStatus !== "past_due"
+  ) {
+    await updateDoc(doc(db, COL.institutions, institution.id), {
+      planStatus: "past_due",
+    });
+    return { ...institution, planStatus: "past_due" };
+  }
+
+  return institution;
+}
+
 // ─── Users ───
 
 export function membershipDocId(uid: string, institutionId: string): string {

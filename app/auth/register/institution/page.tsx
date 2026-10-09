@@ -126,6 +126,7 @@ export default function InstitutionRegisterPage() {
         primaryColor: "#000000",
         accentColor: "#000000",
         aiGenerationsUsed: 0,
+        trialEndsAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30-day free trial
         createdAt: Date.now(),
       });
       await createUserProfile({
@@ -168,294 +169,291 @@ export default function InstitutionRegisterPage() {
   return (
     <AuthFrame>
       <AuthCard>
-          <h1 className="text-2xl font-semibold tracking-tight mb-1">
-            Register your institution
-          </h1>
-          <p className="text-white/45 text-sm mb-8">
-            Set up your ExamPro workspace in 3 steps
-          </p>
+        <h1 className="text-2xl font-semibold tracking-tight mb-1">
+          Register your institution
+        </h1>
+        <p className="text-white/45 text-sm mb-8">
+          Set up your ExamPro workspace in 3 steps
+        </p>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 mb-8">
-            {steps.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-2 flex-1">
-                <div
-                  className={`w-8 h-8 flex items-center justify-center text-sm font-semibold shrink-0 transition-colors ${
-                    step > s.id
-                      ? "bg-white text-black"
-                      : step === s.id
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 mb-8">
+          {steps.map((s, i) => (
+            <div key={s.id} className="flex items-center gap-2 flex-1">
+              <div
+                className={`w-8 h-8 flex items-center justify-center text-sm font-semibold shrink-0 transition-colors ${step > s.id
+                    ? "bg-white text-black"
+                    : step === s.id
                       ? "bg-white text-black"
                       : "bg-white/10 text-white/30"
                   }`}
-                >
-                  {step > s.id ? <Check className="w-4 h-4" /> : s.id}
-                </div>
-                <span
-                  className={`text-xs font-medium ${
-                    step === s.id ? "text-white" : "text-white/30"
-                  }`}
-                >
-                  {s.label}
-                </span>
-                {i < steps.length - 1 && (
-                  <div
-                    className={`flex-1 h-0.5 ${
-                      step > s.id ? "bg-white" : "bg-white/10"
-                    }`}
-                  />
-                )}
+              >
+                {step > s.id ? <Check className="w-4 h-4" /> : s.id}
               </div>
-            ))}
-          </div>
-
-          {error && (
-            <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>{error}</span>
+              <span
+                className={`text-xs font-medium ${step === s.id ? "text-white" : "text-white/30"
+                  }`}
+              >
+                {s.label}
+              </span>
+              {i < steps.length - 1 && (
+                <div
+                  className={`flex-1 h-0.5 ${step > s.id ? "bg-white" : "bg-white/10"
+                    }`}
+                />
+              )}
             </div>
+          ))}
+        </div>
+
+        {error && (
+          <div className="mb-5 flex items-start gap-2 bg-white/5 border border-white/15 text-white/80 text-sm rounded-lg px-4 py-3">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleNext} className="space-y-5">
+          {/* Step 1: Your account */}
+          {step === 1 && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Full name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={(e) => update("name", e.target.value)}
+                  placeholder="John Doe"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Work email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => update("email", e.target.value)}
+                  placeholder="admin@institution.com"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={form.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  placeholder="Min. 8 characters"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Confirm password
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={form.confirmPassword}
+                  onChange={(e) => update("confirmPassword", e.target.value)}
+                  placeholder="Re-enter your password"
+                  className={inputClass}
+                />
+              </div>
+            </>
           )}
 
-          <form onSubmit={handleNext} className="space-y-5">
-            {/* Step 1: Your account */}
-            {step === 1 && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Full name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.name}
-                    onChange={(e) => update("name", e.target.value)}
-                    placeholder="John Doe"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Work email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={form.email}
-                    onChange={(e) => update("email", e.target.value)}
-                    placeholder="admin@institution.com"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={form.password}
-                    onChange={(e) => update("password", e.target.value)}
-                    placeholder="Min. 8 characters"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Confirm password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={form.confirmPassword}
-                    onChange={(e) => update("confirmPassword", e.target.value)}
-                    placeholder="Re-enter your password"
-                    className={inputClass}
-                  />
-                </div>
-              </>
-            )}
+          {/* Step 2: Institution */}
+          {step === 2 && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Institution name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.institutionName}
+                  onChange={(e) => update("institutionName", e.target.value)}
+                  placeholder="TechBridge Academy"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Institution type
+                </label>
+                <select
+                  required
+                  value={form.institutionType}
+                  onChange={(e) => update("institutionType", e.target.value)}
+                  className={`${inputClass} bg-zinc-950`}
+                >
+                  <option value="">Select type</option>
+                  {INSTITUTION_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.country}
+                  onChange={(e) => update("country", e.target.value)}
+                  placeholder="Nigeria"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Phone{" "}
+                  <span className="text-white/30 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => update("phone", e.target.value)}
+                  placeholder="+234 800 000 0000"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  Website{" "}
+                  <span className="text-white/30 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="url"
+                  value={form.website}
+                  onChange={(e) => update("website", e.target.value)}
+                  placeholder="https://institution.com"
+                  className={inputClass}
+                />
+              </div>
+            </>
+          )}
 
-            {/* Step 2: Institution */}
-            {step === 2 && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Institution name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.institutionName}
-                    onChange={(e) => update("institutionName", e.target.value)}
-                    placeholder="TechBridge Academy"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Institution type
-                  </label>
-                  <select
-                    required
-                    value={form.institutionType}
-                    onChange={(e) => update("institutionType", e.target.value)}
-                    className={`${inputClass} bg-zinc-950`}
-                  >
-                    <option value="">Select type</option>
-                    {INSTITUTION_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.country}
-                    onChange={(e) => update("country", e.target.value)}
-                    placeholder="Nigeria"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Phone{" "}
-                    <span className="text-white/30 font-normal">(optional)</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => update("phone", e.target.value)}
-                    placeholder="+234 800 000 0000"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
-                    Website{" "}
-                    <span className="text-white/30 font-normal">(optional)</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={form.website}
-                    onChange={(e) => update("website", e.target.value)}
-                    placeholder="https://institution.com"
-                    className={inputClass}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Step 3: Review & create */}
-            {step === 3 && (
-              <>
-                <div className="bg-white/5 rounded-xl p-5 space-y-3">
-                  <h2 className="text-sm font-semibold text-white">
-                    Your account
+          {/* Step 3: Review & create */}
+          {step === 3 && (
+            <>
+              <div className="bg-white/5 rounded-xl p-5 space-y-3">
+                <h2 className="text-sm font-semibold text-white">
+                  Your account
+                </h2>
+                <dl className="space-y-1.5 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-white/45">Admin name</dt>
+                    <dd className="text-white font-medium text-right">
+                      {form.name}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-white/45">Email</dt>
+                    <dd className="text-white font-medium text-right">
+                      {form.email}
+                    </dd>
+                  </div>
+                </dl>
+                <div className="border-t border-white/10 pt-3">
+                  <h2 className="text-sm font-semibold text-white mb-1.5">
+                    Institution
                   </h2>
                   <dl className="space-y-1.5 text-sm">
                     <div className="flex justify-between gap-4">
-                      <dt className="text-white/45">Admin name</dt>
+                      <dt className="text-white/45">Name</dt>
                       <dd className="text-white font-medium text-right">
-                        {form.name}
+                        {form.institutionName}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <dt className="text-white/45">Email</dt>
+                      <dt className="text-white/45">Type</dt>
                       <dd className="text-white font-medium text-right">
-                        {form.email}
+                        {typeLabel}
                       </dd>
                     </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-white/45">Country</dt>
+                      <dd className="text-white font-medium text-right">
+                        {form.country}
+                      </dd>
+                    </div>
+                    {form.phone && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-white/45">Phone</dt>
+                        <dd className="text-white font-medium text-right">
+                          {form.phone}
+                        </dd>
+                      </div>
+                    )}
+                    {form.website && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-white/45">Website</dt>
+                        <dd className="text-white font-medium text-right">
+                          {form.website}
+                        </dd>
+                      </div>
+                    )}
                   </dl>
-                  <div className="border-t border-white/10 pt-3">
-                    <h2 className="text-sm font-semibold text-white mb-1.5">
-                      Institution
-                    </h2>
-                    <dl className="space-y-1.5 text-sm">
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-white/45">Name</dt>
-                        <dd className="text-white font-medium text-right">
-                          {form.institutionName}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-white/45">Type</dt>
-                        <dd className="text-white font-medium text-right">
-                          {typeLabel}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-white/45">Country</dt>
-                        <dd className="text-white font-medium text-right">
-                          {form.country}
-                        </dd>
-                      </div>
-                      {form.phone && (
-                        <div className="flex justify-between gap-4">
-                          <dt className="text-white/45">Phone</dt>
-                          <dd className="text-white font-medium text-right">
-                            {form.phone}
-                          </dd>
-                        </div>
-                      )}
-                      {form.website && (
-                        <div className="flex justify-between gap-4">
-                          <dt className="text-white/45">Website</dt>
-                          <dd className="text-white font-medium text-right">
-                            {form.website}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
-                  </div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-sm text-white/50">
-                  After creating your workspace, you&apos;ll be guided through a
-                  quick setup to add your classes, subjects, and invite your
-                  teachers and students.
-                </div>
-              </>
-            )}
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 text-sm text-white/50">
+                After creating your workspace, you&apos;ll be guided through a
+                quick setup to add your classes, subjects, and invite your
+                teachers and students.
+              </div>
+            </>
+          )}
 
-            <div className="flex gap-3 pt-2">
-              {step > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="flex-1 text-white/70 hover:bg-white/10"
-                  onClick={() => setStep(step - 1)}
-                  disabled={loading}
-                >
-                  Back
-                </Button>
-              )}
-              <Button type="submit" variant="inverse" loading={loading} className="flex-1">
-                {step < 3 ? (
-                  <>
-                    Continue <ArrowRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  "Create Workspace"
-                )}
+          <div className="flex gap-3 pt-2">
+            {step > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 text-white/70 hover:bg-white/10"
+                onClick={() => setStep(step - 1)}
+                disabled={loading}
+              >
+                Back
               </Button>
-            </div>
-          </form>
+            )}
+            <Button type="submit" variant="inverse" loading={loading} className="flex-1">
+              {step < 3 ? (
+                <>
+                  Continue <ArrowRight className="w-4 h-4" />
+                </>
+              ) : (
+                "Create Workspace"
+              )}
+            </Button>
+          </div>
+        </form>
 
-          <p className="mt-6 text-center text-sm text-white/40">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="text-white font-medium hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
+        <p className="mt-6 text-center text-sm text-white/40">
+          Already have an account?{" "}
+          <Link
+            href="/auth/login"
+            className="text-white font-medium hover:underline"
+          >
+            Sign in
+          </Link>
+        </p>
       </AuthCard>
     </AuthFrame>
   );

@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     q: "Is there a setup fee?",
-    a: "No. Every institution starts on the Free plan after onboarding. Paid plans are billed monthly via Paystack.",
+    a: "No. When you register your institution, you get a 30-day free trial — no card required to start. After the trial your account stays on the Free plan (30 students, 3 teachers, 20 AI gens/month) until you upgrade. All your data is always preserved.",
   },
   {
     q: "How does AI question generation work?",
@@ -102,7 +102,7 @@ export default function PricingPage() {
                   ? "Contact sales"
                   : plan.priceNgn === 0
                     ? "Start free"
-                    : "Get started"}
+                    : "Start 30-day free trial"}
               </Link>
 
               <ul className="mt-6 space-y-2.5 flex-1">
@@ -123,7 +123,10 @@ export default function PricingPage() {
 
         {/* Payment note */}
         <p className="text-center text-xs text-white/30 mt-6">
-          Payments processed securely by Paystack · USD prices shown · Billed monthly
+          Payments processed securely by Paystack · USD prices shown · Billed monthly · No auto-renew
+        </p>
+        <p className="text-center text-xs text-white/20 mt-1.5">
+          All paid plans include a 30-day free trial from the date of institution registration. No card required to start.
         </p>
       </section>
 

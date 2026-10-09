@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getInstitution } from "@/lib/db";
+import { getPlan, planAllows } from "@/lib/plans";
 
-// Generates assessment questions with Google Gemini (free API tier).
+// Generates assessment questions with Google Gemini.
 // Env: GEMINI_API_KEY — https://aistudio.google.com/apikey
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 
 interface GenerateBody {
+  institutionId: string;
   subject: string;
   className: string;
   topic?: string;
   count: number;
   type: "mcq" | "truefalse" | "short" | "essay" | "coding";
   difficulty: "easy" | "medium" | "hard";
-  language?: string; // for coding questions
+  language?: string;
 }
 
 function buildPrompt(b: GenerateBody): string {
@@ -57,12 +60,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!body.subject || !body.count || !body.type) {
+  if (!body.subject || !body.count || !body.type || !body.institutionId) {
     return NextResponse.json(
-      { error: "subject, count and type are required" },
+      { error: "institutionId, subject, count and type are required" },
       { status: 400 }
     );
   }
+
+  // ── Server-side quota enforcement ──────────────────────────────────────────
+  const institution = await getInstitution(body.institutionId);
+  if (!institution) {
+    return NextResponse.json({ error: "Institution not found." }, { status: 404 });
+  }
+
+  const plan = getPlan(institution.plan);
+  const allowed = planAllows(plan, { aiUsed: institution.aiGenerationsUsed });
+  if (!allowed.ai) {
+    return NextResponse.json(
+      {
+        error:
+          plan.aiGenerationsPerMonth === -1
+            ? "AI generation is not available on your current plan."
+            : `You've used all ${plan.aiGenerationsPerMonth} AI generations on the ${plan.name} plan this month. Upgrade to generate more.`,
+      },
+      { status: 403 }
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   body.count = Math.min(Math.max(1, Number(body.count)), 20);
 
   try {
@@ -97,7 +122,6 @@ export async function POST(req: NextRequest) {
     try {
       questions = JSON.parse(text);
     } catch {
-      // Model occasionally wraps output in code fences despite instructions
       const match = text.match(/\[[\s\S]*\]/);
       if (!match) throw new Error("Could not parse model output");
       questions = JSON.parse(match[0]);
@@ -110,10 +134,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ questions });
   } catch (e) {
     return NextResponse.json(
-      {
-        error:
-          e instanceof Error ? e.message : "Failed to generate questions",
-      },
+      { error: e instanceof Error ? e.message : "Failed to generate questions" },
       { status: 500 }
     );
   }
