@@ -24,23 +24,33 @@ const sections = [
     items: [
       {
         icon: FileText,
+        title: "Tests, Quizzes, Exams & Assignments",
+        desc: "Create or AI-generate any assessment type — Test, Quiz, Exam, Assignment, Project or Practice — and assign it to a whole class or hand-picked students.",
+      },
+      {
+        icon: Users,
+        title: "Admins & teachers, same power",
+        desc: "Instructors and administrators both build, generate, publish and assign assessments from a shared question bank — exactly the Bridgitus Test/Exam/Quiz workflow.",
+      },
+      {
+        icon: FileText,
         title: "6 question types",
-        desc: "MCQ, true/false, short answer, essay, coding playground, and project upload — all in one assessment.",
+        desc: "MCQ, true/false, short answer, essay, coding playground, and project upload — mix up to 100 questions in one assessment.",
       },
       {
         icon: Zap,
-        title: "Instant auto-grading",
-        desc: "MCQ and true/false grade the moment a student submits. Results appear on their dashboard immediately.",
+        title: "Instant auto-grading & corrections",
+        desc: "MCQ and true/false grade the moment a student submits. Students immediately see their score, what they missed, and step-by-step solutions.",
+      },
+      {
+        icon: Clock,
+        title: "Timed, self-paced & trials",
+        desc: "Set a countdown or let students work at their own pace. Control the number of trials per student and re-assign the same exam as many times as you need.",
       },
       {
         icon: Code2,
         title: "Coding playground",
         desc: "Students write JavaScript in the browser. A sandboxed Web Worker runs their code against your test cases in real time.",
-      },
-      {
-        icon: Clock,
-        title: "Timed or self-paced",
-        desc: "Set a countdown timer or let students work at their own pace. Accommodation support adds extra time per student.",
       },
     ],
   },
@@ -50,17 +60,17 @@ const sections = [
       {
         icon: Brain,
         title: "AI question generation",
-        desc: "Describe a topic and difficulty. Google Gemini drafts MCQ, short answer, essay, or coding questions you can edit and save.",
+        desc: "Describe a subject, topic, and difficulty. Google Gemini drafts up to 100 questions at a time — MCQ, true/false, short answer, essay, coding, or mixed — with answers and worked solutions.",
       },
       {
         icon: Layers,
-        title: "Reusable question library",
-        desc: "Every question lives in a searchable library organised by subject, class, topic, and skill tag.",
+        title: "Subject folders & question sets",
+        desc: "Every subject gets a folder. Store as many question sets as you need — up to 100 questions per set — and reuse a whole set in any assessment in one click.",
       },
       {
         icon: FileText,
         title: "CSV import & export",
-        desc: "Bulk-import questions from a spreadsheet or export your entire question bank for offline backup.",
+        desc: "Bulk-import questions from a spreadsheet into a set or the library, or export your entire question bank for offline backup.",
       },
       {
         icon: CheckCircle,
@@ -125,7 +135,7 @@ const sections = [
       {
         icon: BookOpen,
         title: "Learning materials",
-        desc: "Upload PDFs, videos, links, and rich-text notes. Students mark materials complete; teachers see progress.",
+        desc: "Upload PDFs, videos, links, and rich-text notes. Assign to a whole class or to hand-picked students; they mark materials complete and you track progress.",
       },
       {
         icon: Layers,
@@ -197,7 +207,9 @@ export default function FeaturesPage() {
                       <item.icon className="w-4 h-4" />
                     </div>
                     <p className="font-semibold text-sm mb-2">{item.title}</p>
-                    <p className="text-xs text-white/45 leading-relaxed">{item.desc}</p>
+                    <p className="text-xs text-white/45 leading-relaxed">
+                      {item.desc}
+                    </p>
                   </div>
                 ))}
               </div>

@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -17,6 +12,7 @@ import {
   ClipboardList,
   Code2,
   FileText,
+  Folder,
   GraduationCap,
   Globe,
   LayoutDashboard,
@@ -53,7 +49,7 @@ function Reveal({
       ([e]) => {
         if (e.isIntersecting) setShow(true);
       },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -63,8 +59,9 @@ function Reveal({
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        } ${className}`}
+      className={`transition-all duration-700 ease-out ${
+        show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      } ${className}`}
     >
       {children}
     </div>
@@ -98,8 +95,15 @@ const SLIDES = [
     screen: (
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-2">
-          {[["Students", "248"], ["Teachers", "18"], ["Pass rate", "87%"]].map(([l, v]) => (
-            <div key={l} className="rounded-lg border border-white/10 bg-white/5 p-3">
+          {[
+            ["Students", "248"],
+            ["Teachers", "18"],
+            ["Pass rate", "87%"],
+          ].map(([l, v]) => (
+            <div
+              key={l}
+              className="rounded-lg border border-white/10 bg-white/5 p-3"
+            >
               <p className="text-[10px] text-white/40 mb-1">{l}</p>
               <p className="text-lg font-semibold text-white">{v}</p>
             </div>
@@ -109,16 +113,24 @@ const SLIDES = [
           <p className="text-[10px] text-white/40 mb-2">Attempts this week</p>
           <div className="flex items-end gap-1 h-14">
             {[42, 68, 51, 88, 73, 95, 80].map((h, i) => (
-              <div key={i} className="flex-1 rounded-sm bg-indigo-400/80" style={{ height: `${h}%` }} />
+              <div
+                key={i}
+                className="flex-1 rounded-sm bg-indigo-400/80"
+                style={{ height: `${h}%` }}
+              />
             ))}
           </div>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 p-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] text-white/40 mb-0.5">Join code</p>
-            <p className="text-base font-mono tracking-[0.25em] text-white">K7MQ2P</p>
+            <p className="text-base font-mono tracking-[0.25em] text-white">
+              K7MQ2P
+            </p>
           </div>
-          <div className="text-[10px] px-2 py-1 border border-white/15 text-white/50 rounded-md">Copy</div>
+          <div className="text-[10px] px-2 py-1 border border-white/15 text-white/50 rounded-md">
+            Copy
+          </div>
         </div>
       </div>
     ),
@@ -135,19 +147,37 @@ const SLIDES = [
               <Sparkles className="w-2.5 h-2.5" /> AI Generate
             </div>
           </div>
-          <p className="text-xs text-white leading-relaxed">Which HTTP status code means a resource was created successfully?</p>
+          <p className="text-xs text-white leading-relaxed">
+            Which HTTP status code means a resource was created successfully?
+          </p>
           <div className="flex flex-wrap gap-1 mt-2">
             {["MCQ", "Essay", "Coding", "Short"].map((t) => (
-              <span key={t} className="text-[9px] px-1.5 py-0.5 border border-white/10 text-white/40 rounded">{t}</span>
+              <span
+                key={t}
+                className="text-[9px] px-1.5 py-0.5 border border-white/10 text-white/40 rounded"
+              >
+                {t}
+              </span>
             ))}
           </div>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 p-3">
           <p className="text-[10px] text-white/40 mb-2">Submissions</p>
-          {[["Amara O.", "94%", true], ["Tunde A.", "61%", true], ["Kemi F.", "Needs grading", false]].map(([n, s, g]) => (
-            <div key={String(n)} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
+          {[
+            ["Amara O.", "94%", true],
+            ["Tunde A.", "61%", true],
+            ["Kemi F.", "Needs grading", false],
+          ].map(([n, s, g]) => (
+            <div
+              key={String(n)}
+              className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0"
+            >
               <span className="text-xs text-white/70">{n}</span>
-              <span className={`text-[10px] font-medium ${g ? (Number(String(s).replace('%', '')) >= 70 ? "text-emerald-400" : "text-amber-400") : "text-white/40"}`}>{s}</span>
+              <span
+                className={`text-[10px] font-medium ${g ? (Number(String(s).replace("%", "")) >= 70 ? "text-emerald-400" : "text-amber-400") : "text-white/40"}`}
+              >
+                {s}
+              </span>
             </div>
           ))}
         </div>
@@ -162,25 +192,44 @@ const SLIDES = [
         <div className="rounded-lg border border-white/10 bg-white/5 p-3">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">Exam · Computer Science</p>
-              <p className="text-sm font-medium text-white">HTTP Fundamentals</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider">
+                Exam · Computer Science
+              </p>
+              <p className="text-sm font-medium text-white">
+                HTTP Fundamentals
+              </p>
             </div>
             <div className="flex items-center gap-1 text-xs font-mono text-white border border-white/15 rounded-md px-2 py-1">
-              <Timer className="w-3 h-3" />12:48
+              <Timer className="w-3 h-3" />
+              12:48
             </div>
           </div>
-          <p className="text-xs text-white mb-2">1. Which status code means a resource was created?</p>
+          <p className="text-xs text-white mb-2">
+            1. Which status code means a resource was created?
+          </p>
           <div className="grid grid-cols-2 gap-1.5">
-            {["200 OK", "201 Created", "204 No Content", "301 Moved"].map((opt, i) => (
-              <div key={opt} className={`text-[10px] px-2 py-1.5 rounded-md border ${i === 1 ? "border-white bg-white text-black font-semibold" : "border-white/10 text-white/50"}`}>
-                {opt}
-              </div>
-            ))}
+            {["200 OK", "201 Created", "204 No Content", "301 Moved"].map(
+              (opt, i) => (
+                <div
+                  key={opt}
+                  className={`text-[10px] px-2 py-1.5 rounded-md border ${i === 1 ? "border-white bg-white text-black font-semibold" : "border-white/10 text-white/50"}`}
+                >
+                  {opt}
+                </div>
+              ),
+            )}
           </div>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {[["Avg score", "84%"], ["Attempts", "12"], ["Certificates", "2"]].map(([l, v]) => (
-            <div key={l} className="rounded-lg border border-white/10 bg-white/5 p-2.5 text-center">
+          {[
+            ["Avg score", "84%"],
+            ["Attempts", "12"],
+            ["Certificates", "2"],
+          ].map(([l, v]) => (
+            <div
+              key={l}
+              className="rounded-lg border border-white/10 bg-white/5 p-2.5 text-center"
+            >
               <p className="text-[9px] text-white/35">{l}</p>
               <p className="text-sm font-semibold text-white mt-0.5">{v}</p>
             </div>
@@ -226,12 +275,19 @@ function HeroDashboard() {
         <div className="flex h-[340px]">
           {/* Mini sidebar */}
           <div className="w-10 bg-black/60 border-r border-white/10 flex flex-col items-center py-3 gap-3">
-            <div className="w-6 h-6 rounded border border-white/20 flex items-center justify-center text-[8px] font-bold text-white">EP</div>
-            {[LayoutDashboard, FileText, BarChart3, Users, Bell].map((Icon, i) => (
-              <div key={i} className={`w-6 h-6 rounded flex items-center justify-center ${i === 0 ? "bg-white/10" : ""}`}>
-                <Icon className="w-3 h-3 text-white/40" />
-              </div>
-            ))}
+            <div className="w-6 h-6 rounded border border-white/20 flex items-center justify-center text-[8px] font-bold text-white">
+              EP
+            </div>
+            {[LayoutDashboard, FileText, BarChart3, Users, Bell].map(
+              (Icon, i) => (
+                <div
+                  key={i}
+                  className={`w-6 h-6 rounded flex items-center justify-center ${i === 0 ? "bg-white/10" : ""}`}
+                >
+                  <Icon className="w-3 h-3 text-white/40" />
+                </div>
+              ),
+            )}
           </div>
 
           {/* Main content */}
@@ -241,8 +297,13 @@ function HeroDashboard() {
           >
             {/* Role badge */}
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: slide.color }} />
-              <p className="text-[10px] font-medium text-white/50 uppercase tracking-wider">{slide.role} Dashboard</p>
+              <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: slide.color }}
+              />
+              <p className="text-[10px] font-medium text-white/50 uppercase tracking-wider">
+                {slide.role} Dashboard
+              </p>
             </div>
             {slide.screen}
           </div>
@@ -270,11 +331,7 @@ function HeroDashboard() {
 
 const CYCLE = ["quizzes", "exams", "coding tests", "assignments"];
 
-function Hero({
-  onPreviewRole,
-}: {
-  onPreviewRole: (role: Role) => void;
-}) {
+function Hero({ onPreviewRole }: { onPreviewRole: (role: Role) => void }) {
   const [word, setWord] = useState(0);
   const [spot, setSpot] = useState({ x: 50, y: 30 });
   const area = useRef<HTMLElement>(null);
@@ -313,7 +370,7 @@ function Hero({
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left — copy */}
           <div>
-            <div className="inline-flex items-center gap-2 border border-white/15 px-3 py-1 text-xs text-white/60 mb-8">
+            <div className="inline-flex items-center gap-2 border border-white/15 rounded-full px-3 py-1 text-xs text-white/60 mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               Now in public beta · Free plan included
             </div>
@@ -331,9 +388,9 @@ function Hero({
             </h1>
 
             <p className="mt-6 text-lg text-white/50 max-w-xl leading-relaxed">
-              One workspace per school. Super admins run the institution, teachers
-              set work with AI, students take it — scored instantly, including
-              coding playgrounds.
+              One workspace per school. Super admins run the institution,
+              teachers set work with AI, students take it — scored instantly,
+              including coding playgrounds.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
@@ -354,7 +411,8 @@ function Hero({
             </div>
 
             <p className="mt-5 text-xs text-white/35">
-              No card required · 30-day free trial · Plans from $29/mo · Cancel anytime
+              No card required · 30-day free trial · Plans from $29/mo · Cancel
+              anytime
             </p>
 
             <div className="mt-10 flex flex-wrap gap-2">
@@ -369,9 +427,11 @@ function Hero({
                   key={id}
                   onClick={() => {
                     onPreviewRole(id);
-                    document.getElementById("product")?.scrollIntoView({ behavior: "smooth" });
+                    document
+                      .getElementById("product")
+                      ?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="text-xs px-3 py-1.5 border border-white/10 text-white/50 hover:text-white hover:border-white/30 transition"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/30 transition"
                 >
                   Preview {label} →
                 </button>
@@ -485,13 +545,16 @@ function ProductPreview({
             <button
               key={t.id}
               onClick={() => setRole(t.id)}
-              className={`px-4 py-2.5 rounded-lg text-sm transition border ${role === t.id
-                ? "bg-white text-black border-white"
-                : "border-white/10 text-white/55 hover:text-white hover:border-white/25"
-                }`}
+              className={`px-4 py-2.5 rounded-lg text-sm transition border ${
+                role === t.id
+                  ? "bg-white text-black border-white"
+                  : "border-white/10 text-white/55 hover:text-white hover:border-white/25"
+              }`}
             >
               <span className="font-medium">{t.label}</span>
-              <span className={`ml-2 text-xs ${role === t.id ? "text-black/50" : "text-white/30"}`}>
+              <span
+                className={`ml-2 text-xs ${role === t.id ? "text-black/50" : "text-white/30"}`}
+              >
                 {t.hint}
               </span>
             </button>
@@ -524,7 +587,9 @@ function ProductPreview({
                           className="rounded-xl border border-white/10 p-4 hover:border-white/25 transition"
                         >
                           <p className="text-[11px] text-white/40">{l}</p>
-                          <p className="text-2xl font-semibold text-white mt-1">{v}</p>
+                          <p className="text-2xl font-semibold text-white mt-1">
+                            {v}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -548,14 +613,18 @@ function ProductPreview({
                   </div>
                   <div className="md:col-span-2 space-y-4">
                     <div className="rounded-xl border border-white/10 p-4">
-                      <p className="text-[11px] text-white/40 mb-2">Join code</p>
+                      <p className="text-[11px] text-white/40 mb-2">
+                        Join code
+                      </p>
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-mono tracking-[0.35em] text-white">
                           K7MQ2P
                         </span>
                         <button
                           onClick={() => {
-                            navigator.clipboard.writeText("K7MQ2P").catch(() => { });
+                            navigator.clipboard
+                              .writeText("K7MQ2P")
+                              .catch(() => {});
                             setCopied(true);
                             setTimeout(() => setCopied(false), 1600);
                           }}
@@ -567,7 +636,9 @@ function ProductPreview({
                     </div>
                     <div className="rounded-xl border border-white/10 p-4 space-y-3">
                       <p className="text-[11px] text-white/40">Announcement</p>
-                      <p className="text-sm text-white">Midterms open Monday.</p>
+                      <p className="text-sm text-white">
+                        Midterms open Monday.
+                      </p>
                       <p className="text-xs text-white/40">
                         Sent to all students · 214 read
                       </p>
@@ -580,7 +651,9 @@ function ProductPreview({
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-sm font-medium text-white">Question library</p>
+                      <p className="text-sm font-medium text-white">
+                        Question library · Mathematics
+                      </p>
                       <button
                         onClick={generate}
                         disabled={generating}
@@ -600,30 +673,48 @@ function ProductPreview({
                         </p>
                       ) : (
                         <p className="text-sm text-white/30">
-                          Click generate — Gemini drafts questions into your library.
+                          Click generate — Gemini drafts up to 100 questions
+                          into your subject folders.
                         </p>
                       )}
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {["MCQ", "True / False", "Short", "Essay", "Coding"].map((t) => (
+                      {["Algebra", "Geometry", "Statistics"].map((t) => (
                         <span
                           key={t}
-                          className="text-[11px] px-2 py-1 rounded-md border border-white/10 text-white/50"
+                          className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border border-white/10 text-white/50"
                         >
+                          <Folder className="w-3 h-3" />
                           {t}
                         </span>
                       ))}
                     </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {["MCQ", "True / False", "Short", "Essay", "Coding"].map(
+                        (t) => (
+                          <span
+                            key={t}
+                            className="text-[11px] px-2 py-1 rounded-md border border-white/10 text-white/50"
+                          >
+                            {t}
+                          </span>
+                        ),
+                      )}
+                    </div>
                   </div>
                   <div className="rounded-xl border border-white/10 p-4">
-                    <p className="text-sm font-medium text-white mb-3">Publish as</p>
+                    <p className="text-sm font-medium text-white mb-3">
+                      Publish as
+                    </p>
                     {["Quiz", "Test", "Exam", "Assignment"].map((k, i) => (
                       <label
                         key={k}
                         className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0 cursor-pointer group"
                       >
                         <span className="w-4 h-4 rounded-full border border-white/30 group-hover:border-white flex items-center justify-center">
-                          {i === 2 && <span className="w-2 h-2 rounded-full bg-white" />}
+                          {i === 2 && (
+                            <span className="w-2 h-2 rounded-full bg-white" />
+                          )}
                         </span>
                         <span className="text-sm text-white/80">{k}</span>
                         <span className="ml-auto text-[11px] text-white/30">
@@ -642,7 +733,9 @@ function ProductPreview({
                       <p className="text-[11px] text-white/40 uppercase tracking-wider">
                         Exam · Computer Science
                       </p>
-                      <p className="text-lg font-medium text-white">HTTP fundamentals</p>
+                      <p className="text-lg font-medium text-white">
+                        HTTP fundamentals
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 text-sm font-mono text-white border border-white/15 rounded-lg px-3 py-1.5">
                       <Timer className="w-3.5 h-3.5" />
@@ -653,29 +746,33 @@ function ProductPreview({
                     1. Which status code means a resource was created?
                   </p>
                   <div className="grid sm:grid-cols-2 gap-2">
-                    {["200 OK", "201 Created", "204 No Content", "301 Moved"].map(
-                      (opt, i) => {
-                        const on = picked === i;
-                        const correct = i === 1;
-                        return (
-                          <button
-                            key={opt}
-                            onClick={() => setPicked(i)}
-                            className={`text-left text-sm px-4 py-3 rounded-xl border transition ${on
+                    {[
+                      "200 OK",
+                      "201 Created",
+                      "204 No Content",
+                      "301 Moved",
+                    ].map((opt, i) => {
+                      const on = picked === i;
+                      const correct = i === 1;
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() => setPicked(i)}
+                          className={`text-left text-sm px-4 py-3 rounded-xl border transition ${
+                            on
                               ? correct
                                 ? "border-white bg-white text-black"
                                 : "border-white/40 bg-white/10 text-white"
                               : "border-white/10 text-white/70 hover:border-white/30"
-                              }`}
-                          >
-                            {opt}
-                            {on && correct && (
-                              <span className="float-right text-xs">Correct</span>
-                            )}
-                          </button>
-                        );
-                      }
-                    )}
+                          }`}
+                        >
+                          {opt}
+                          {on && correct && (
+                            <span className="float-right text-xs">Correct</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                   <div className="mt-5 flex items-center gap-3 text-xs text-white/35">
                     <Code2 className="w-3.5 h-3.5" />
@@ -698,13 +795,19 @@ function Features() {
   const items = [
     {
       title: "AI question generation",
-      desc: "Describe a topic and difficulty. Gemini drafts MCQ, true/false, short answer, essay, or coding questions in seconds. Edit every line before saving — AI does the first draft, you have final say.",
+      desc: "Describe a subject, topic, and difficulty. Gemini drafts up to 100 questions at a time — MCQ, true/false, short answer, essay, coding, or mixed — each with options, answers, and worked solutions. Edit every line before saving; AI does the first draft, you have final say.",
       icon: Sparkles,
       wide: true,
     },
     {
+      title: "Subject folders & question sets",
+      desc: "Every subject gets a folder. Store as many question sets as you need — up to 100 questions per set — built manually, generated by AI, or imported by CSV. Reuse a whole set in any assessment in one click.",
+      icon: Folder,
+      wide: true,
+    },
+    {
       title: "Instant auto-grading",
-      desc: "MCQ, true/false, and short-answer questions grade the moment a student submits. No waiting.",
+      desc: "MCQ, true/false, and short-answer questions grade the moment a student submits. Students see their score, what they missed, and step-by-step corrections immediately.",
       icon: Check,
     },
     {
@@ -714,12 +817,12 @@ function Features() {
     },
     {
       title: "6 question types",
-      desc: "MCQ · True/False · Short answer · Essay · Coding playground · Project upload. Mix them in one assessment.",
+      desc: "MCQ · True/False · Short answer · Essay · Coding playground · Project upload. Mix up to 100 of them in one assessment.",
       icon: Library,
     },
     {
       title: "Learning materials & paths",
-      desc: "Upload PDFs, paste YouTube links, or write rich-text notes. Sequence them into a learning path and gate the exam — students must complete materials before the assessment unlocks.",
+      desc: "Upload PDFs, paste links, or write rich-text notes. Assign to a whole class or to hand-picked students, then sequence materials into a learning path that gates the exam — students must complete them before the assessment unlocks.",
       icon: GraduationCap,
       wide: true,
     },
@@ -773,7 +876,8 @@ function Features() {
             Everything after signup
           </h2>
           <p className="mt-4 text-white/45 max-w-xl">
-            Every tool in the assessment lifecycle — from writing the first question to handing out a certificate.
+            Every tool in the assessment lifecycle — from writing the first
+            question to handing out a certificate.
           </p>
         </Reveal>
         <div className="mt-12 grid md:grid-cols-3 gap-3">
@@ -781,7 +885,9 @@ function Features() {
             <Reveal
               key={item.title}
               delay={i * 50}
-              className={(item as { wide?: boolean }).wide ? "md:col-span-2" : ""}
+              className={
+                (item as { wide?: boolean }).wide ? "md:col-span-2" : ""
+              }
             >
               <div className="group h-full rounded-2xl border border-white/10 p-7 hover:border-white/25 hover:bg-white/[0.02] transition-all">
                 <item.icon className="w-5 h-5 text-white mb-5 opacity-70" />
@@ -804,10 +910,26 @@ function Features() {
 
 function How() {
   const steps = [
-    { n: "01", t: "Register the school", d: "Admin creates the workspace and gets a 6-character join code." },
-    { n: "02", t: "Onboard structure", d: "Name your classes — Grade, Level, or Cohort — and list subjects." },
-    { n: "03", t: "Invite faculty & students", d: "Share the code, or collect emails. Plan limits are enforced." },
-    { n: "04", t: "Teach, assess, score", d: "Materials, AI questions, timed exams, retakes, live analytics." },
+    {
+      n: "01",
+      t: "Register the school",
+      d: "Admin creates the workspace and gets a 6-character join code.",
+    },
+    {
+      n: "02",
+      t: "Onboard structure",
+      d: "Name your classes — Grade, Level, or Cohort — and list subjects.",
+    },
+    {
+      n: "03",
+      t: "Invite faculty & students",
+      d: "Share the code, or collect emails. Plan limits are enforced.",
+    },
+    {
+      n: "04",
+      t: "Teach, assess, score",
+      d: "Materials, AI questions, timed exams, retakes, live analytics.",
+    },
   ];
   return (
     <section id="how" className="py-24 scroll-mt-24 border-y border-white/10">
@@ -825,7 +947,7 @@ function How() {
           {steps.map((s, i) => (
             <Reveal key={s.n} delay={i * 90}>
               <div className="relative">
-                <div className="w-8 h-8 bg-black border border-white text-[11px] font-mono text-white flex items-center justify-center mb-5">
+                <div className="w-8 h-8 rounded-xl bg-black border border-white text-[11px] font-mono text-white flex items-center justify-center mb-5">
                   {s.n}
                 </div>
                 <h3 className="text-white font-medium mb-2">{s.t}</h3>
@@ -857,9 +979,9 @@ function Roles() {
       icon: Library,
       name: "Teacher",
       points: [
-        "AI + manual question bank",
+        "AI question sets in subject folders",
         "Quizzes, tests, exams, assignments",
-        "Coding playgrounds",
+        "Assign with trials & retakes",
         "Manual grade essays & other languages",
       ],
     },
@@ -868,9 +990,9 @@ function Roles() {
       name: "Student",
       points: [
         "Timed, shuffled papers",
-        "Instant results when allowed",
+        "Instant results with corrections",
         "Retake if the teacher says so",
-        "Progress by subject and class",
+        "Study materials & progress tracking",
       ],
     },
   ];
@@ -893,7 +1015,10 @@ function Roles() {
                 <h3 className="text-lg font-medium mb-5">{r.name}</h3>
                 <ul className="space-y-2.5">
                   {r.points.map((p) => (
-                    <li key={p} className="flex gap-2 text-sm text-white/50 group-hover:text-black/60">
+                    <li
+                      key={p}
+                      className="flex gap-2 text-sm text-white/50 group-hover:text-black/60"
+                    >
                       <Check className="w-4 h-4 shrink-0 mt-0.5" />
                       {p}
                     </li>
@@ -916,9 +1041,12 @@ function Stats() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) setOn(true);
-    }, { threshold: 0.4 });
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) setOn(true);
+      },
+      { threshold: 0.4 },
+    );
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -960,26 +1088,33 @@ function PricingTeaser() {
               Start free. Scale the school.
             </h2>
           </div>
-          <p className="text-sm text-white/35 self-start md:self-end">All prices in USD · Billed monthly</p>
+          <p className="text-sm text-white/35 self-start md:self-end">
+            All prices in USD · Billed monthly
+          </p>
         </Reveal>
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {PLANS.map((p, i) => (
             <Reveal key={p.id} delay={i * 60}>
               <div
-                className={`h-full rounded-2xl border p-6 flex flex-col ${p.highlighted
-                  ? "border-white bg-white text-black"
-                  : "border-white/10 text-white"
-                  }`}
+                className={`h-full rounded-2xl border p-6 flex flex-col ${
+                  p.highlighted
+                    ? "border-white bg-white text-black"
+                    : "border-white/10 text-white"
+                }`}
               >
                 <p className="text-sm font-medium">{p.name}</p>
-                <p className={`text-3xl font-semibold mt-4 tabular-nums ${p.highlighted ? "text-black" : "text-white"}`}>
+                <p
+                  className={`text-3xl font-semibold mt-4 tabular-nums ${p.highlighted ? "text-black" : "text-white"}`}
+                >
                   {p.priceUsd < 0
                     ? "Custom"
                     : p.priceUsd === 0
                       ? "Free"
                       : `$${p.priceUsd}`}
                 </p>
-                <p className={`text-xs mt-1 ${p.highlighted ? "text-black/50" : "text-white/35"}`}>
+                <p
+                  className={`text-xs mt-1 ${p.highlighted ? "text-black/50" : "text-white/35"}`}
+                >
                   {p.priceUsd > 0 ? "per month" : p.tagline}
                 </p>
                 <ul className="mt-6 space-y-2 flex-1">
@@ -993,20 +1128,32 @@ function PricingTeaser() {
                   ))}
                 </ul>
                 <Link
-                  href={p.id === "enterprise" ? "/contact" : "/auth/register/institution"}
-                  className={`mt-6 text-center text-sm py-2.5 rounded-lg font-medium transition ${p.highlighted
-                    ? "bg-black text-white hover:bg-zinc-800"
-                    : "border border-white/15 hover:bg-white hover:text-black"
-                    }`}
+                  href={
+                    p.id === "enterprise"
+                      ? "/contact"
+                      : "/auth/register/institution"
+                  }
+                  className={`mt-6 text-center text-sm py-2.5 rounded-lg font-medium transition ${
+                    p.highlighted
+                      ? "bg-black text-white hover:bg-zinc-800"
+                      : "border border-white/15 hover:bg-white hover:text-black"
+                  }`}
                 >
-                  {p.id === "enterprise" ? "Talk to us" : p.priceUsd === 0 ? "Start free" : "Start free trial"}
+                  {p.id === "enterprise"
+                    ? "Talk to us"
+                    : p.priceUsd === 0
+                      ? "Start free"
+                      : "Start free trial"}
                 </Link>
               </div>
             </Reveal>
           ))}
         </div>
         <p className="text-center mt-8">
-          <Link href="/pricing" className="text-sm text-white/40 hover:text-white inline-flex items-center gap-1">
+          <Link
+            href="/pricing"
+            className="text-sm text-white/40 hover:text-white inline-flex items-center gap-1"
+          >
             Full comparison <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </p>
