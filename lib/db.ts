@@ -41,6 +41,9 @@ import type {
   Rubric,
   LearningPath,
   Certificate,
+  CertificateTemplate,
+  ParentMessage,
+  LiveSession,
   AuditEvent,
   Membership,
   AttendanceRecord,
@@ -68,9 +71,12 @@ export const COL = {
   rubrics: "rubrics",
   paths: "paths",
   certificates: "certificates",
+  certificateTemplates: "certificateTemplates",
   audit: "audit",
   memberships: "memberships",
   attendance: "attendance",
+  liveSessions: "liveSessions",
+  parentMessages: "parentMessages",
 } as const;
 
 export function newId(col: string): string {
@@ -1580,4 +1586,102 @@ export async function attendanceByStudent(
     list.sort((a, b) => b.localeCompare(a));
   }
   return grouped;
+}
+
+// ─── Live sessions ──────────────────────────────────────────────────────────
+
+/** Mirrors assessmentVisibleTo: audience=all, or class match, or explicit student. */
+export function sessionVisibleTo(
+  s: LiveSession,
+  classNames: string[],
+  studentId?: string,
+): boolean {
+  if (s.status !== "scheduled") return false;
+  if (s.audience === "all") return true;
+  if (s.audience === "students") {
+    return !!studentId && (s.assignedStudentIds ?? []).includes(studentId);
+  }
+  const targets = s.classNames ?? [];
+  if (!targets.length) return true;
+  const set = new Set(classNames);
+  return targets.some((t) => set.has(t));
+}
+
+export async function saveLiveSession(s: LiveSession) {
+  await setDoc(doc(db, COL.liveSessions, s.id), clean(s));
+}
+
+export async function updateLiveSession(id: string, data: Partial<LiveSession>) {
+  await updateDoc(doc(db, COL.liveSessions, id), clean(data));
+}
+
+export async function deleteLiveSession(id: string) {
+  await deleteDoc(doc(db, COL.liveSessions, id));
+}
+
+export async function listLiveSessions(
+  institutionId: string,
+): Promise<LiveSession[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.liveSessions),
+      where("institutionId", "==", institutionId),
+    ),
+  );
+  return snap.docs
+    .map((d) => d.data() as LiveSession)
+    .sort((a, b) => a.startsAt - b.startsAt);
+}
+
+export async function listSessionsForLearner(
+  institutionId: string,
+  profile: UserProfile,
+): Promise<LiveSession[]> {
+  const all = await listLiveSessions(institutionId);
+  const classNames = learnerClassNames(profile);
+  return all.filter((s) => sessionVisibleTo(s, classNames, profile.uid));
+}
+
+// ─── Certificate templates ──────────────────────────────────────────────────
+
+export async function saveCertificateTemplate(t: CertificateTemplate) {
+  await setDoc(doc(db, COL.certificateTemplates, t.id), clean(t));
+}
+
+export async function deleteCertificateTemplate(id: string) {
+  await deleteDoc(doc(db, COL.certificateTemplates, id));
+}
+
+export async function listCertificateTemplates(
+  institutionId: string,
+): Promise<CertificateTemplate[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.certificateTemplates),
+      where("institutionId", "==", institutionId),
+    ),
+  );
+  return snap.docs
+    .map((d) => d.data() as CertificateTemplate)
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+// ─── Parent messages ────────────────────────────────────────────────────────
+
+export async function saveParentMessage(m: ParentMessage) {
+  await setDoc(doc(db, COL.parentMessages, m.id), clean(m));
+}
+
+export async function listParentMessages(
+  institutionId: string,
+): Promise<ParentMessage[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.parentMessages),
+      where("institutionId", "==", institutionId),
+    ),
+  );
+  return snap.docs
+    .map((d) => d.data() as ParentMessage)
+    .sort((a, b) => b.createdAt - a.createdAt);
 }

@@ -27,6 +27,20 @@ export interface Vocabulary {
   admin: string;
 }
 
+/* Editable content + template for an institution's public landing page. */
+export interface InstitutionSite {
+  template: "aurora" | "slate" | "warm";
+  heroTitle: string;
+  heroSubtitle: string;
+  /** Rich-text (HTML) body shown in the about section. */
+  about?: string;
+  highlights?: { title: string; body: string }[];
+  ctaLabel?: string;
+  showJoin?: boolean;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
 export interface Institution {
   id: string;
   name: string;
@@ -40,6 +54,12 @@ export interface Institution {
   logoUrl?: string;
   primaryColor?: string;
   accentColor?: string;
+  /** Institution default for the dashboard content palette. Per-user toggle overrides. */
+  themeMode?: "light" | "dark";
+  /** Custom dashboard content background hex; surface/border/text derive from it. */
+  dashboardBg?: string | null;
+  /** Shareable public landing page content + chosen template. */
+  site?: InstitutionSite;
   slug?: string;
   classLabel: string;
   classes: string[];
@@ -220,6 +240,71 @@ export interface Certificate {
   skills?: string[];
   verifyCode: string;
   issuedAt: number;
+  /** Rendered certificate image (merged name onto template, or an upload). */
+  imageUrl?: string;
+  /** Template used to render this certificate, when a template merge was used. */
+  templateId?: string;
+  /** When a copy was emailed to the student, if ever. */
+  emailedAt?: number;
+}
+
+/** An uploaded certificate background image with a placed name token. */
+export interface CertificateTemplate {
+  id: string;
+  institutionId: string;
+  name: string;
+  /** Cloudinary image URL of the blank certificate. */
+  imageUrl: string;
+  /** Natural pixel dimensions the coordinates were captured against. */
+  imageWidth: number;
+  imageHeight: number;
+  /** Where the student's name is drawn (image pixel coordinates). */
+  nameX: number;
+  nameY: number;
+  fontSize: number;
+  fontFamily: string;
+  color: string;
+  /** Center the name horizontally on nameX instead of left-aligning it. */
+  centerName?: boolean;
+  defaultTitle?: string;
+  createdAt: number;
+}
+
+/** A message a staff member sends to a student's parent/guardian by email. */
+export interface ParentMessage {
+  id: string;
+  institutionId: string;
+  fromStaffId: string;
+  fromStaffName: string;
+  fromStaffRole: Role;
+  subject: string;
+  body: string;
+  /** Students whose parents were targeted. */
+  studentIds: string[];
+  studentNames: string[];
+  /** Resolved parent/guardian email addresses the message went to. */
+  deliveredTo: string[];
+  status: "sent" | "partial" | "failed";
+  createdAt: number;
+}
+
+/** A scheduled online class the host shares a join link for. */
+export interface LiveSession {
+  id: string;
+  institutionId: string;
+  hostId: string;
+  hostName: string;
+  title: string;
+  description?: string;
+  platform: "zoom" | "google-meet" | "microsoft-teams" | "other";
+  url: string;
+  startsAt: number;
+  durationMins: number;
+  audience: "all" | "classes" | "students";
+  classNames?: string[];
+  assignedStudentIds?: string[];
+  status: "scheduled" | "ended" | "cancelled";
+  createdAt: number;
 }
 
 export interface AuditEvent {
@@ -240,7 +325,8 @@ export type QuestionType =
   | "short"
   | "essay"
   | "coding"
-  | "project";
+  | "project"
+  | "pdf";
 
 /** Difficulty buckets used by the AI generator and question sets. */
 export type QuestionDifficulty =

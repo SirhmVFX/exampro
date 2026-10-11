@@ -14,6 +14,8 @@ export type NavItem = {
   href: string;
   icon: React.ReactNode;
   badge?: string | number;
+  /** Section header this item belongs to. A header is emitted when it changes. */
+  group?: string;
 };
 
 interface SidebarProps {
@@ -60,7 +62,7 @@ export default function DashboardSidebar({
     <aside
       className={`relative flex flex-col transition-all duration-300 ${
         collapsed ? "w-16" : "w-64"
-      } min-h-screen shrink-0`}
+      } h-screen sticky top-0 self-start shrink-0`}
       style={{
         background: "var(--dash-sidebar)",
         color: "var(--dash-sidebar-fg)",
@@ -103,9 +105,26 @@ export default function DashboardSidebar({
       <InstitutionSwitcher collapsed={collapsed} />
 
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
-        {navItems.map((item) => {
+        {navItems.map((item, idx) => {
           const isActive = isActiveFor(item.href);
+          const prev = navItems[idx - 1];
+          const showHeader = !!item.group && item.group !== prev?.group;
           return (
+            <div key={item.href}>
+              {showHeader &&
+                (collapsed ? (
+                  <div
+                    className="my-2 mx-1 h-px"
+                    style={{ background: "var(--dash-sidebar-border)" }}
+                  />
+                ) : (
+                  <p
+                    className="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider"
+                    style={{ color: "var(--dash-sidebar-muted)" }}
+                  >
+                    {item.group}
+                  </p>
+                ))}
             <Link
               key={item.href}
               href={item.href}
@@ -155,6 +174,7 @@ export default function DashboardSidebar({
                 </>
               )}
             </Link>
+            </div>
           );
         })}
       </nav>

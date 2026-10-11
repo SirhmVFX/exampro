@@ -6,6 +6,7 @@ import { useAuth, dashboardPathForRole } from "@/lib/auth-context";
 import { institutionThemeVars } from "@/lib/theme";
 import DashboardSidebar from "./sidebar";
 import DashboardTopbar from "./topbar";
+import { PageHelp } from "@/app/components/ui/page-help";
 import { navFor } from "./nav";
 import type { NavItem } from "./sidebar";
 import type { Role } from "@/lib/types";
@@ -29,8 +30,13 @@ function ShellInner({
   // Sidebar always reflects the signed-in user's own role, so shared
   // workspaces (question bank, assessments) show admin nav for admins.
   const items = navFor(profile?.role ?? role, institution);
-  const { theme } = useDashTheme();
+  const { theme, syncDefault } = useDashTheme();
   const isDark = theme === "dark";
+
+  // Apply the institution's default base-mode until the member toggles.
+  useEffect(() => {
+    if (institution?.themeMode) syncDefault(institution.themeMode);
+  }, [institution?.themeMode, syncDefault]);
 
   useEffect(() => {
     if (loading) return;
@@ -76,6 +82,10 @@ function ShellInner({
       style={institutionThemeVars(
         institution?.primaryColor,
         institution?.accentColor,
+        {
+          themeMode: institution?.themeMode,
+          dashboardBg: institution?.dashboardBg,
+        },
       )}
     >
       <DashboardSidebar
@@ -87,7 +97,10 @@ function ShellInner({
       />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardTopbar title={title} subtitle={subtitle} />
-        <main className="flex-1 p-6 bg-[var(--dash-bg)]">{children}</main>
+        <main className="flex-1 p-6 bg-[var(--dash-bg)]">
+          <PageHelp />
+          {children}
+        </main>
       </div>
     </div>
   );

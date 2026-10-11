@@ -73,7 +73,9 @@ export function isReservedSlug(slug: string): boolean {
 }
 
 export function isValidSlug(slug: string): boolean {
-  return /^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$/.test(slug) && !isReservedSlug(slug);
+  return (
+    /^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$/.test(slug) && !isReservedSlug(slug)
+  );
 }
 
 /** Extract tenant slug from Host, or null on the apex/marketing domain. */
@@ -113,7 +115,8 @@ export function appOrigin(): string {
  * Local dev: http://localhost:3000/s/{slug}
  */
 export function institutionPublicUrl(slug: string, path = ""): string {
-  const clean = !path || path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
+  const clean =
+    !path || path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
   return `${appOrigin()}/s/${slug}${clean}`;
 }
 
@@ -134,15 +137,16 @@ export function authPath(path: string): string {
 
 export function fallbackJoinUrl(
   role: "student" | "teacher",
-  code: string
+  code: string,
 ): string {
   return `${appOrigin()}/auth/register/${role}?code=${encodeURIComponent(code)}`;
 }
 
-export function institutionJoinLinks(inst: {
-  slug?: string;
-  code: string;
-}): { portal: string; student: string; teacher: string } {
+export function institutionJoinLinks(inst: { slug?: string; code: string }): {
+  portal: string;
+  student: string;
+  teacher: string;
+} {
   if (inst.slug) {
     return {
       portal: institutionPublicUrl(inst.slug),

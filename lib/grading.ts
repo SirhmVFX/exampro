@@ -112,6 +112,7 @@ async function gradeQuestion(
     }
     case "essay":
     case "project":
+    case "pdf":
       return { ...base, correct: null };
     case "coding": {
       const code = String(answer ?? "");

@@ -44,9 +44,10 @@ export const TYPE_LABEL: Record<string, string> = {
   mcq: "Multiple choice",
   truefalse: "True / False",
   short: "Short answer",
-  essay: "Essay",
+  essay: "Rich text / Essay",
   coding: "Coding",
   project: "Project",
+  pdf: "File / PDF upload",
 };
 
 export function initials(name: string): string {
