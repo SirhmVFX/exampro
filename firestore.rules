@@ -254,6 +254,27 @@ service cloud.firestore {
         isStaff(request.resource.data.institutionId);
     }
 
+    match /certificateTemplates/{id} {
+      allow read: if isMember(resource.data.institutionId);
+      allow create, update, delete: if isStaff(resource.data.institutionId) ||
+        isStaff(request.resource.data.institutionId);
+    }
+
+    // ── live sessions ──────────────────────────────────────────────────────
+
+    match /liveSessions/{id} {
+      allow read: if isMember(resource.data.institutionId);
+      allow create: if isStaff(request.resource.data.institutionId);
+      allow update, delete: if isStaff(resource.data.institutionId);
+    }
+
+    // ── parent messages (staff-authored email log) ─────────────────────────
+
+    match /parentMessages/{id} {
+      allow read: if isStaff(resource.data.institutionId);
+      allow create: if isStaff(request.resource.data.institutionId);
+    }
+
     // ── audit log ──────────────────────────────────────────────────────────
 
     match /audit/{id} {
