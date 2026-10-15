@@ -66,6 +66,9 @@ function StudentRegisterForm() {
     gender: "" as "" | "male" | "female" | "other" | "prefer_not_to_say",
     dateOfBirth: "",
     avatarUrl: "",
+    parentEmail: "",
+    parentName: "",
+    parentPhone: "",
   });
 
   useEffect(() => {
@@ -187,6 +190,7 @@ function StudentRegisterForm() {
           avatarUrl: form.avatarUrl || undefined,
           className: classNames[0],
           classNames,
+          parentEmail: form.parentEmail.trim() || undefined,
           status: "active",
           createdAt: Date.now(),
         });
@@ -388,6 +392,24 @@ function StudentRegisterForm() {
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-1.5">Profile picture <span className="text-white/30 font-normal">(optional)</span></label>
                 <ImageUpload value={form.avatarUrl} onChange={(url) => setForm({ ...form, avatarUrl: url })} folder="exampro/avatars" />
+              </div>
+              <div className="pt-1 border-t border-white/10">
+                <p className="text-sm font-semibold text-white mt-4 mb-1">Parent / guardian contact</p>
+                <p className="text-xs text-white/45 mb-3">We use this to send progress updates and messages to your family.</p>
+                <div>
+                  <label className="block text-sm font-medium text-white/70 mb-1.5">Parent/guardian email</label>
+                  <input type="email" required value={form.parentEmail} onChange={(e) => setForm({ ...form, parentEmail: e.target.value })} placeholder="parent@example.com" className={inputClass} />
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <label className="block text-sm font-medium text-white/70 mb-1.5">Name <span className="text-white/30 font-normal">(optional)</span></label>
+                    <input type="text" value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} placeholder="e.g. Alex Smith" className={darkInput} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white/70 mb-1.5">Phone <span className="text-white/30 font-normal">(optional)</span></label>
+                    <input type="tel" value={form.parentPhone} onChange={(e) => setForm({ ...form, parentPhone: e.target.value })} placeholder="+234 800 000 0000" className={darkInput} />
+                  </div>
+                </div>
               </div>
             </>
           )}

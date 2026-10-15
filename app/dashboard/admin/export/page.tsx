@@ -13,6 +13,7 @@ import {
   writeAudit,
 } from "@/lib/db";
 import { downloadCsv, toCsv } from "@/lib/csv";
+import StudentDataExport from "@/app/components/dashboard/student-data-export";
 
 export default function ExportPage() {
   const { institution, profile } = useAuth();
@@ -27,7 +28,17 @@ export default function ExportPage() {
         downloadCsv(
           "exampro-results.csv",
           toCsv(
-            ["student", "assessment", "kind", "subject", "class", "percent", "passed", "status", "submitted"],
+            [
+              "student",
+              "assessment",
+              "kind",
+              "subject",
+              "class",
+              "percent",
+              "passed",
+              "status",
+              "submitted",
+            ],
             attempts.map((a) => [
               a.studentName,
               a.assessmentTitle,
@@ -38,8 +49,8 @@ export default function ExportPage() {
               a.passed ? "yes" : "no",
               a.status,
               a.submittedAt ? new Date(a.submittedAt).toISOString() : "",
-            ])
-          )
+            ]),
+          ),
         );
       } else if (kind === "questions") {
         const qs = await listQuestions(institution.id);
@@ -55,8 +66,8 @@ export default function ExportPage() {
               q.skill,
               q.shared ? "yes" : "no",
               q.text,
-            ])
-          )
+            ]),
+          ),
         );
       } else {
         const users = await listUsers(institution.id);
@@ -71,8 +82,8 @@ export default function ExportPage() {
               (u.classNames ?? (u.className ? [u.className] : [])).join("; "),
               u.status,
               u.externalId,
-            ])
-          )
+            ]),
+          ),
         );
       }
       await listAllAssessments(institution.id);
@@ -95,28 +106,46 @@ export default function ExportPage() {
       title="Export"
       subtitle="Download results, questions, and roster for records or disputes"
     >
-      <div className="grid md:grid-cols-3 gap-4 max-w-4xl">
-        {[
-          { id: "results" as const, title: "Results", body: "Every attempt: scores, pass/fail, timestamps." },
-          { id: "questions" as const, title: "Question bank", body: "Library items including shared department questions." },
-          { id: "roster" as const, title: "Roster", body: "People, roles, groups, and external IDs." },
-        ].map((c) => (
-          <Card key={c.id}>
-            <CardHeader>
-              <h2 className="font-semibold">{c.title}</h2>
-            </CardHeader>
-            <CardBody className="space-y-4">
-              <p className="text-sm text-[var(--dash-text-muted)]">{c.body}</p>
-              <Button
-                variant="outline"
-                loading={busy === c.id}
-                onClick={() => void run(c.id)}
-              >
-                Download CSV
-              </Button>
-            </CardBody>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        <div className="grid md:grid-cols-3 gap-4 w-full">
+          {[
+            {
+              id: "results" as const,
+              title: "Results",
+              body: "Every attempt: scores, pass/fail, timestamps.",
+            },
+            {
+              id: "questions" as const,
+              title: "Question bank",
+              body: "Library items including shared department questions.",
+            },
+            {
+              id: "roster" as const,
+              title: "Roster",
+              body: "People, roles, groups, and external IDs.",
+            },
+          ].map((c) => (
+            <Card key={c.id}>
+              <CardHeader>
+                <h2 className="font-semibold">{c.title}</h2>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <p className="text-sm text-[var(--dash-text-muted)]">
+                  {c.body}
+                </p>
+                <Button
+                  variant="outline"
+                  loading={busy === c.id}
+                  onClick={() => void run(c.id)}
+                >
+                  Download CSV
+                </Button>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+
+        <StudentDataExport role="admin" />
       </div>
     </DashboardShell>
   );

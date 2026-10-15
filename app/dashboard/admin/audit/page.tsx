@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { History } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { Card, CardBody } from "@/app/components/ui/card";
+import {
+  DataTable,
+  type Column,
+  type FilterDef,
+} from "@/app/components/ui/data-table";
 import { useAuth } from "@/lib/auth-context";
 import { listAudit } from "@/lib/db";
 import type { AuditEvent } from "@/lib/types";
@@ -21,6 +27,51 @@ export default function AuditLogPage() {
     });
   }, [institution]);
 
+  const columns: Column<AuditEvent>[] = [
+    {
+      key: "time",
+      header: "When",
+      sortValue: (e) => e.createdAt,
+      cell: (e) => (
+        <span className="text-[var(--dash-text-muted)] whitespace-nowrap">
+          {formatDateTime(e.createdAt)}
+        </span>
+      ),
+    },
+    {
+      key: "actor",
+      header: "Actor",
+      sortValue: (e) => e.actorName.toLowerCase(),
+      cell: (e) => <span className="font-medium">{e.actorName}</span>,
+    },
+    { key: "action", header: "Action", cell: (e) => e.action },
+    { key: "entity", header: "Type", cell: (e) => e.entityType },
+    {
+      key: "detail",
+      header: "Detail",
+      cell: (e) => (
+        <span className="text-[var(--dash-text-muted)]">{e.detail ?? "—"}</span>
+      ),
+    },
+  ];
+
+  const entityTypes = useMemo(
+    () => [...new Set(items.map((e) => e.entityType))].sort(),
+    [items],
+  );
+
+  const filters: FilterDef<AuditEvent>[] = [
+    {
+      key: "entity",
+      label: "Type",
+      getValue: (e) => e.entityType,
+      options: [
+        { value: "", label: "All types" },
+        ...entityTypes.map((t) => ({ value: t, label: t })),
+      ],
+    },
+  ];
+
   return (
     <DashboardShell
       role="admin"
@@ -31,24 +82,19 @@ export default function AuditLogPage() {
         <CardBody className="p-0">
           {loading ? (
             <div className="h-32 animate-pulse bg-[var(--dash-surface-alt)]" />
-          ) : items.length === 0 ? (
-            <p className="px-6 py-10 text-sm text-gray-400 text-center">
-              No events yet. Imports, certificates, and settings changes appear here.
-            </p>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {items.map((e) => (
-                <div key={e.id} className="px-6 py-3 flex flex-wrap gap-3 text-sm">
-                  <span className="text-gray-400 w-40 shrink-0">
-                    {formatDateTime(e.createdAt)}
-                  </span>
-                  <span className="font-medium">{e.actorName}</span>
-                  <span className="text-gray-600">{e.action}</span>
-                  {e.detail && (
-                    <span className="text-gray-400 truncate">{e.detail}</span>
-                  )}
-                </div>
-              ))}
+            <div className="px-6 pb-6 pt-4">
+              <DataTable
+                rows={items}
+                columns={columns}
+                filters={filters}
+                searchKeys={(e) => `${e.actorName} ${e.action} ${e.detail ?? ""}`}
+                searchPlaceholder="Search the audit log…"
+                emptyTitle="No events yet"
+                emptyDescription="Imports, certificates, and settings changes appear here."
+                emptyIcon={<History className="w-6 h-6" />}
+                getRowId={(e) => e.id}
+              />
             </div>
           )}
         </CardBody>

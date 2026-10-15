@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Plus, Trash2, Upload, Users } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { teacherNav, adminNav } from "@/app/components/dashboard/nav";
@@ -8,7 +8,11 @@ import { Card, CardBody } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { Modal } from "@/app/components/ui/modal";
-import { EmptyState } from "@/app/components/ui/empty";
+import {
+  DataTable,
+  type Column,
+  type FilterDef,
+} from "@/app/components/ui/data-table";
 import { WysiwygEditor } from "@/app/components/ui/wysiwyg-editor";
 import { HtmlContent, isEmptyHtml } from "@/app/components/ui/html-content";
 import { StudentPicker } from "@/app/components/ui/student-picker";
@@ -127,6 +131,114 @@ export default function MaterialsWorkspace({ for: who }: { for: "teacher" | "adm
     }
   };
 
+  const subjects = useMemo(
+    () => [...new Set(items.map((m) => m.subject).filter(Boolean))].sort(),
+    [items],
+  );
+  const types = useMemo(
+    () => [...new Set(items.map((m) => m.type))].sort(),
+    [items],
+  );
+
+  const columns: Column<Material>[] = [
+    {
+      key: "type",
+      header: "Type",
+      sortValue: (m) => m.type,
+      cell: (m) => <Badge variant="info">{m.type}</Badge>,
+    },
+    {
+      key: "material",
+      header: "Material",
+      sortValue: (m) => m.title.toLowerCase(),
+      cell: (m) => (
+        <div className="min-w-0">
+          <p className="font-medium text-[var(--dash-text)]">{m.title}</p>
+          {m.description && (
+            <HtmlContent html={m.description} compact className="mt-0.5" />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "subject",
+      header: "Subject",
+      sortValue: (m) => m.subject.toLowerCase(),
+      cell: (m) => <Badge variant="outline">{m.subject}</Badge>,
+    },
+    {
+      key: "class",
+      header: institution?.classLabel ?? "Class",
+      sortValue: (m) => m.className ?? "",
+      cell: (m) => (
+        <span className="text-[var(--dash-text-muted)]">{m.className}</span>
+      ),
+    },
+    {
+      key: "assigned",
+      header: "Assigned",
+      sortValue: (m) => m.assignedStudentIds?.length ?? 0,
+      cell: (m) =>
+        m.assignedStudentIds?.length ? (
+          <Badge variant="warning">
+            <Users className="w-3 h-3 inline mr-0.5" />
+            {m.assignedStudentIds.length}
+          </Badge>
+        ) : (
+          <span className="text-[var(--dash-text-faint)]">Class</span>
+        ),
+    },
+    {
+      key: "created",
+      header: "Created",
+      sortValue: (m) => m.createdAt,
+      cell: (m) => (
+        <span className="text-[var(--dash-text-muted)] whitespace-nowrap">
+          {formatDate(m.createdAt)}
+        </span>
+      ),
+    },
+    {
+      key: "action",
+      header: "",
+      className: "text-right",
+      cell: (m) => (
+        <button
+          onClick={async () => {
+            if (!confirm("Delete this material?")) return;
+            await deleteMaterial(m.id);
+            await reload();
+          }}
+          className="p-2 text-[var(--dash-text-faint)] hover:text-red-600"
+          aria-label="Delete material"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      ),
+    },
+  ];
+
+  const filters: FilterDef<Material>[] = [
+    {
+      key: "subject",
+      label: "Subject",
+      getValue: (m) => m.subject,
+      options: [
+        { value: "", label: "All subjects" },
+        ...subjects.map((s) => ({ value: s, label: s })),
+      ],
+    },
+    {
+      key: "type",
+      label: "Type",
+      getValue: (m) => m.type,
+      options: [
+        { value: "", label: "All types" },
+        ...types.map((t) => ({ value: t, label: t })),
+      ],
+    },
+  ];
+
   return (
     <DashboardShell
       role="teacher"
@@ -157,61 +269,23 @@ export default function MaterialsWorkspace({ for: who }: { for: "teacher" | "adm
                 {[0, 1].map((i) => (
                   <div
                     key={i}
-                    className="h-12 bg-gray-50 animate-pulse rounded-lg"
+                    className="h-12 bg-[var(--dash-surface-alt)] animate-pulse rounded-lg"
                   />
                 ))}
               </div>
-            ) : items.length === 0 ? (
-              <EmptyState
-                icon={<BookOpen className="w-6 h-6" />}
-                title="No materials yet"
-                description="Upload a document or add a note for your students."
-              />
             ) : (
-              <div className="divide-y divide-gray-50">
-                {items.map((m) => (
-                  <div key={m.id} className="px-6 py-4 flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex gap-2 mb-1">
-                        <Badge variant="info">{m.type}</Badge>
-                        <Badge variant="outline">{m.subject}</Badge>
-                        {m.assignedStudentIds?.length ? (
-                          <Badge variant="warning">
-                            <Users className="w-3 h-3 inline mr-0.5" />
-                            {m.assignedStudentIds.length} student
-                            {m.assignedStudentIds.length === 1 ? "" : "s"}
-                          </Badge>
-                        ) : null}
-                        <span className="text-xs text-[var(--dash-text-faint)]">
-                          {m.className}
-                        </span>
-                      </div>
-                      <p className="font-medium text-[var(--dash-text)]">
-                        {m.title}
-                      </p>
-                      {m.description && (
-                        <HtmlContent
-                          html={m.description}
-                          compact
-                          className="mt-0.5"
-                        />
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDate(m.createdAt)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        if (!confirm("Delete this material?")) return;
-                        await deleteMaterial(m.id);
-                        await reload();
-                      }}
-                      className="p-2 text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+              <div className="px-6 pb-6 pt-4">
+                <DataTable
+                  rows={items}
+                  columns={columns}
+                  filters={filters}
+                  searchKeys={(m) => `${m.title} ${m.subject} ${m.className ?? ""}`}
+                  searchPlaceholder="Search materials…"
+                  emptyTitle="No materials yet"
+                  emptyDescription="Upload a document or add a note for your students."
+                  emptyIcon={<BookOpen className="w-6 h-6" />}
+                  getRowId={(m) => m.id}
+                />
               </div>
             )}
           </CardBody>

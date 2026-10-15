@@ -365,7 +365,7 @@ function Hero({ onPreviewRole }: { onPreviewRole: (role: Role) => void }) {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto px-6">
+      <div className="relative max-w-7xl mx-auto px-6">
         {/* Two-column layout: copy left, dashboard right */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left — copy */}
@@ -526,7 +526,7 @@ function ProductPreview({
 
   return (
     <section id="product" className="py-24 scroll-mt-24">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <Reveal>
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">
             Product
@@ -867,7 +867,7 @@ function Features() {
 
   return (
     <section id="features" className="py-24 scroll-mt-24">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <Reveal>
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">
             Platform
@@ -886,7 +886,7 @@ function Features() {
               key={item.title}
               delay={i * 50}
               className={
-                (item as { wide?: boolean }).wide ? "md:col-span-2" : ""
+                (item as { wide?: boolean }).wide ? "md:col-span-3" : ""
               }
             >
               <div className="group h-full rounded-2xl border border-white/10 p-7 hover:border-white/25 hover:bg-white/[0.02] transition-all">
@@ -933,7 +933,7 @@ function How() {
   ];
   return (
     <section id="how" className="py-24 scroll-mt-24 border-y border-white/10">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <Reveal>
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">
             How it works
@@ -998,7 +998,7 @@ function Roles() {
   ];
   return (
     <section id="roles" className="py-24 scroll-mt-24">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <Reveal>
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">
             Roles
@@ -1010,15 +1010,12 @@ function Roles() {
         <div className="mt-12 grid md:grid-cols-3 gap-3">
           {roles.map((r, i) => (
             <Reveal key={r.name} delay={i * 80}>
-              <div className="h-full rounded-2xl border border-white/10 p-7 hover:bg-white text-white hover:text-black transition-colors duration-300 group">
+              <div className="h-full rounded-2xl border border-white/10 p-7 hover:bg-white/5 text-white  transition-colors duration-300 group">
                 <r.icon className="w-5 h-5 mb-5" />
                 <h3 className="text-lg font-medium mb-5">{r.name}</h3>
                 <ul className="space-y-2.5">
                   {r.points.map((p) => (
-                    <li
-                      key={p}
-                      className="flex gap-2 text-sm text-white/50 group-hover:text-black/60"
-                    >
+                    <li key={p} className="flex gap-2 text-sm text-white/50 ">
                       <Check className="w-4 h-4 shrink-0 mt-0.5" />
                       {p}
                     </li>
@@ -1055,7 +1052,7 @@ function Stats() {
   const c = useCountUp(3, on);
   return (
     <div ref={ref} className="border-y border-white/10">
-      <div className="max-w-6xl mx-auto px-6 py-14 grid grid-cols-3 gap-6 text-center">
+      <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-3 gap-6 text-center">
         {[
           [a, "assessment types"],
           [b, "question formats"],
@@ -1078,7 +1075,7 @@ function Stats() {
 function PricingTeaser() {
   return (
     <section className="py-24">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">
@@ -1096,7 +1093,7 @@ function PricingTeaser() {
           {PLANS.map((p, i) => (
             <Reveal key={p.id} delay={i * 60}>
               <div
-                className={`h-full rounded-2xl border p-6 flex flex-col ${
+                className={`h-[35rem] rounded-2xl border p-6 flex flex-col ${
                   p.highlighted
                     ? "border-white bg-white text-black"
                     : "border-white/10 text-white"
@@ -1186,7 +1183,7 @@ function FAQ() {
   const [open, setOpen] = useState(0);
   return (
     <section id="faq" className="py-24 scroll-mt-24 border-t border-white/10">
-      <div className="max-w-3xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <Reveal>
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">
             FAQ

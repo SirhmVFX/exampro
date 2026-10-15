@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ClipboardCheck, FileText, Plus, Trash2 } from "lucide-react";
@@ -9,7 +9,11 @@ import { teacherNav, adminNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
-import { EmptyState } from "@/app/components/ui/empty";
+import {
+  DataTable,
+  type Column,
+  type FilterDef,
+} from "@/app/components/ui/data-table";
 import { useAuth } from "@/lib/auth-context";
 import {
   listAssessmentsByTeacher,
@@ -88,6 +92,139 @@ function AssessmentsList({ for: who }: { for: "teacher" | "admin" }) {
   const filtered =
     kind === "all" ? items : items.filter((a) => a.kind === kind);
 
+  const subjects = useMemo(
+    () => [...new Set(items.map((a) => a.subject).filter(Boolean))].sort(),
+    [items],
+  );
+
+  const columns: Column<Assessment>[] = [
+    {
+      key: "title",
+      header: "Title",
+      sortValue: (a) => a.title.toLowerCase(),
+      cell: (a) => <span className="font-medium">{a.title}</span>,
+    },
+    {
+      key: "type",
+      header: "Type",
+      sortValue: (a) => a.kind,
+      cell: (a) => KIND_LABEL[a.kind],
+    },
+    {
+      key: "subject",
+      header: "Subject",
+      sortValue: (a) => a.subject.toLowerCase(),
+      cell: (a) => a.subject,
+    },
+    {
+      key: "class",
+      header: institution?.classLabel ?? "Class",
+      sortValue: (a) => a.className ?? "",
+      cell: (a) => a.className,
+    },
+    {
+      key: "questions",
+      header: "Questions",
+      sortValue: (a) => a.questions.length,
+      cell: (a) => <span className="tabular-nums">{a.questions.length}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortValue: (a) => a.status,
+      cell: (a) => <Badge variant={statusVariant[a.status]}>{a.status}</Badge>,
+    },
+    ...(who === "admin"
+      ? [
+          {
+            key: "creator",
+            header: "Creator",
+            sortValue: (a: Assessment) => a.teacherName.toLowerCase(),
+            cell: (a: Assessment) => (
+              <span className="text-[var(--dash-text-muted)]">{a.teacherName}</span>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: "created",
+      header: "Created",
+      sortValue: (a) => a.createdAt,
+      cell: (a) => (
+        <span className="text-[var(--dash-text-muted)]">
+          {formatDate(a.createdAt)}
+        </span>
+      ),
+    },
+    {
+      key: "action",
+      header: "",
+      className: "text-right",
+      cell: (a) => (
+        <span className="space-x-3">
+          <Link href={`${base}/assessments/new?edit=${a.id}`}>
+            <button className="text-xs text-[var(--dash-primary)]">Edit</button>
+          </Link>
+          {a.status === "draft" && (
+            <button
+              className="text-xs text-[var(--dash-primary)]"
+              onClick={async () => {
+                await updateAssessment(a.id, { status: "published" });
+                await reload();
+              }}
+            >
+              Publish
+            </button>
+          )}
+          {a.status === "published" && (
+            <button
+              className="text-xs text-amber-500"
+              onClick={async () => {
+                await updateAssessment(a.id, { status: "closed" });
+                await reload();
+              }}
+            >
+              Close
+            </button>
+          )}
+          <button
+            className="text-xs text-red-500"
+            onClick={async () => {
+              if (!confirm("Delete this assessment?")) return;
+              await deleteAssessment(a.id);
+              await reload();
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5 inline" />
+          </button>
+        </span>
+      ),
+    },
+  ];
+
+  const filters: FilterDef<Assessment>[] = [
+    {
+      key: "status",
+      label: "Status",
+      getValue: (a) => a.status,
+      options: [
+        { value: "", label: "All statuses" },
+        { value: "draft", label: "Draft" },
+        { value: "published", label: "Published" },
+        { value: "closed", label: "Closed" },
+      ],
+    },
+    {
+      key: "subject",
+      label: "Subject",
+      getValue: (a) => a.subject,
+      options: [
+        { value: "", label: "All subjects" },
+        ...subjects.map((s) => ({ value: s, label: s })),
+      ],
+    },
+  ];
+
   return (
     <DashboardShell
       role="teacher"
@@ -130,106 +267,24 @@ function AssessmentsList({ for: who }: { for: "teacher" | "admin" }) {
                   />
                 ))}
               </div>
-            ) : filtered.length === 0 ? (
-              <EmptyState
-                icon={<FileText className="w-6 h-6" />}
-                title={
-                  kind === "all"
-                    ? "No assessments yet"
-                    : `No ${KIND_LABEL[kind].toLowerCase()}s yet`
-                }
-                description="Create a quiz, test, exam or assignment from your question library."
-                action={
-                  <Link href={`${base}/assessments/new`}>
-                    <Button>Create assessment</Button>
-                  </Link>
-                }
-              />
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-[var(--dash-surface-alt)] text-left text-xs font-semibold text-[var(--dash-text-muted)] uppercase">
-                  <tr>
-                    <th className="px-6 py-3">Title</th>
-                    <th className="px-6 py-3">Type</th>
-                    <th className="px-6 py-3">Subject</th>
-                    <th className="px-6 py-3">
-                      {institution?.classLabel ?? "Class"}
-                    </th>
-                    <th className="px-6 py-3">Questions</th>
-                    <th className="px-6 py-3">Status</th>
-                    {who === "admin" && <th className="px-6 py-3">Creator</th>}
-                    <th className="px-6 py-3">Created</th>
-                    <th className="px-6 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--dash-border)] text-[var(--dash-text)]">
-                  {filtered.map((a) => (
-                    <tr key={a.id}>
-                      <td className="px-6 py-3 font-medium">{a.title}</td>
-                      <td className="px-6 py-3">{KIND_LABEL[a.kind]}</td>
-                      <td className="px-6 py-3">{a.subject}</td>
-                      <td className="px-6 py-3">{a.className}</td>
-                      <td className="px-6 py-3">{a.questions.length}</td>
-                      <td className="px-6 py-3">
-                        <Badge variant={statusVariant[a.status]}>
-                          {a.status}
-                        </Badge>
-                      </td>
-                      {who === "admin" && (
-                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
-                          {a.teacherName}
-                        </td>
-                      )}
-                      <td className="px-6 py-3 text-[var(--dash-text-muted)]">
-                        {formatDate(a.createdAt)}
-                      </td>
-                      <td className="px-6 py-3 text-right space-x-3">
-                        <Link href={`${base}/assessments/new?edit=${a.id}`}>
-                          <button className="text-xs text-[var(--dash-primary)]">
-                            Edit
-                          </button>
-                        </Link>
-                        {a.status === "draft" && (
-                          <button
-                            className="text-xs text-[var(--dash-primary)]"
-                            onClick={async () => {
-                              await updateAssessment(a.id, {
-                                status: "published",
-                              });
-                              await reload();
-                            }}
-                          >
-                            Publish
-                          </button>
-                        )}
-                        {a.status === "published" && (
-                          <button
-                            className="text-xs text-amber-500"
-                            onClick={async () => {
-                              await updateAssessment(a.id, {
-                                status: "closed",
-                              });
-                              await reload();
-                            }}
-                          >
-                            Close
-                          </button>
-                        )}
-                        <button
-                          className="text-xs text-red-500"
-                          onClick={async () => {
-                            if (!confirm("Delete this assessment?")) return;
-                            await deleteAssessment(a.id);
-                            await reload();
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5 inline" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="px-6 pb-6 pt-4">
+                <DataTable
+                  rows={filtered}
+                  columns={columns}
+                  filters={filters}
+                  searchKeys={(a) => `${a.title} ${a.subject} ${a.className ?? ""}`}
+                  searchPlaceholder="Search assessments…"
+                  emptyTitle={
+                    kind === "all"
+                      ? "No assessments yet"
+                      : `No ${KIND_LABEL[kind].toLowerCase()}s yet`
+                  }
+                  emptyDescription="Create a quiz, test, exam or assignment from your question library."
+                  emptyIcon={<FileText className="w-6 h-6" />}
+                  getRowId={(a) => a.id}
+                />
+              </div>
             )}
           </CardBody>
         </Card>

@@ -6,13 +6,7 @@ import DashboardShell from "@/app/components/dashboard/shell";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import {
-  COL,
-  createInvite,
-  listInvites,
-  newId,
-  writeAudit,
-} from "@/lib/db";
+import { COL, createInvite, listInvites, newId, writeAudit } from "@/lib/db";
 import { downloadCsv, parseRosterCsv, rosterTemplateCsv } from "@/lib/csv";
 import { vocab } from "@/lib/vocab";
 import { canSelfJoin } from "@/lib/join-policy";
@@ -45,7 +39,10 @@ export default function RosterImportPage() {
       let created = 0;
       let skipped = 0;
       for (const row of rows) {
-        const gate = canSelfJoin(institution, { email: row.email, hasInvite: true });
+        const gate = canSelfJoin(institution, {
+          email: row.email,
+          hasInvite: true,
+        });
         if (!gate.ok) {
           skipped++;
           continue;
@@ -93,7 +90,7 @@ export default function RosterImportPage() {
         detail: `Created ${created} invites, skipped ${skipped}`,
       });
       setResult(
-        `Imported ${created} ${v.students.toLowerCase()}. ${skipped} skipped (already invited or domain blocked). They sign up with that email — or Google/Microsoft SSO — and land in the right ${v.class.toLowerCase()}.`
+        `Imported ${created} ${v.students.toLowerCase()}. ${skipped} skipped (already invited or domain blocked). They sign up with that email — or Google/Microsoft SSO — and land in the right ${v.class.toLowerCase()}.`,
       );
     } catch {
       setError("Import failed. Check your connection and try again.");
@@ -108,13 +105,13 @@ export default function RosterImportPage() {
       title="Roster import"
       subtitle={`Add ${v.students.toLowerCase()} from a spreadsheet. They are invited, not added by hand.`}
     >
-      <div className="max-w-3xl space-y-6">
+      <div className="w-full space-y-6">
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold">CSV / Excel export</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Columns: name, email, class (or cohort / grade), id, role, department,
-              parentEmail. Save Excel as CSV first.
+              Columns: name, email, class (or cohort / grade), id, role,
+              department, parentEmail. Save Excel as CSV first.
             </p>
           </CardHeader>
           <CardBody className="space-y-4">
@@ -123,7 +120,12 @@ export default function RosterImportPage() {
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
-                onClick={() => downloadCsv("exampro-roster-template.csv", rosterTemplateCsv())}
+                onClick={() =>
+                  downloadCsv(
+                    "exampro-roster-template.csv",
+                    rosterTemplateCsv(),
+                  )
+                }
               >
                 Download template
               </Button>

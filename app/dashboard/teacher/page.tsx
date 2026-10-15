@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   FileText,
-  Library,
   BookOpen,
   ClipboardCheck,
   Plus,
   Inbox,
+  Video,
+  CalendarClock,
 } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { teacherNav } from "@/app/components/dashboard/nav";
@@ -22,9 +23,10 @@ import {
   listAttemptsByTeacher,
   listMaterialsByTeacher,
   listQuestions,
+  listLiveSessions,
 } from "@/lib/db";
-import type { Attempt } from "@/lib/types";
-import { formatDateTime, passRate } from "@/lib/utils";
+import type { Attempt, LiveSession } from "@/lib/types";
+import { formatDateTime, passRate, averagePercent } from "@/lib/utils";
 
 export default function TeacherOverviewPage() {
   const { profile, institution } = useAuth();
@@ -35,16 +37,19 @@ export default function TeacherOverviewPage() {
     pending: 0,
   });
   const [recent, setRecent] = useState<Attempt[]>([]);
+  const [allSubmitted, setAllSubmitted] = useState<Attempt[]>([]);
+  const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!profile || !institution) return;
     (async () => {
-      const [qs, as, mats, atts] = await Promise.all([
+      const [qs, as, mats, atts, sess] = await Promise.all([
         listQuestions(institution.id, profile.uid),
         listAssessmentsByTeacher(institution.id, profile.uid),
         listMaterialsByTeacher(institution.id, profile.uid),
         listAttemptsByTeacher(institution.id, profile.uid),
+        listLiveSessions(institution.id),
       ]);
       setCounts({
         questions: qs.length,
@@ -53,12 +58,24 @@ export default function TeacherOverviewPage() {
         pending: atts.filter((a) => a.needsManualGrading && a.status !== "graded").length,
       });
       setRecent(atts.slice(0, 8));
+      setAllSubmitted(atts.filter((a) => a.status !== "in_progress"));
+      const now = Date.now();
+      setSessions(
+        sess
+          .filter(
+            (s) =>
+              s.hostId === profile.uid &&
+              s.status === "scheduled" &&
+              s.startsAt >= now,
+          )
+          .slice(0, 4),
+      );
       setLoading(false);
     })();
   }, [profile, institution]);
 
-  const submitted = recent.filter((a) => a.status !== "in_progress");
-  const pass = passRate(submitted);
+  const pass = passRate(allSubmitted);
+  const avg = averagePercent(allSubmitted);
 
   return (
     <DashboardShell
@@ -70,9 +87,15 @@ export default function TeacherOverviewPage() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            label="Questions"
-            value={loading ? "—" : counts.questions}
-            icon={<Library className="w-5 h-5" />}
+            label="Active classes"
+            value={loading ? "—" : institution?.classes?.length ?? 0}
+            icon={<BookOpen className="w-5 h-5" />}
+            color="emerald"
+          />
+          <StatCard
+            label="Average score"
+            value={avg === null ? "—" : `${avg}%`}
+            icon={<ClipboardCheck className="w-5 h-5" />}
             color="indigo"
           />
           <StatCard
@@ -95,7 +118,43 @@ export default function TeacherOverviewPage() {
             trendLabel={pass === null ? "No submissions yet" : `${pass}% pass rate`}
             trend={pass === null ? "neutral" : pass >= 50 ? "up" : "down"}
           />
+          <StatCard
+            label="Upcoming sessions"
+            value={loading ? "—" : sessions.length}
+            icon={<Video className="w-5 h-5" />}
+            color="cyan"
+          />
         </div>
+
+        {sessions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold">Your upcoming live sessions</h2>
+            </CardHeader>
+            <CardBody className="p-0">
+              <div className="divide-y divide-[var(--dash-border)]">
+                {sessions.map((s) => (
+                  <div key={s.id} className="flex items-center gap-4 px-6 py-3">
+                    <div className="w-9 h-9 rounded-lg bg-[var(--dash-primary-soft)] text-[var(--dash-primary)] flex items-center justify-center shrink-0">
+                      <CalendarClock className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{s.title}</p>
+                      <p className="text-xs text-[var(--dash-text-muted)]">
+                        {formatDateTime(s.startsAt)} · {s.durationMins} min
+                      </p>
+                    </div>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="outline">
+                        Open link
+                      </Button>
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
+        )}
 
         <div className="flex flex-wrap gap-3">
           <Link href="/dashboard/teacher/questions">

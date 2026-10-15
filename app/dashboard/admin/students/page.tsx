@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  Search,
   GraduationCap,
   Ban,
   CheckCircle,
@@ -15,7 +14,11 @@ import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { Modal } from "@/app/components/ui/modal";
-import { EmptyState } from "@/app/components/ui/empty";
+import {
+  DataTable,
+  type Column,
+  type FilterDef,
+} from "@/app/components/ui/data-table";
 import { CopyButton } from "@/app/components/ui/copy-button";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -39,8 +42,6 @@ export default function AdminStudentsPage() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [attendance, setAttendance] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
-  const [classFilter, setClassFilter] = useState("all");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [emails, setEmails] = useState("");
   const [saving, setSaving] = useState(false);
@@ -66,13 +67,104 @@ export default function AdminStudentsPage() {
 
   const joinLink = institution ? institutionJoinLinks(institution).student : "";
 
-  const filtered = students.filter((s) => {
-    const matchQ =
-      s.name.toLowerCase().includes(q.toLowerCase()) ||
-      s.email.toLowerCase().includes(q.toLowerCase());
-    const matchC = classFilter === "all" || s.className === classFilter;
-    return matchQ && matchC;
-  });
+  const toggleStatus = async (s: UserProfile) => {
+    await updateUserProfile(s.uid, {
+      status: s.status === "active" ? "suspended" : "active",
+    });
+    await reload();
+  };
+
+  const columns: Column<UserProfile>[] = [
+    {
+      key: "student",
+      header: "Student",
+      sortValue: (s) => s.name.toLowerCase(),
+      cell: (s) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-[var(--dash-primary-soft)] text-[var(--dash-primary)] text-xs font-bold flex items-center justify-center rounded">
+            {initials(s.name)}
+          </div>
+          <div>
+            <p className="font-medium text-[var(--dash-text)]">{s.name}</p>
+            <p className="text-xs text-[var(--dash-text-muted)]">{s.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "class",
+      header: institution?.classLabel ?? "Class",
+      sortValue: (s) => s.className ?? "",
+      cell: (s) => (
+        <span className="text-[var(--dash-text-muted)]">{s.className || "—"}</span>
+      ),
+    },
+    {
+      key: "joined",
+      header: "Joined",
+      sortValue: (s) => s.createdAt,
+      cell: (s) => <span className="text-[var(--dash-text-muted)]">{formatDate(s.createdAt)}</span>,
+    },
+    {
+      key: "attendance",
+      header: "Attendance (30d)",
+      sortValue: (s) => attendance[s.uid] ?? 0,
+      cell: (s) => (
+        <span className="text-[var(--dash-text-muted)]">{attendance[s.uid] ?? 0} days</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortValue: (s) => s.status,
+      cell: (s) => (
+        <Badge variant={s.status === "active" ? "success" : "danger"}>{s.status}</Badge>
+      ),
+    },
+    {
+      key: "action",
+      header: "",
+      className: "text-right",
+      cell: (s) => (
+        <button
+          onClick={() => void toggleStatus(s)}
+          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+        >
+          {s.status === "active" ? (
+            <>
+              <Ban className="w-3.5 h-3.5" /> Suspend
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-3.5 h-3.5" /> Activate
+            </>
+          )}
+        </button>
+      ),
+    },
+  ];
+
+  const filters: FilterDef<UserProfile>[] = [
+    {
+      key: "class",
+      label: "Class",
+      getValue: (s) => s.className ?? "",
+      options: [
+        { value: "", label: `All ${institution?.classLabel ?? "classes"}` },
+        ...(institution?.classes ?? []).map((c) => ({ value: c, label: c })),
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      getValue: (s) => s.status,
+      options: [
+        { value: "", label: "All statuses" },
+        { value: "active", label: "Active" },
+        { value: "suspended", label: "Suspended" },
+      ],
+    },
+  ];
 
   const sendInvites = async () => {
     if (!institution) return;
@@ -128,30 +220,7 @@ export default function AdminStudentsPage() {
       subtitle="See who has joined and manage access"
     >
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-[var(--dash-text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search students…"
-              className={`${inputClass} pl-9`}
-            />
-          </div>
-          <select
-            value={classFilter}
-            onChange={(e) => setClassFilter(e.target.value)}
-            className={`${inputClass} w-auto`}
-          >
-            <option value="all">
-              All {institution?.classLabel ?? "classes"}
-            </option>
-            {(institution?.classes ?? []).map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+        <div className="flex justify-end">
           <Button variant="outline" onClick={() => setInviteOpen(true)}>
             <Mail className="w-4 h-4" /> Invite by email
           </Button>
@@ -189,102 +258,30 @@ export default function AdminStudentsPage() {
             </h2>
           </CardHeader>
           <CardBody className="p-0">
-            {loading ? (
-              <div className="p-6 space-y-3">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-12 bg-[var(--dash-surface-alt)] rounded-lg animate-pulse"
-                  />
-                ))}
-              </div>
-            ) : filtered.length === 0 ? (
-              <EmptyState
-                icon={<GraduationCap className="w-6 h-6" />}
-                title="No students yet"
-                description="Share the join code or invite link so students can sign up."
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-[var(--dash-surface-alt)] text-left text-xs font-semibold text-[var(--dash-text-muted)] uppercase">
-                    <tr>
-                      <th className="px-6 py-3">Student</th>
-                      <th className="px-6 py-3">
-                        {institution?.classLabel ?? "Class"}
-                      </th>
-                      <th className="px-6 py-3">Joined</th>
-                      <th className="px-6 py-3">Attendance (30d)</th>
-                      <th className="px-6 py-3">Status</th>
-                      <th className="px-6 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--dash-border)]">
-                    {filtered.map((s) => (
-                      <tr key={s.uid}>
-                        <td className="px-6 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-[var(--dash-primary-soft)] text-[var(--dash-primary)] text-xs font-bold flex items-center justify-center">
-                              {initials(s.name)}
-                            </div>
-                            <div>
-                              <p className="font-medium text-[var(--dash-text)]">
-                                {s.name}
-                              </p>
-                              <p className="text-xs text-[var(--dash-text-muted)]">
-                                {s.email}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
-                          {s.className || "—"}
-                        </td>
-                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
-                          {formatDate(s.createdAt)}
-                        </td>
-                        <td className="px-6 py-3 text-[var(--dash-text-muted)]">
-                          {attendance[s.uid] ?? 0} days
-                        </td>
-                        <td className="px-6 py-3">
-                          <Badge
-                            variant={
-                              s.status === "active" ? "success" : "danger"
-                            }
-                          >
-                            {s.status}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-3 text-right">
-                          <button
-                            onClick={async () => {
-                              await updateUserProfile(s.uid, {
-                                status:
-                                  s.status === "active"
-                                    ? "suspended"
-                                    : "active",
-                              });
-                              await reload();
-                            }}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
-                          >
-                            {s.status === "active" ? (
-                              <>
-                                <Ban className="w-3.5 h-3.5" /> Suspend
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="w-3.5 h-3.5" /> Activate
-                              </>
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <div className="px-6 pb-6 pt-4">
+              {loading ? (
+                <div className="space-y-3">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="h-12 bg-[var(--dash-surface-alt)] rounded-lg animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <DataTable
+                  rows={students}
+                  columns={columns}
+                  filters={filters}
+                  searchKeys={(s) => `${s.name} ${s.email}`}
+                  searchPlaceholder="Search students…"
+                  emptyTitle="No students yet"
+                  emptyDescription="Share the join code or invite link so students can sign up."
+                  emptyIcon={<GraduationCap className="w-6 h-6" />}
+                  getRowId={(s) => s.uid}
+                />
+              )}
+            </div>
           </CardBody>
         </Card>
 

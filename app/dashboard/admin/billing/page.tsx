@@ -3,7 +3,12 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  CheckCircle, CreditCard, AlertCircle, Clock, ArrowUpRight, Zap,
+  CheckCircle,
+  CreditCard,
+  AlertCircle,
+  Clock,
+  ArrowUpRight,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import DashboardShell from "@/app/components/dashboard/shell";
@@ -36,22 +41,27 @@ function TrialBanner({ trialEndsAt }: { trialEndsAt: number }) {
   const expired = days === 0;
   return (
     <div
-      className={`flex items-start gap-3 rounded-xl px-4 py-3.5 text-sm ${expired
+      className={`flex items-start gap-3 rounded-xl px-4 py-3.5 text-sm ${
+        expired
           ? "bg-red-50 border border-red-200 text-red-700"
           : days <= 7
             ? "bg-amber-50 border border-amber-200 text-amber-800"
             : "bg-blue-50 border border-blue-200 text-blue-800"
-        }`}
+      }`}
     >
       <Clock className="w-4 h-4 mt-0.5 shrink-0" />
       <div className="flex-1">
         {expired ? (
           <p>
-            <strong>Your 30-day free trial has ended.</strong> Upgrade to keep all your data and continue running assessments. On the Free plan, you are limited to 30 students and 3 teachers.
+            <strong>Your 30-day free trial has ended.</strong> Upgrade to keep
+            all your data and continue running assessments. On the Free plan,
+            you are limited to 30 students and 3 teachers.
           </p>
         ) : (
           <p>
-            <strong>{days} day{days !== 1 ? "s" : ""} left on your free trial.</strong>{" "}
+            <strong>
+              {days} day{days !== 1 ? "s" : ""} left on your free trial.
+            </strong>{" "}
             {days <= 7
               ? "Upgrade now to avoid interruption when your trial ends."
               : "After the trial your account stays on the Free plan (30 students, 3 teachers, 20 AI gens/month)."}
@@ -91,7 +101,7 @@ function BillingInner() {
       setCounts({
         students: users.filter((u) => u.role === "student").length,
         teachers: users.filter((u) => u.role === "teacher").length,
-      })
+      }),
     );
   }, [institution]);
 
@@ -119,7 +129,7 @@ function BillingInner() {
   }) => {
     if (!institution) return;
     const already = (await listPayments(institution.id)).some(
-      (p) => p.reference === opts.reference && p.status === "success"
+      (p) => p.reference === opts.reference && p.status === "success",
     );
     if (already) {
       setNotice("Plan already activated for this payment.");
@@ -141,7 +151,9 @@ function BillingInner() {
     await setInstitutionPlan(institution.id, opts.planId, renewsAt);
     await refresh();
     setPayments(await listPayments(institution.id));
-    setNotice(`You're now on the ${getPlan(opts.planId).name} plan. Welcome! 🎉`);
+    setNotice(
+      `You're now on the ${getPlan(opts.planId).name} plan. Welcome! 🎉`,
+    );
   };
 
   const verifyPaystack = async (reference: string) => {
@@ -156,7 +168,7 @@ function BillingInner() {
       if (!res.ok || data.status !== "success") {
         setError(
           data.error ??
-          "Payment could not be verified. If you were charged, contact support with your reference number."
+            "Payment could not be verified. If you were charged, contact support with your reference number.",
         );
         return;
       }
@@ -168,7 +180,7 @@ function BillingInner() {
       });
     } catch {
       setError(
-        "Could not verify payment. Please contact support with your Paystack reference number."
+        "Could not verify payment. Please contact support with your Paystack reference number.",
       );
     }
   };
@@ -191,7 +203,11 @@ function BillingInner() {
       if (!res.ok) throw new Error(data.error ?? "Could not start payment.");
       window.location.href = data.authorizationUrl;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Payment initiation failed. Try again.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Payment initiation failed. Try again.",
+      );
       setPaying(null);
     }
   };
@@ -226,7 +242,7 @@ function BillingInner() {
       title="Billing"
       subtitle="Manage your institution's ExamPro plan"
     >
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 w-full">
         {/* Error / success banners */}
         {error && (
           <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3.5">
@@ -254,11 +270,13 @@ function BillingInner() {
           <CardBody className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-2xl font-bold text-[var(--dash-text)]">{current.name}</p>
+                <p className="text-2xl font-bold text-[var(--dash-text)]">
+                  {current.name}
+                </p>
                 <Badge variant={statusVariant}>
                   {institution?.planStatus === "past_due"
                     ? "Trial ended"
-                    : institution?.planStatus ?? "active"}
+                    : (institution?.planStatus ?? "active")}
                 </Badge>
                 {trialActive && institution?.trialEndsAt && (
                   <Badge variant="info">
@@ -269,10 +287,10 @@ function BillingInner() {
               <p className="text-sm text-gray-500 mt-1">{current.tagline}</p>
               <p className="text-xs text-gray-400 mt-2">
                 {counts.students} /{" "}
-                {current.maxStudents === -1 ? "∞" : current.maxStudents} students ·{" "}
-                {counts.teachers} /{" "}
-                {current.maxTeachers === -1 ? "∞" : current.maxTeachers} teachers ·{" "}
-                {institution?.aiGenerationsUsed ?? 0} /{" "}
+                {current.maxStudents === -1 ? "∞" : current.maxStudents}{" "}
+                students · {counts.teachers} /{" "}
+                {current.maxTeachers === -1 ? "∞" : current.maxTeachers}{" "}
+                teachers · {institution?.aiGenerationsUsed ?? 0} /{" "}
                 {current.aiGenerationsPerMonth === -1
                   ? "∞"
                   : current.aiGenerationsPerMonth}{" "}
@@ -280,8 +298,8 @@ function BillingInner() {
               </p>
               {institution?.planRenewsAt && institution.plan !== "free" && (
                 <p className="text-xs text-gray-400 mt-1">
-                  Plan active until {formatDate(institution.planRenewsAt)} · payments are
-                  manual (no auto-renew)
+                  Plan active until {formatDate(institution.planRenewsAt)} ·
+                  payments are manual (no auto-renew)
                 </p>
               )}
             </div>
@@ -290,7 +308,7 @@ function BillingInner() {
         </Card>
 
         {/* Plan cards */}
-        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 h-[25rem]">
           {PLANS.map((plan) => {
             const isCurrent =
               institution?.plan === plan.id &&
@@ -299,77 +317,97 @@ function BillingInner() {
             return (
               <Card
                 key={plan.id}
-                className={plan.highlighted ? "ring-2 ring-[var(--dash-primary)]" : ""}
+                className={
+                  plan.highlighted ? "ring-2 ring-[var(--dash-primary)]" : ""
+                }
               >
                 <CardBody className="space-y-3 flex flex-col">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-[var(--dash-text)]">{plan.name}</h3>
-                    {plan.highlighted && <Badge>Popular</Badge>}
-                  </div>
-                  <p className="text-sm text-gray-500 min-h-10">{plan.tagline}</p>
-
-                  {/* Price */}
-                  <p className="text-2xl font-extrabold text-[var(--dash-text)]">
-                    {plan.priceUsd < 0
-                      ? "Custom"
-                      : plan.priceUsd === 0
-                        ? "Free"
-                        : `$${plan.priceUsd}`}
-                    {plan.priceUsd > 0 && (
-                      <span className="text-sm font-medium text-[var(--dash-text-faint)]">/mo</span>
-                    )}
-                  </p>
-                  {plan.priceNgn > 0 && (
-                    <p className="text-xs text-[var(--dash-text-faint)]">
-                      ≈ ₦{plan.priceNgn.toLocaleString()} via Paystack
-                    </p>
-                  )}
-
-                  <ul className="text-xs text-gray-600 space-y-1 flex-1">
-                    {plan.features.slice(0, 4).map((f) => (
-                      <li key={f} className="flex items-start gap-1.5">
-                        <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA */}
-                  {plan.id === "enterprise" ? (
-                    <Link href="/contact" className="block mt-auto">
-                      <Button variant="outline" fullWidth>
-                        Contact sales
-                      </Button>
-                    </Link>
-                  ) : isCurrent ? (
-                    <Button variant="ghost" fullWidth disabled className="mt-auto">
-                      Current plan
-                    </Button>
-                  ) : plan.priceUsd === 0 ? (
-                    <Button
-                      variant="outline"
-                      fullWidth
-                      className="mt-auto"
-                      onClick={downgradeFree}
-                    >
-                      Switch to Free
-                    </Button>
-                  ) : (
-                    <div className="space-y-1.5 mt-auto">
-                      <Button
-                        fullWidth
-                        loading={paying === plan.id}
-                        onClick={() => void startPaystack(plan.id)}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <Zap className="w-3.5 h-3.5" />
-                        Upgrade — ${plan.priceUsd}/mo
-                      </Button>
-                      <p className="text-[10px] text-center text-[var(--dash-text-faint)]">
-                        Paid via Paystack · ≈ ₦{plan.priceNgn.toLocaleString()} · no auto-renew
+                  <div className="flex flex-col justify-between gap-6">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-[var(--dash-text)]">
+                          {plan.name}
+                        </h3>
+                        {plan.highlighted && <Badge>Popular</Badge>}
+                      </div>
+                      <p className="text-sm text-gray-500 min-h-10">
+                        {plan.tagline}
                       </p>
+
+                      {/* Price */}
+                      <p className="text-2xl font-extrabold text-[var(--dash-text)]">
+                        {plan.priceUsd < 0
+                          ? "Custom"
+                          : plan.priceUsd === 0
+                            ? "Free"
+                            : `$${plan.priceUsd}`}
+                        {plan.priceUsd > 0 && (
+                          <span className="text-sm font-medium text-[var(--dash-text-faint)]">
+                            /mo
+                          </span>
+                        )}
+                      </p>
+                      {plan.priceNgn > 0 && (
+                        <p className="text-xs text-[var(--dash-text-faint)]">
+                          ≈ ₦{plan.priceNgn.toLocaleString()} via Paystack
+                        </p>
+                      )}
+
+                      <ul className="text-xs text-gray-600 space-y-1 flex-1">
+                        {plan.features.slice(0, 4).map((f) => (
+                          <li key={f} className="flex items-start gap-1.5">
+                            <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  )}
+
+                    <div>
+                      {/* CTA */}
+                      {plan.id === "enterprise" ? (
+                        <Link href="/contact" className="block mt-auto">
+                          <Button variant="outline" fullWidth>
+                            Contact sales
+                          </Button>
+                        </Link>
+                      ) : isCurrent ? (
+                        <Button
+                          variant="ghost"
+                          fullWidth
+                          disabled
+                          className="mt-auto"
+                        >
+                          Current plan
+                        </Button>
+                      ) : plan.priceUsd === 0 ? (
+                        <Button
+                          variant="outline"
+                          fullWidth
+                          className="mt-auto"
+                          onClick={downgradeFree}
+                        >
+                          Switch to Free
+                        </Button>
+                      ) : (
+                        <div className="space-y-1.5 mt-auto">
+                          <Button
+                            fullWidth
+                            loading={paying === plan.id}
+                            onClick={() => void startPaystack(plan.id)}
+                            className="flex items-center justify-center gap-2"
+                          >
+                            <Zap className="w-3.5 h-3.5" />
+                            Upgrade — ${plan.priceUsd}/mo
+                          </Button>
+                          <p className="text-[10px] text-center text-[var(--dash-text-faint)]">
+                            Paid via Paystack · ≈ ₦
+                            {plan.priceNgn.toLocaleString()} · no auto-renew
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </CardBody>
               </Card>
             );
@@ -382,12 +420,16 @@ function BillingInner() {
             <CardBody className="flex items-start gap-4">
               <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-gray-900 mb-1">Free plan limits</p>
+                <p className="font-semibold text-gray-900 mb-1">
+                  Free plan limits
+                </p>
                 <ul className="text-sm text-gray-500 space-y-1">
                   <li>· New student sign-ups blocked after 30 students</li>
                   <li>· New teacher sign-ups blocked after 3 teachers</li>
                   <li>· AI generation limited to 20 per month</li>
-                  <li>· All existing data, assessments, and results are preserved</li>
+                  <li>
+                    · All existing data, assessments, and results are preserved
+                  </li>
                 </ul>
               </div>
             </CardBody>
@@ -402,7 +444,9 @@ function BillingInner() {
           <CardBody className="p-0">
             {payments.length === 0 ? (
               <div className="px-6 py-10 text-center">
-                <p className="text-sm text-[var(--dash-text-faint)]">No payments yet.</p>
+                <p className="text-sm text-[var(--dash-text-faint)]">
+                  No payments yet.
+                </p>
                 <p className="text-xs text-gray-400 mt-1">
                   Your payment history appears here after your first upgrade.
                 </p>
@@ -431,7 +475,9 @@ function BillingInner() {
                       </td>
                       <td className="px-6 py-3">
                         <Badge
-                          variant={p.status === "success" ? "success" : "danger"}
+                          variant={
+                            p.status === "success" ? "success" : "danger"
+                          }
                         >
                           {p.status}
                         </Badge>

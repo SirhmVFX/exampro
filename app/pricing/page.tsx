@@ -50,14 +50,15 @@ export default function PricingPage() {
 
       {/* Plan cards */}
       <section className="px-6 pb-24">
-        <div className="max-w-6xl mx-auto grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="max-w-7xl mx-auto grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
-              className={`rounded-2xl border p-6 flex flex-col ${plan.highlighted
-                ? "border-white bg-white text-black"
-                : "border-white/10"
-                }`}
+              className={`rounded-2xl border p-6 flex flex-col h-[35rem] ${
+                plan.highlighted
+                  ? "border-white bg-white text-black"
+                  : "border-white/10"
+              }`}
             >
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-base">{plan.name}</h2>
@@ -68,8 +69,9 @@ export default function PricingPage() {
                 )}
               </div>
               <p
-                className={`text-xs mt-2 leading-relaxed min-h-8 ${plan.highlighted ? "text-black/50" : "text-white/40"
-                  }`}
+                className={`text-xs mt-2 leading-relaxed min-h-8 ${
+                  plan.highlighted ? "text-black/50" : "text-white/40"
+                }`}
               >
                 {plan.tagline}
               </p>
@@ -83,8 +85,9 @@ export default function PricingPage() {
                     : `$${plan.priceUsd}`}
                 {plan.priceUsd > 0 && (
                   <span
-                    className={`text-sm font-normal ${plan.highlighted ? "text-black/40" : "text-white/35"
-                      }`}
+                    className={`text-sm font-normal ${
+                      plan.highlighted ? "text-black/40" : "text-white/35"
+                    }`}
                   >
                     /mo
                   </span>
@@ -92,11 +95,16 @@ export default function PricingPage() {
               </p>
 
               <Link
-                href={plan.id === "enterprise" ? "/contact" : "/auth/register/institution"}
-                className={`mt-6 text-center text-sm py-2.5 rounded-xl font-medium transition ${plan.highlighted
-                  ? "bg-black text-white hover:bg-zinc-800"
-                  : "border border-white/15 hover:bg-white hover:text-black"
-                  }`}
+                href={
+                  plan.id === "enterprise"
+                    ? "/contact"
+                    : "/auth/register/institution"
+                }
+                className={`mt-6 text-center text-sm py-2.5 rounded-xl font-medium transition ${
+                  plan.highlighted
+                    ? "bg-black text-white hover:bg-zinc-800"
+                    : "border border-white/15 hover:bg-white hover:text-black"
+                }`}
               >
                 {plan.id === "enterprise"
                   ? "Contact sales"
@@ -109,8 +117,9 @@ export default function PricingPage() {
                 {plan.features.map((f) => (
                   <li
                     key={f}
-                    className={`flex items-start gap-2 text-xs leading-relaxed ${plan.highlighted ? "text-black/70" : "text-white/55"
-                      }`}
+                    className={`flex items-start gap-2 text-xs leading-relaxed ${
+                      plan.highlighted ? "text-black/70" : "text-white/55"
+                    }`}
                   >
                     <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     {f}
@@ -123,16 +132,18 @@ export default function PricingPage() {
 
         {/* Payment note */}
         <p className="text-center text-xs text-white/30 mt-6">
-          Payments processed securely by Paystack · USD prices shown · Billed monthly · No auto-renew
+          Payments processed securely by Paystack · USD prices shown · Billed
+          monthly · No auto-renew
         </p>
         <p className="text-center text-xs text-white/20 mt-1.5">
-          All paid plans include a 30-day free trial from the date of institution registration. No card required to start.
+          All paid plans include a 30-day free trial from the date of
+          institution registration. No card required to start.
         </p>
       </section>
 
       {/* FAQ */}
       <section className="px-6 pb-28 border-t border-white/10 pt-20">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-semibold tracking-tight mb-2">
             Frequently asked questions
           </h2>
@@ -159,8 +170,11 @@ export default function PricingPage() {
                     />
                   </div>
                   <div
-                    className={`grid transition-all duration-300 ${on ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"
-                      }`}
+                    className={`grid transition-all duration-300 ${
+                      on
+                        ? "grid-rows-[1fr] opacity-100 mt-3"
+                        : "grid-rows-[0fr] opacity-0"
+                    }`}
                   >
                     <p className="overflow-hidden text-sm text-white/45 leading-relaxed">
                       {item.a}
