@@ -153,6 +153,24 @@ function QuestionResultCard({
                 q.options?.[r.answer] ?? String(r.answer)
               ) : typeof r?.answer === "string" ? (
                 <HtmlContent html={r.answer} compact />
+              ) : typeof r?.answer === "object" && r?.answer ? (
+                (() => {
+                  const o = r.answer as { fileUrl?: string; fileName?: string; githubUrl?: string; notes?: string };
+                  if (o.fileUrl || o.githubUrl || o.notes) {
+                    return (
+                      <div className="space-y-1">
+                        {o.fileUrl && (
+                          <a href={o.fileUrl} target="_blank" rel="noreferrer" className="underline font-medium">
+                            {o.fileName || "Your submitted file"}
+                          </a>
+                        )}
+                        {o.githubUrl && <a href={o.githubUrl} target="_blank" rel="noreferrer" className="block underline">{o.githubUrl}</a>}
+                        {o.notes && <HtmlContent html={o.notes} compact />}
+                      </div>
+                    );
+                  }
+                  return String(JSON.stringify(o));
+                })()
               ) : (
                 String(r?.answer ?? "Not answered")
               )}

@@ -62,9 +62,25 @@ export function isNearBlack(hex?: string | null): boolean {
   return r < 24 && g < 24 && b < 24;
 }
 
+/** Blend two hex colors; ratio 0..1 toward `to`. */
+function mix(from: string, to: string, ratio: number): string {
+  const a = hexToRgb(from);
+  const b = hexToRgb(to);
+  const c = (x: number, y: number) =>
+    Math.round(x + (y - x) * Math.min(1, Math.max(0, ratio)));
+  const h = (n: number) => n.toString(16).padStart(2, "0");
+  return `#${h(c(a.r, b.r))}${h(c(a.g, b.g))}${h(c(a.b, b.b))}`;
+}
+
+export interface InstitutionThemeOptions {
+  themeMode?: "light" | "dark" | null;
+  dashboardBg?: string | null;
+}
+
 export function institutionThemeVars(
   primary?: string | null,
-  accent?: string | null
+  accent?: string | null,
+  opts?: InstitutionThemeOptions
 ): CSSProperties {
   const p = normalizeHex(primary);
   const a = normalizeHex(accent ?? DEFAULT_ACCENT);
@@ -73,7 +89,7 @@ export function institutionThemeVars(
   const fg = hexToRgb(onSidebar);
   const ar = hexToRgb(a);
 
-  return {
+  const vars: Record<string, string> = {
     "--dash-sidebar": p,
     "--dash-sidebar-fg": onSidebar,
     "--dash-sidebar-muted": `rgba(${fg.r}, ${fg.g}, ${fg.b}, 0.5)`,
@@ -87,5 +103,24 @@ export function institutionThemeVars(
     "--dash-primary": a,
     "--dash-on-primary": onAccent,
     "--dash-primary-soft": `rgba(${ar.r}, ${ar.g}, ${ar.b}, 0.12)`,
-  } as CSSProperties;
+  };
+
+  // When a custom content background is chosen, derive the whole content
+  // palette from it so inline vars override the :root/.dash-dark class values.
+  if (opts?.dashboardBg) {
+    const bg = normalizeHex(opts.dashboardBg);
+    const onBg = onColor(bg);
+    const bgFg = hexToRgb(onBg);
+    vars["--dash-bg"] = bg;
+    vars["--dash-surface"] = mix(bg, onBg, 0.04);
+    vars["--dash-surface-alt"] = mix(bg, onBg, 0.09);
+    vars["--dash-border"] = `rgba(${bgFg.r}, ${bgFg.g}, ${bgFg.b}, 0.14)`;
+    vars["--dash-text"] = onBg;
+    vars["--dash-text-muted"] = `rgba(${bgFg.r}, ${bgFg.g}, ${bgFg.b}, 0.62)`;
+    vars["--dash-text-faint"] = `rgba(${bgFg.r}, ${bgFg.g}, ${bgFg.b}, 0.38)`;
+    vars["--dash-topbar-bg"] = mix(bg, onBg, 0.04);
+    vars["--dash-topbar-border"] = `rgba(${bgFg.r}, ${bgFg.g}, ${bgFg.b}, 0.14)`;
+  }
+
+  return vars as CSSProperties;
 }

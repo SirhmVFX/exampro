@@ -25,6 +25,7 @@ import { Button } from "@/app/components/ui/button";
 import { Modal } from "@/app/components/ui/modal";
 import { EmptyState } from "@/app/components/ui/empty";
 import { WysiwygEditor } from "@/app/components/ui/wysiwyg-editor";
+import { ImageUpload } from "@/app/components/ui/image-upload";
 import { HtmlContent, isEmptyHtml } from "@/app/components/ui/html-content";
 import { StudentPicker } from "@/app/components/ui/student-picker";
 import { useAuth } from "@/lib/auth-context";
@@ -76,6 +77,7 @@ const emptyForm = {
   difficulty: "medium" as QuestionDifficulty,
   explanation: "",
   workedSolution: "",
+  imageUrl: "",
   options: ["", "", "", ""],
   correctIndex: 0,
   correctBool: true,
@@ -249,6 +251,14 @@ function QuestionFields({
           minHeight={140}
         />
       </div>
+      <div>
+        <ImageUpload
+          label="Question image (optional)"
+          value={form.imageUrl}
+          onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+          folder="exampro/question-images"
+        />
+      </div>
       {form.type === "mcq" && (
         <div className="space-y-2">
           <label className="block text-sm font-medium">
@@ -387,6 +397,12 @@ function QuestionFields({
           </div>
         </div>
       )}
+      {form.type === "pdf" && (
+        <div className="rounded-lg bg-[var(--dash-surface-alt)] border border-[var(--dash-border)] px-3 py-2 text-xs text-[var(--dash-text-muted)]">
+          Students upload a PDF/file (and optionally a written note) as their
+          answer. You grade it manually.
+        </div>
+      )}
       <div>
         <label className="block text-sm font-medium mb-1.5">
           Explanation (optional)
@@ -431,6 +447,7 @@ function toQuestion(
     difficulty: form.difficulty,
     explanation: form.explanation || undefined,
     workedSolution: form.workedSolution || undefined,
+    imageUrl: form.imageUrl || undefined,
     skill: form.skill || undefined,
     shared: form.shared || undefined,
     aiGenerated: meta.ai,
@@ -471,6 +488,7 @@ function questionToForm(
     difficulty: q.difficulty ?? "medium",
     explanation: q.explanation ?? "",
     workedSolution: q.workedSolution ?? "",
+    imageUrl: q.imageUrl ?? "",
     options: opts.slice(0, 4),
     correctIndex: q.correctIndex ?? 0,
     correctBool: q.correctBool ?? true,
@@ -1553,32 +1571,34 @@ export default function QuestionsWorkspace({
             placeholder="Search questions and sets…"
             className={`${inputClass} w-auto flex-1 min-w-44`}
           />
-          <select
-            value={filter.difficulty}
-            onChange={(e) =>
-              setFilter({ ...filter, difficulty: e.target.value })
-            }
-            className={`${inputClass} w-auto`}
-          >
-            <option value="all">All difficulties</option>
-            {Object.entries(DIFFICULTY_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filter.type}
-            onChange={(e) => setFilter({ ...filter, type: e.target.value })}
-            className={`${inputClass} w-auto`}
-          >
-            <option value="all">All types</option>
-            {Object.entries(TYPE_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={filter.difficulty}
+              onChange={(e) =>
+                setFilter({ ...filter, difficulty: e.target.value })
+              }
+              className={`${inputClass} w-auto`}
+            >
+              <option value="all">All difficulties</option>
+              {Object.entries(DIFFICULTY_LABEL).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filter.type}
+              onChange={(e) => setFilter({ ...filter, type: e.target.value })}
+              className={`${inputClass} w-auto`}
+            >
+              <option value="all">All types</option>
+              {Object.entries(TYPE_LABEL).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex gap-1 bg-gray-100 dark:bg-[var(--dash-surface)] p-1 rounded-lg">
             <button
               onClick={() => setView("folders")}

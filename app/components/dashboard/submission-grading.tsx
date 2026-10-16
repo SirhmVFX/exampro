@@ -126,21 +126,70 @@ export default function GradeSubmissionPage({
                 <div className="text-sm font-semibold">
                   {i + 1}. <HtmlContent html={q.text} className="inline" />
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
+                {q.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={q.imageUrl}
+                    alt=""
+                    className="mt-2 max-h-56 w-auto border border-[var(--dash-border)] object-contain bg-white rounded-lg"
+                  />
+                )}
+                <p className="text-xs text-[var(--dash-text-muted)] mt-1">
                   {q.type} · {q.points} pts
                   {r?.correct === null ? " · needs manual grade" : ""}
                 </p>
               </CardHeader>
               <CardBody className="space-y-3">
-                <div className="bg-gray-50 p-3 text-sm">
+                <div className="bg-[var(--dash-surface-alt)] p-3 text-sm rounded-lg">
                   {typeof answer === "boolean" ? (
                     answer ? "True" : "False"
                   ) : typeof answer === "string" ? (
                     <HtmlContent html={answer} />
                   ) : typeof answer === "object" && answer ? (
-                    <pre className="whitespace-pre-wrap font-mono text-xs">
-                      {JSON.stringify(answer, null, 2)}
-                    </pre>
+                    (() => {
+                      const o = answer as {
+                        fileUrl?: string;
+                        fileName?: string;
+                        githubUrl?: string;
+                        notes?: string;
+                      };
+                      if (o.fileUrl || o.githubUrl || o.notes) {
+                        return (
+                          <div className="space-y-2">
+                            {o.fileUrl && (
+                              <div className="space-y-1">
+                                <a
+                                  href={o.fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[var(--dash-primary)] underline text-sm font-medium"
+                                >
+                                  {o.fileName || "Download submitted file"}
+                                </a>
+                                {/\.pdf(?:$|\?)/i.test(o.fileUrl) && (
+                                  <iframe
+                                    src={o.fileUrl}
+                                    title="Submitted PDF"
+                                    className="w-full h-80 border border-[var(--dash-border)] rounded-lg bg-white"
+                                  />
+                                )}
+                              </div>
+                            )}
+                            {o.githubUrl && (
+                              <a href={o.githubUrl} target="_blank" rel="noreferrer" className="block text-sm underline">
+                                {o.githubUrl}
+                              </a>
+                            )}
+                            {o.notes && <HtmlContent html={o.notes} />}
+                          </div>
+                        );
+                      }
+                      return (
+                        <pre className="whitespace-pre-wrap font-mono text-xs">
+                          {JSON.stringify(answer, null, 2)}
+                        </pre>
+                      );
+                    })()
                   ) : (
                     String(answer ?? "—")
                   )}

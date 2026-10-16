@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AlertCircle, Clock, Play } from "lucide-react";
+import { AlertCircle, Clock, Play, FileUp } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { studentNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -202,6 +202,63 @@ function ProjectAnswer({
           Attached file
         </a>
       )}
+    </div>
+  );
+}
+
+function PdfAnswer({
+  value,
+  onChange,
+}: {
+  value: { fileUrl?: string; fileName?: string; notes?: string };
+  onChange: (v: { fileUrl?: string; fileName?: string; notes?: string }) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState("");
+  return (
+    <div className="space-y-3">
+      <WysiwygEditor
+        content={value.notes ?? ""}
+        onChange={(notes) => onChange({ ...value, notes })}
+        placeholder="Type your answer here (optional)…"
+        minHeight={140}
+      />
+      <div className="space-y-2">
+        <label className="inline-flex items-center gap-2 text-sm font-medium cursor-pointer px-3 py-2 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] text-[var(--dash-text)]">
+          <FileUp className="w-4 h-4" />
+          {uploading ? "Uploading…" : value.fileUrl ? "Replace file" : "Upload PDF / file"}
+          <input
+            type="file"
+            accept="application/pdf,.pdf,image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setErr("");
+              setUploading(true);
+              try {
+                const r = await uploadToCloudinary(file, "exampro/submissions");
+                onChange({ ...value, fileUrl: r.url, fileName: file.name });
+              } catch (e2) {
+                setErr(e2 instanceof Error ? e2.message : "Upload failed");
+              } finally {
+                setUploading(false);
+              }
+            }}
+          />
+        </label>
+        {value.fileUrl && (
+          <a
+            href={value.fileUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs underline block text-[var(--dash-primary)]"
+          >
+            {value.fileName || "Uploaded file"}
+          </a>
+        )}
+        {err && <p className="text-xs text-red-600">{err}</p>}
+      </div>
     </div>
   );
 }
@@ -467,6 +524,14 @@ export default function TakeAssessmentPage() {
                 </span>{" "}
                 <span className="text-xs font-normal text-[var(--dash-text-faint)]">({q.points} pts)</span>
               </p>
+              {q.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={q.imageUrl}
+                  alt=""
+                  className="mt-2 max-h-56 w-auto border border-[var(--dash-border)] object-contain bg-white rounded-lg"
+                />
+              )}
             </CardHeader>
             <CardBody>
               {q.type === "mcq" && (
@@ -539,6 +604,16 @@ export default function TakeAssessmentPage() {
                     (typeof answers[q.id] === "object" && answers[q.id]
                       ? (answers[q.id] as { githubUrl?: string; fileUrl?: string; notes?: string })
                       : { githubUrl: "", fileUrl: "", notes: String(answers[q.id] ?? "") })
+                  }
+                  onChange={(v) => setAnswers({ ...answers, [q.id]: v })}
+                />
+              )}
+              {q.type === "pdf" && (
+                <PdfAnswer
+                  value={
+                    (typeof answers[q.id] === "object" && answers[q.id]
+                      ? (answers[q.id] as { fileUrl?: string; fileName?: string; notes?: string })
+                      : { fileUrl: "", fileName: "", notes: String(answers[q.id] ?? "") })
                   }
                   onChange={(v) => setAnswers({ ...answers, [q.id]: v })}
                 />

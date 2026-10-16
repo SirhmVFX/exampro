@@ -6,6 +6,7 @@ import { GraduationCap, Users, LogIn } from "lucide-react";
 import { getInstitutionBySlug } from "@/lib/db";
 import type { Institution } from "@/lib/types";
 import { Wordmark } from "@/app/components/marketing/shell";
+import { SiteTemplate } from "@/app/components/site/templates";
 import { onColor } from "@/lib/theme";
 import { authPath } from "@/lib/domain";
 
@@ -51,6 +52,10 @@ export default function SchoolPortalPage({
         </Link>
       </div>
     );
+  }
+
+  if (institution.site) {
+    return <SiteTemplate institution={institution} site={institution.site} />;
   }
 
   const sidebar = institution.primaryColor || "#000000";
