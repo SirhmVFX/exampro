@@ -411,7 +411,7 @@ function Hero({ onPreviewRole }: { onPreviewRole: (role: Role) => void }) {
             </div>
 
             <p className="mt-5 text-xs text-white/35">
-              No card required · 30-day free trial · Plans from $29/mo · Cancel
+              No card required · 30-day free trial · Plans from $39/mo · Cancel
               anytime
             </p>
 

@@ -35,8 +35,8 @@ export const PLANS: Plan[] = [
     id: "starter",
     name: "Starter",
     tagline: "For growing schools & training centers",
-    priceUsd: 29,
-    priceNgn: 39000,
+    priceUsd: 39,
+    priceNgn: 52000,
     maxStudents: 200,
     maxTeachers: 15,
     aiGenerationsPerMonth: 200,
@@ -53,8 +53,8 @@ export const PLANS: Plan[] = [
     id: "growth",
     name: "Growth",
     tagline: "For established institutions at scale",
-    priceUsd: 79,
-    priceNgn: 120000,
+    priceUsd: 89,
+    priceNgn: 135000,
     maxStudents: 1000,
     maxTeachers: 50,
     aiGenerationsPerMonth: -1,
@@ -89,6 +89,21 @@ export const PLANS: Plan[] = [
 export function getPlan(id: PlanId): Plan {
   return PLANS.find((p) => p.id === id) ?? PLANS[0];
 }
+
+// Prepaid billing terms: an institution can pay for any whole number of
+// months from 1 up to MAX_BILLING_MONTHS in a single checkout.
+export const MAX_BILLING_MONTHS = 12;
+
+export function normalizeBillingMonths(value: unknown): number {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(n, MAX_BILLING_MONTHS);
+}
+
+export const BILLING_MONTH_OPTIONS: number[] = Array.from(
+  { length: MAX_BILLING_MONTHS },
+  (_, i) => i + 1,
+);
 
 export function planAllows(
   plan: Plan,

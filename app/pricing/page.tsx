@@ -132,8 +132,8 @@ export default function PricingPage() {
 
         {/* Payment note */}
         <p className="text-center text-xs text-white/30 mt-6">
-          Payments processed securely by Paystack · USD prices shown · Billed
-          monthly · No auto-renew
+          Payments processed securely by Paystack · USD prices shown · Pay
+          monthly or prepay up to 12 months · No auto-renew
         </p>
         <p className="text-center text-xs text-white/20 mt-1.5">
           All paid plans include a 30-day free trial from the date of

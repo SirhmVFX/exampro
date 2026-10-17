@@ -17,8 +17,8 @@ export default function Page() {
         headers={["Plan", "Price", "Students", "Teachers", "AI gens/mo"]}
         rows={[
           ["Free", "$0", "30", "3", "20"],
-          ["Starter", "$29/mo", "200", "15", "200"],
-          ["Growth", "$79/mo", "1,000", "50", "Unlimited"],
+          ["Starter", "$39/mo", "200", "15", "200"],
+          ["Growth", "$89/mo", "1,000", "50", "Unlimited"],
           ["Enterprise", "Custom", "Unlimited", "Unlimited", "Unlimited"],
         ]}
       />
@@ -29,12 +29,12 @@ export default function Page() {
       <DocP>The Free plan does not require a credit card or any payment details.</DocP>
 
       <DocH2 id="paid">Paid plans</DocH2>
-      <DocP>Starter and Growth are billed monthly. Payments are processed by <strong>Paystack</strong> — supports Nigerian bank cards, Visa, Mastercard, bank transfer, and USSD. Paid plans activate immediately after a successful payment.</DocP>
+      <DocP>Starter and Growth are priced per month — you can pay for a single month or prepay any term up to 12 months in one checkout. Payments are processed by <strong>Paystack</strong> — supports Nigerian bank cards, Visa, Mastercard, bank transfer, and USSD. Paid plans activate immediately after a successful payment.</DocP>
       <DocUl>
-        <DocLi><strong>Starter ($29/mo)</strong> — growing schools up to 200 students. Includes full Cloudinary file storage for materials.</DocLi>
-        <DocLi><strong>Growth ($79/mo)</strong> — established institutions up to 1,000 students. Unlimited AI generations and priority support.</DocLi>
+        <DocLi><strong>Starter ($39/mo)</strong> — growing schools up to 200 students. Includes full Cloudinary file storage for materials.</DocLi>
+        <DocLi><strong>Growth ($89/mo)</strong> — established institutions up to 1,000 students. Unlimited AI generations and priority support.</DocLi>
       </DocUl>
-      <Tip>Plans do not auto-renew. Each month is a separate payment. If you don&apos;t pay again, the plan stays active until the end of the paid month, then reverts to Free. No data is deleted.</Tip>
+      <Tip>Plans do not auto-renew. Your plan stays active for the number of months you prepaid, then reverts to Free. No data is deleted.</Tip>
 
       <DocH2 id="enterprise">Enterprise</DocH2>
       <DocP>For universities, multi-campus institutions, or anyone with special requirements. Features include unlimited students and teachers, dedicated account manager, custom SLA, and onboarding support.</DocP>
