@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PLANS } from "@/lib/plans";
+import { PLANS, normalizeBillingMonths } from "@/lib/plans";
 
 // Initializes a Paystack transaction (NGN payments).
 // Env: PAYSTACK_SECRET_KEY
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { institutionId?: string; planId?: string; email?: string };
+  let body: { institutionId?: string; planId?: string; email?: string; months?: number };
   try {
     body = await req.json();
   } catch {
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { institutionId, planId, email } = body;
+  const months = normalizeBillingMonths(body.months);
 
   const plan = PLANS.find((p) => p.id === planId);
   if (!plan || plan.priceUsd <= 0) {
@@ -42,7 +43,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Use the explicit NGN price if set, otherwise convert from USD at the current rate.
-  const amountNgn = plan.priceNgn > 0 ? plan.priceNgn : plan.priceUsd * USD_TO_NGN;
+  // Multiply by the number of prepaid months selected at checkout.
+  const monthlyNgn = plan.priceNgn > 0 ? plan.priceNgn : plan.priceUsd * USD_TO_NGN;
+  const amountNgn = monthlyNgn * months;
   const amountKobo = amountNgn * 100; // Paystack expects kobo (1 NGN = 100 kobo)
 
   const origin = req.headers.get("origin") ?? req.nextUrl.origin;
@@ -63,6 +66,8 @@ export async function POST(req: NextRequest) {
         planId,
         planName: plan.name,
         priceUsd: plan.priceUsd,
+        months,
+        totalUsd: plan.priceUsd * months,
       },
     }),
   });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeBillingMonths } from "@/lib/plans";
 
 // Verifies a Paystack transaction after the callback redirect.
 // Env: PAYSTACK_SECRET_KEY
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
     reference: tx.reference,
     institutionId: tx.metadata?.institutionId ?? null,
     planId: tx.metadata?.planId ?? null,
+    months: normalizeBillingMonths(tx.metadata?.months ?? 1),
     paidAt: tx.paid_at,
   });
 }

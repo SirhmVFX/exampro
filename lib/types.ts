@@ -559,6 +559,7 @@ export interface PaymentRecord {
   plan: PlanId;
   amount: number;
   currency: string;
+  months?: number; // prepaid months covered by this payment (default 1)
   status: "success" | "failed" | "pending";
   createdAt: number;
 }
