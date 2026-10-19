@@ -17,7 +17,7 @@ import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import { PLANS, getPlan } from "@/lib/plans";
+import { PLANS, getPlan, BILLING_MONTH_OPTIONS } from "@/lib/plans";
 import {
   listPayments,
   listUsers,
@@ -83,6 +83,7 @@ function BillingInner() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [counts, setCounts] = useState({ students: 0, teachers: 0 });
   const [checked, setChecked] = useState(false);
+  const [months, setMonths] = useState(1);
 
   // On load: check whether plan or trial has expired
   useEffect(() => {
@@ -126,6 +127,7 @@ function BillingInner() {
     planId: PlanId;
     amount: number;
     currency: string;
+    months: number;
   }) => {
     if (!institution) return;
     const already = (await listPayments(institution.id)).some(
@@ -135,8 +137,8 @@ function BillingInner() {
       setNotice("Plan already activated for this payment.");
       return;
     }
-    // Renews 30 days from now — manual monthly cycle
-    const renewsAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    // Prepaid term: active for `months` × 30 days from now (manual cycle, no auto-renew)
+    const renewsAt = Date.now() + opts.months * 30 * 24 * 60 * 60 * 1000;
     await savePayment({
       id: newId(COL.payments),
       institutionId: institution.id,
@@ -145,6 +147,7 @@ function BillingInner() {
       plan: opts.planId,
       amount: opts.amount,
       currency: opts.currency,
+      months: opts.months,
       status: "success",
       createdAt: Date.now(),
     });
@@ -152,7 +155,9 @@ function BillingInner() {
     await refresh();
     setPayments(await listPayments(institution.id));
     setNotice(
-      `You're now on the ${getPlan(opts.planId).name} plan. Welcome! 🎉`,
+      `You're now on the ${getPlan(opts.planId).name} plan for ${opts.months} month${
+        opts.months !== 1 ? "s" : ""
+      }. Welcome! 🎉`,
     );
   };
 
@@ -177,6 +182,7 @@ function BillingInner() {
         planId: data.planId,
         amount: data.amount,
         currency: data.currency,
+        months: data.months ?? 1,
       });
     } catch {
       setError(
@@ -197,6 +203,7 @@ function BillingInner() {
           institutionId: institution.id,
           planId,
           email: profile.email,
+          months,
         }),
       });
       const data = await res.json();
@@ -307,8 +314,42 @@ function BillingInner() {
           </CardBody>
         </Card>
 
+        {/* Billing term selector */}
+        <Card>
+          <CardBody>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[var(--dash-primary)]" />
+                <p className="text-sm font-semibold text-[var(--dash-text)]">
+                  Billing term
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {BILLING_MONTH_OPTIONS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMonths(m)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition border ${
+                      months === m
+                        ? "bg-[var(--dash-primary)] text-white border-transparent"
+                        : "text-[var(--dash-text-muted)] border-[var(--dash-border)] hover:bg-[var(--dash-surface-alt)]"
+                    }`}
+                  >
+                    {m} mo
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-[var(--dash-text-faint)]">
+                Choose how many months to prepay — one secure payment, active
+                for {months} month{months !== 1 ? "s" : ""}. No auto-renew.
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+
         {/* Plan cards */}
-        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 h-[25rem]">
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 h-[26rem]">
           {PLANS.map((plan) => {
             const isCurrent =
               institution?.plan === plan.id &&
@@ -334,22 +375,29 @@ function BillingInner() {
                         {plan.tagline}
                       </p>
 
-                      {/* Price */}
+                      {/* Price (total for the selected prepaid term) */}
                       <p className="text-2xl font-extrabold text-[var(--dash-text)]">
                         {plan.priceUsd < 0
                           ? "Custom"
                           : plan.priceUsd === 0
                             ? "Free"
-                            : `$${plan.priceUsd}`}
+                            : `$${plan.priceUsd * months}`}
                         {plan.priceUsd > 0 && (
                           <span className="text-sm font-medium text-[var(--dash-text-faint)]">
-                            /mo
+                            /{months} mo
                           </span>
                         )}
                       </p>
+                      {plan.priceUsd > 0 && (
+                        <p className="text-xs text-[var(--dash-text-faint)]">
+                          ${plan.priceUsd}/mo · billed for {months} month
+                          {months !== 1 ? "s" : ""}
+                        </p>
+                      )}
                       {plan.priceNgn > 0 && (
                         <p className="text-xs text-[var(--dash-text-faint)]">
-                          ≈ ₦{plan.priceNgn.toLocaleString()} via Paystack
+                          ≈ ₦{(plan.priceNgn * months).toLocaleString()} via
+                          Paystack
                         </p>
                       )}
 
@@ -398,11 +446,12 @@ function BillingInner() {
                             className="flex items-center justify-center gap-2"
                           >
                             <Zap className="w-3.5 h-3.5" />
-                            Upgrade — ${plan.priceUsd}/mo
+                            Upgrade — ${plan.priceUsd * months} ({months} mo)
                           </Button>
                           <p className="text-[10px] text-center text-[var(--dash-text-faint)]">
                             Paid via Paystack · ≈ ₦
-                            {plan.priceNgn.toLocaleString()} · no auto-renew
+                            {(plan.priceNgn * months).toLocaleString()} · no
+                            auto-renew
                           </p>
                         </div>
                       )}
@@ -457,6 +506,7 @@ function BillingInner() {
                   <tr>
                     <th className="px-6 py-3">Date</th>
                     <th className="px-6 py-3">Plan</th>
+                    <th className="px-6 py-3">Term</th>
                     <th className="px-6 py-3">Amount</th>
                     <th className="px-6 py-3">Reference</th>
                     <th className="px-6 py-3">Status</th>
@@ -467,6 +517,9 @@ function BillingInner() {
                     <tr key={p.id}>
                       <td className="px-6 py-3">{formatDate(p.createdAt)}</td>
                       <td className="px-6 py-3 capitalize">{p.plan}</td>
+                      <td className="px-6 py-3">
+                        {p.months ?? 1} mo
+                      </td>
                       <td className="px-6 py-3">
                         {p.currency} {p.amount.toLocaleString()}
                       </td>
