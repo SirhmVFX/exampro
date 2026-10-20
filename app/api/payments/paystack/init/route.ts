@@ -13,16 +13,27 @@ export async function POST(req: NextRequest) {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   if (!secret) {
     return NextResponse.json(
-      { error: "PAYSTACK_SECRET_KEY is not configured. Contact your administrator." },
-      { status: 500 }
+      {
+        error:
+          "PAYSTACK_SECRET_KEY is not configured. Contact your administrator.",
+      },
+      { status: 500 },
     );
   }
 
-  let body: { institutionId?: string; planId?: string; email?: string; months?: number };
+  let body: {
+    institutionId?: string;
+    planId?: string;
+    email?: string;
+    months?: number;
+  };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: 400 },
+    );
   }
 
   const { institutionId, planId, email } = body;
@@ -32,19 +43,20 @@ export async function POST(req: NextRequest) {
   if (!plan || plan.priceUsd <= 0) {
     return NextResponse.json(
       { error: "Invalid plan. Only Starter and Growth are purchasable." },
-      { status: 400 }
+      { status: 400 },
     );
   }
   if (!institutionId || !email) {
     return NextResponse.json(
       { error: "institutionId and email are required." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   // Use the explicit NGN price if set, otherwise convert from USD at the current rate.
   // Multiply by the number of prepaid months selected at checkout.
-  const monthlyNgn = plan.priceNgn > 0 ? plan.priceNgn : plan.priceUsd * USD_TO_NGN;
+  const monthlyNgn =
+    plan.priceNgn > 0 ? plan.priceNgn : plan.priceUsd * USD_TO_NGN;
   const amountNgn = monthlyNgn * months;
   const amountKobo = amountNgn * 100; // Paystack expects kobo (1 NGN = 100 kobo)
 
@@ -76,7 +88,7 @@ export async function POST(req: NextRequest) {
   if (!res.ok || !data.status) {
     return NextResponse.json(
       { error: data.message ?? "Paystack initialization failed. Try again." },
-      { status: 502 }
+      { status: 502 },
     );
   }
 
