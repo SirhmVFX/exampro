@@ -9,7 +9,7 @@ import { getPlan, planAllows } from "@/lib/plans";
 
 // Default matches the proven-working model used by bridgitus-admin; override
 // with GEMINI_MODEL in .env.local if your key targets a different model.
-const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash-lite";
 const MAX_COUNT = 100;
 const BATCH_SIZE = 15;
 
