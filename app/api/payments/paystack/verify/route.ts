@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   if (!secret) {
     return NextResponse.json(
       { error: "PAYSTACK_SECRET_KEY is not configured." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -20,14 +20,14 @@ export async function POST(req: NextRequest) {
 
   const res = await fetch(
     `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
-    { headers: { Authorization: `Bearer ${secret}` } }
+    { headers: { Authorization: `Bearer ${secret}` } },
   );
   const data = await res.json();
 
   if (!res.ok || !data.status) {
     return NextResponse.json(
       { error: data.message ?? "Verification failed" },
-      { status: 502 }
+      { status: 502 },
     );
   }
 
