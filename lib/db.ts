@@ -555,9 +555,9 @@ export async function listUsers(
         collection(db, COL.users),
         ...(role
           ? [
-              where("institutionId", "==", institutionId),
-              where("role", "==", role),
-            ]
+            where("institutionId", "==", institutionId),
+            where("role", "==", role),
+          ]
           : [where("institutionId", "==", institutionId)]),
       ),
     ),
@@ -823,6 +823,26 @@ export async function listAttemptsByTeacher(
     .sort((a, b) => b.startedAt - a.startedAt);
 }
 
+/** Real-time listener for attempts assigned to a teacher. */
+export function subscribeToTeacherAttempts(
+  institutionId: string,
+  teacherId: string,
+  cb: (attempts: Attempt[]) => void,
+): Unsubscribe {
+  const q = query(
+    collection(db, COL.attempts),
+    where("institutionId", "==", institutionId),
+    where("teacherId", "==", teacherId),
+  );
+  return onSnapshot(q, (snap) => {
+    cb(
+      snap.docs
+        .map((d) => d.data() as Attempt)
+        .sort((a, b) => b.startedAt - a.startedAt),
+    );
+  });
+}
+
 export async function listAllAttempts(
   institutionId: string,
 ): Promise<Attempt[]> {
@@ -835,6 +855,52 @@ export async function listAllAttempts(
   return snap.docs
     .map((d) => d.data() as Attempt)
     .sort((a, b) => b.startedAt - a.startedAt);
+}
+
+/** Delete all attempts a student has made on a specific assessment (retake reset). */
+export async function deleteStudentAttempts(
+  institutionId: string,
+  assessmentId: string,
+  studentId: string,
+): Promise<void> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.attempts),
+      where("institutionId", "==", institutionId),
+      where("assessmentId", "==", assessmentId),
+      where("studentId", "==", studentId),
+    ),
+  );
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+}
+
+/** List all attempts for a specific assessment (for teacher/admin submission views). */
+export async function listAttemptsByAssessment(
+  institutionId: string,
+  assessmentId: string,
+): Promise<Attempt[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.attempts),
+      where("institutionId", "==", institutionId),
+      where("assessmentId", "==", assessmentId),
+    ),
+  );
+  return snap.docs
+    .map((d) => d.data() as Attempt)
+    .sort((a, b) => b.startedAt - a.startedAt);
+}
+
+/** All shared questions visible to everyone in an institution. */
+export async function listSharedQuestions(institutionId: string): Promise<Question[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COL.questions),
+      where("institutionId", "==", institutionId),
+      where("shared", "==", true),
+    ),
+  );
+  return snap.docs.map((d) => d.data() as Question);
 }
 
 // ─── Materials ───
