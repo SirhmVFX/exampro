@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, RefreshCw } from "lucide-react";
+import toast from "react-hot-toast";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { teacherNav, adminNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -13,7 +14,7 @@ import {
   type FilterDef,
 } from "@/app/components/ui/data-table";
 import { useAuth } from "@/lib/auth-context";
-import { listAttemptsByTeacher, listAllAttempts } from "@/lib/db";
+import { listAttemptsByTeacher, listAllAttempts, deleteStudentAttempts } from "@/lib/db";
 import type { Attempt } from "@/lib/types";
 import { formatDateTime, KIND_LABEL } from "@/lib/utils";
 
@@ -27,8 +28,9 @@ export default function SubmissionsWorkspace({
   const { profile, institution } = useAuth();
   const [items, setItems] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resetting, setResetting] = useState<string | null>(null);
 
-  useEffect(() => {
+  const reload = () => {
     if (!institution || !profile) return;
     (who === "admin"
       ? listAllAttempts(institution.id)
@@ -37,6 +39,26 @@ export default function SubmissionsWorkspace({
       setItems(a.filter((x) => x.status !== "in_progress"));
       setLoading(false);
     });
+  };
+
+  const resetRetake = async (a: Attempt) => {
+    if (!institution) return;
+    if (!confirm(`Reset all attempts for ${a.studentName} on "${a.assessmentTitle}"? They will be able to retake from scratch.`)) return;
+    setResetting(a.studentId + a.assessmentId);
+    try {
+      await deleteStudentAttempts(institution.id, a.assessmentId, a.studentId);
+      reload();
+      toast.success("Retake reset — student can now attempt again.");
+    } catch {
+      toast.error("Reset failed.");
+    } finally {
+      setResetting(null);
+    }
+  };
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [institution, profile, who]);
 
   const statusOf = (a: Attempt) =>
@@ -94,12 +116,22 @@ export default function SubmissionsWorkspace({
       header: "",
       className: "text-right",
       cell: (a) => (
-        <Link
-          href={`${base}/submissions/${a.id}`}
-          className="text-xs text-[var(--dash-primary)] font-medium"
-        >
-          Open
-        </Link>
+        <div className="flex items-center justify-end gap-2">
+          <Link
+            href={`${base}/submissions/${a.id}`}
+            className="text-xs text-[var(--dash-primary)] font-medium"
+          >
+            Open
+          </Link>
+          <button
+            onClick={() => void resetRetake(a)}
+            disabled={resetting === a.studentId + a.assessmentId}
+            title="Reset retake — delete all attempts so student can retake"
+            className="p-1 rounded text-[var(--dash-text-faint)] hover:text-amber-600 disabled:opacity-40"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        </div>
       ),
     },
   ];
