@@ -60,6 +60,7 @@ function AssessmentBuilder({ for: who }: { for: "teacher" | "admin" }) {
   const [library, setLibrary] = useState<Question[]>([]);
   const [sets, setSets] = useState<QuestionSet[]>([]);
   const [setsOpen, setSetsOpen] = useState(false);
+  const [difficultyFilter, setDifficultyFilter] = useState("");
   const [materials, setMaterials] = useState<{ id: string; title: string }[]>(
     [],
   );
@@ -199,7 +200,8 @@ function AssessmentBuilder({ for: who }: { for: "teacher" | "admin" }) {
   const matching = pool.filter(
     (q) =>
       (!form.subject || q.subject === form.subject) &&
-      (!form.className || q.className === form.className),
+      (!form.className || q.className === form.className) &&
+      (!difficultyFilter || q.difficulty === difficultyFilter),
   );
 
   const picked = pool.filter((q) => selected.has(q.id));
@@ -638,7 +640,20 @@ function AssessmentBuilder({ for: who }: { for: "teacher" | "admin" }) {
                 Filtered by the subject and class you selected
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <select
+                value={difficultyFilter}
+                onChange={(e) => setDifficultyFilter(e.target.value)}
+                className="text-xs px-2 py-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface)] text-[var(--dash-text)]"
+              >
+                <option value="">All difficulties</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+                <option value="support">Support</option>
+                <option value="core">Core</option>
+                <option value="extension">Extension</option>
+              </select>
               <Button
                 variant="outline"
                 size="sm"
@@ -672,8 +687,9 @@ function AssessmentBuilder({ for: who }: { for: "teacher" | "admin" }) {
                       className="mt-1"
                     />
                     <div className="min-w-0">
-                      <div className="flex gap-2 mb-1">
+                      <div className="flex gap-2 mb-1 flex-wrap">
                         <Badge>{TYPE_LABEL[q.type]}</Badge>
+                        {q.difficulty && <Badge variant="outline">{q.difficulty}</Badge>}
                         <span className="text-xs text-[var(--dash-text-faint)]">
                           {q.points} pts
                         </span>
