@@ -16,6 +16,8 @@ import {
   Sparkles,
   Trash2,
   Wand2,
+  Users2,
+  Copy,
 } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { teacherNav, adminNav } from "@/app/components/dashboard/nav";
@@ -42,6 +44,7 @@ import {
   incrementAiUsage,
   newId,
   COL,
+  listSharedQuestions,
 } from "@/lib/db";
 import { getPlan, planAllows } from "@/lib/plans";
 import { downloadCsv } from "@/lib/csv";
@@ -292,11 +295,10 @@ function QuestionFields({
               key={String(v)}
               type="button"
               onClick={() => setForm({ ...form, correctBool: v })}
-              className={`flex-1 py-2 rounded-lg border text-sm font-medium ${
-                form.correctBool === v
-                  ? "bg-[var(--dash-primary)] text-[var(--dash-on-primary)] border-[var(--dash-primary)]"
-                  : "border-gray-200"
-              }`}
+              className={`flex-1 py-2 rounded-lg border text-sm font-medium ${form.correctBool === v
+                ? "bg-[var(--dash-primary)] text-[var(--dash-on-primary)] border-[var(--dash-primary)]"
+                : "border-gray-200"
+                }`}
             >
               {v ? "True" : "False"}
             </button>
@@ -546,11 +548,10 @@ export function QuestionReviewCard({
           {q.options.map((opt, j) => (
             <div
               key={`${q.id}-opt-${j}`}
-              className={`text-xs px-3 py-1.5 border rounded-lg ${
-                j === q.correctIndex
-                  ? "border-emerald-400 bg-emerald-50 text-emerald-800 font-bold"
-                  : "border-[var(--dash-border)] text-[var(--dash-text-muted)]"
-              }`}
+              className={`text-xs px-3 py-1.5 border rounded-lg ${j === q.correctIndex
+                ? "border-emerald-400 bg-emerald-50 text-emerald-800 font-bold"
+                : "border-[var(--dash-border)] text-[var(--dash-text-muted)]"
+                }`}
             >
               {j === q.correctIndex && "✓ "}
               {String.fromCharCode(65 + j)}. {opt}
@@ -909,6 +910,8 @@ export default function QuestionsWorkspace({
   const [loading, setLoading] = useState(true);
 
   const [view, setView] = useState<"folders" | "flat">("folders");
+  const [showShared, setShowShared] = useState(false);
+  const [sharedQuestions, setSharedQuestions] = useState<Question[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState({ type: "all", difficulty: "all" });
 
@@ -985,6 +988,10 @@ export default function QuestionsWorkspace({
     ]);
     setQuestions(q);
     setSets(s);
+    // For teachers: also load institution-wide shared questions
+    if (scope !== "all") {
+      listSharedQuestions(institution.id).then(setSharedQuestions);
+    }
   };
 
   useEffect(() => {
@@ -1232,9 +1239,8 @@ export default function QuestionsWorkspace({
       setPreview(mapped);
       setAssignOpts((prev) => ({
         ...prev,
-        assessmentTitle: `${ai.subject || "AI"} ${ai.topic ? `— ${ai.topic}` : ""} ${
-          prev.assessmentKind
-        }`,
+        assessmentTitle: `${ai.subject || "AI"} ${ai.topic ? `— ${ai.topic}` : ""} ${prev.assessmentKind
+          }`,
       }));
     } catch (e) {
       setAiError(e instanceof Error ? e.message : "Generation failed");
@@ -1602,21 +1608,19 @@ export default function QuestionsWorkspace({
           <div className="flex gap-1 bg-gray-100 dark:bg-[var(--dash-surface)] p-1 rounded-lg">
             <button
               onClick={() => setView("folders")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                view === "folders"
-                  ? "bg-white text-[var(--dash-text)] border border-[var(--dash-border)] shadow-sm"
-                  : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === "folders"
+                ? "bg-white text-[var(--dash-text)] border border-[var(--dash-border)] shadow-sm"
+                : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+                }`}
             >
               <Folder className="w-3.5 h-3.5" /> Folders
             </button>
             <button
               onClick={() => setView("flat")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                view === "flat"
-                  ? "bg-white text-[var(--dash-text)] border border-[var(--dash-border)] shadow-sm"
-                  : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === "flat"
+                ? "bg-white text-[var(--dash-text)] border border-[var(--dash-border)] shadow-sm"
+                : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+                }`}
             >
               <List className="w-3.5 h-3.5" /> All
             </button>
@@ -1624,6 +1628,14 @@ export default function QuestionsWorkspace({
           <Button variant="outline" onClick={() => setCsvOpen(true)}>
             <FileSpreadsheet className="w-4 h-4" /> Import CSV
           </Button>
+          {scope !== "all" && (
+            <Button
+              variant={showShared ? "primary" : "outline"}
+              onClick={() => setShowShared((v) => !v)}
+            >
+              <Users2 className="w-4 h-4" /> Shared bank
+            </Button>
+          )}
           <Button variant="outline" onClick={openBuilder}>
             <Layers className="w-4 h-4" /> New set
           </Button>
@@ -1663,6 +1675,50 @@ export default function QuestionsWorkspace({
                 title="Your question bank is empty"
                 description="Add questions manually, build a set of up to 100 questions, or generate them with Gemini."
               />
+            </CardBody>
+          </Card>
+        ) : showShared ? (
+          <Card>
+            <CardHeader>
+              <h2 className="font-semibold">Shared question bank</h2>
+              <p className="text-sm text-[var(--dash-text-muted)]">Questions marked as shared by all teachers in {institution?.name ?? "your institution"}</p>
+            </CardHeader>
+            <CardBody className="p-0">
+              {sharedQuestions.filter((q) => q.teacherId !== profile?.uid).length === 0 ? (
+                <EmptyState
+                  icon={<Users2 className="w-6 h-6" />}
+                  title="No shared questions yet"
+                  description="When teachers mark questions as shared, they appear here for everyone to copy."
+                />
+              ) : (
+                <div className="divide-y divide-[var(--dash-border)] max-h-[70vh] overflow-y-auto">
+                  {sharedQuestions.filter((q) => q.teacherId !== profile?.uid).map((q) => (
+                    <div key={q.id} className="flex gap-3 px-6 py-3 items-start">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex gap-2 mb-1 flex-wrap">
+                          <Badge>{TYPE_LABEL[q.type]}</Badge>
+                          {q.difficulty && <Badge variant="outline">{q.difficulty}</Badge>}
+                          <span className="text-xs text-[var(--dash-text-faint)]">{q.subject} · {q.points} pts</span>
+                        </div>
+                        <p className="text-sm text-[var(--dash-text)] line-clamp-2">{q.text.replace(/<[^>]+>/g, "")}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          if (!institution || !profile) return;
+                          const copy = { ...q, id: newId(COL.questions), teacherId: profile.uid, shared: false, createdAt: Date.now() };
+                          await saveQuestion(copy);
+                          await reload();
+                          setShowShared(false);
+                        }}
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Copy to my bank
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardBody>
           </Card>
         ) : view === "folders" ? (
@@ -1834,8 +1890,9 @@ export default function QuestionsWorkspace({
               </div>
             </CardBody>
           </Card>
-        )}
-      </div>
+        )
+        }
+      </div >
 
       <Modal
         open={open}
@@ -2524,6 +2581,6 @@ export default function QuestionsWorkspace({
           </div>
         )}
       </Modal>
-    </DashboardShell>
+    </DashboardShell >
   );
 }
