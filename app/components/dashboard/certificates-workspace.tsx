@@ -9,6 +9,8 @@ import {
   Trash2,
   Plus,
   ImageIcon,
+  Users2,
+  Zap,
 } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -29,6 +31,8 @@ import {
   deleteCertificateTemplate,
   newId,
   COL,
+  listAllAttempts,
+  listAllAssessments,
 } from "@/lib/db";
 import type {
   Certificate,
@@ -129,11 +133,10 @@ export default function CertificatesWorkspace({ role }: { role: Role }) {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition ${
-              tab === t.id
-                ? "border-[var(--dash-primary)] text-[var(--dash-primary)]"
-                : "border-transparent text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition ${tab === t.id
+              ? "border-[var(--dash-primary)] text-[var(--dash-primary)]"
+              : "border-transparent text-[var(--dash-text-muted)] hover:text-[var(--dash-text)]"
+              }`}
           >
             {t.icon}
             {t.label}
@@ -195,6 +198,61 @@ function IssueTab({
     skills: "",
   });
   const [saving, setSaving] = useState(false);
+  const [bulkAssessmentId, setBulkAssessmentId] = useState("");
+  const [bulkTitle, setBulkTitle] = useState("Certificate of completion");
+  const [bulkIssuing, setBulkIssuing] = useState(false);
+  const [assessments, setAssessments] = useState<{ id: string; title: string }[]>([]);
+
+  useEffect(() => {
+    if (!institution) return;
+    listAllAssessments(institution.id).then((a) =>
+      setAssessments(a.map((x) => ({ id: x.id, title: x.title })))
+    );
+  }, [institution]);
+
+  const bulkIssue = async () => {
+    if (!institution || !profile || !bulkAssessmentId) return;
+    setBulkIssuing(true);
+    try {
+      const attempts = await listAllAttempts(institution.id);
+      const passed = attempts.filter(
+        (a) => a.assessmentId === bulkAssessmentId && a.passed && a.status !== "in_progress"
+      );
+      // Deduplicate: one cert per student
+      const seen = new Set(certs.map((c) => c.userId));
+      const toIssue = passed.filter((a) => !seen.has(a.studentId));
+      if (!toIssue.length) {
+        toast("All passed students already have a certificate for this assessment.");
+        return;
+      }
+      let count = 0;
+      for (const att of toIssue) {
+        const user = students.find((s) => s.uid === att.studentId);
+        if (!user) continue;
+        await issueCertificate({
+          institution,
+          user,
+          title: bulkTitle.trim() || "Certificate of completion",
+          cohortName: learnerClassNames(user)[0],
+        });
+        count++;
+      }
+      await writeAudit({
+        institutionId: institution.id,
+        actorId: profile.uid,
+        actorName: profile.name,
+        action: "certificate.bulk_issue",
+        entityType: "certificate",
+        detail: `${count} certificates issued`,
+      });
+      await onIssued();
+      toast.success(`${count} certificate${count !== 1 ? "s" : ""} issued!`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Bulk issue failed.");
+    } finally {
+      setBulkIssuing(false);
+    }
+  };
 
   const issue = async () => {
     if (!institution || !profile || !form.userId) return;
@@ -265,6 +323,44 @@ function IssueTab({
           />
           <Button loading={saving} onClick={() => void issue()} disabled={!form.userId}>
             Issue certificate
+          </Button>
+        </CardBody>
+      </Card>
+
+      {/* Bulk issuance */}
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold text-[var(--dash-text)] flex items-center gap-2">
+            <Zap className="w-4 h-4" /> Bulk issue to all who passed
+          </h2>
+          <p className="text-sm text-[var(--dash-text-muted)] mt-0.5">
+            Issue one certificate to every {v.student.toLowerCase()} who passed a specific assessment (skips those who already have one).
+          </p>
+        </CardHeader>
+        <CardBody className="space-y-3">
+          <select
+            value={bulkAssessmentId}
+            onChange={(e) => setBulkAssessmentId(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">Select assessment…</option>
+            {assessments.map((a) => (
+              <option key={a.id} value={a.id}>{a.title}</option>
+            ))}
+          </select>
+          <input
+            value={bulkTitle}
+            onChange={(e) => setBulkTitle(e.target.value)}
+            className={inputClass}
+            placeholder="Certificate title"
+          />
+          <Button
+            variant="outline"
+            loading={bulkIssuing}
+            disabled={!bulkAssessmentId}
+            onClick={() => void bulkIssue()}
+          >
+            <Users2 className="w-4 h-4" /> Issue to all who passed
           </Button>
         </CardBody>
       </Card>
@@ -770,11 +866,10 @@ function SendTab({
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition ${
-                  mode === m
-                    ? "border-[var(--dash-primary)] bg-[var(--dash-primary-soft)] text-[var(--dash-primary)]"
-                    : "border-[var(--dash-border)] text-[var(--dash-text-muted)]"
-                }`}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition ${mode === m
+                  ? "border-[var(--dash-primary)] bg-[var(--dash-primary-soft)] text-[var(--dash-primary)]"
+                  : "border-[var(--dash-border)] text-[var(--dash-text-muted)]"
+                  }`}
               >
                 {m === "template" ? "Use a template" : "Upload finished file"}
               </button>
