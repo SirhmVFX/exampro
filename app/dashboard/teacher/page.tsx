@@ -20,10 +20,10 @@ import { Button } from "@/app/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import {
   listAssessmentsByTeacher,
-  listAttemptsByTeacher,
   listMaterialsByTeacher,
   listQuestions,
   listLiveSessions,
+  subscribeToTeacherAttempts,
 } from "@/lib/db";
 import type { Attempt, LiveSession } from "@/lib/types";
 import { formatDateTime, passRate, averagePercent } from "@/lib/utils";
@@ -43,22 +43,20 @@ export default function TeacherOverviewPage() {
 
   useEffect(() => {
     if (!profile || !institution) return;
-    (async () => {
-      const [qs, as, mats, atts, sess] = await Promise.all([
+
+    void (async () => {
+      const [qs, as, mats, sess] = await Promise.all([
         listQuestions(institution.id, profile.uid),
         listAssessmentsByTeacher(institution.id, profile.uid),
         listMaterialsByTeacher(institution.id, profile.uid),
-        listAttemptsByTeacher(institution.id, profile.uid),
         listLiveSessions(institution.id),
       ]);
-      setCounts({
+      setCounts((c) => ({
+        ...c,
         questions: qs.length,
         assessments: as.length,
         materials: mats.length,
-        pending: atts.filter((a) => a.needsManualGrading && a.status !== "graded").length,
-      });
-      setRecent(atts.slice(0, 8));
-      setAllSubmitted(atts.filter((a) => a.status !== "in_progress"));
+      }));
       const now = Date.now();
       setSessions(
         sess
@@ -72,6 +70,18 @@ export default function TeacherOverviewPage() {
       );
       setLoading(false);
     })();
+
+    // Real-time listener for attempts
+    const unsub = subscribeToTeacherAttempts(institution.id, profile.uid, (atts) => {
+      setCounts((c) => ({
+        ...c,
+        pending: atts.filter((a) => a.needsManualGrading && a.status !== "graded").length,
+      }));
+      setRecent(atts.slice(0, 8));
+      setAllSubmitted(atts.filter((a) => a.status !== "in_progress"));
+    });
+
+    return () => unsub();
   }, [profile, institution]);
 
   const pass = passRate(allSubmitted);
