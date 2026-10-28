@@ -346,6 +346,12 @@ export function getTeacherNav(institution?: Institution | null): NavItem[] {
       icon: <BarChart3 className="w-4 h-4" />,
       group: "Insights",
     },
+    {
+      label: "Profile",
+      href: "/dashboard/teacher/profile",
+      icon: <UserCircle className="w-4 h-4" />,
+      group: "Account",
+    },
   ];
 }
 
