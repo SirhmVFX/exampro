@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Save } from "lucide-react";
+import { Save, KeyRound } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { studentNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -11,12 +11,16 @@ import { updateUserProfile, enrollLearner } from "@/lib/db";
 import { inputClass } from "@/lib/utils";
 import { learnerClassNames } from "@/lib/learners";
 import { vocab } from "@/lib/vocab";
+import { ChangePasswordModal } from "@/app/components/dashboard/change-password-modal";
 
 export default function StudentProfilePage() {
   const { profile, institution, refresh } = useAuth();
   const v = vocab(institution);
   const [name, setName] = useState(profile?.name ?? "");
   const [classNames, setClassNames] = useState<string[]>(learnerClassNames(profile));
+  const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(profile?.dateOfBirth ?? "");
+  const [gender, setGender] = useState(profile?.gender ?? "");
   const [extraTime, setExtraTime] = useState(
     profile?.accommodations?.extraTimePercent ?? 0
   );
@@ -27,12 +31,16 @@ export default function StudentProfilePage() {
   if (profile && !hydrated) {
     setName(profile.name);
     setClassNames(learnerClassNames(profile));
+    setPhone(profile.phone ?? "");
+    setDateOfBirth(profile.dateOfBirth ?? "");
+    setGender(profile.gender ?? "");
     setExtraTime(profile.accommodations?.extraTimePercent ?? 0);
     setLargerText(Boolean(profile.accommodations?.largerText));
     setHydrated(true);
   }
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
 
   const save = async () => {
     if (!profile) return;
@@ -40,6 +48,9 @@ export default function StudentProfilePage() {
     try {
       await updateUserProfile(profile.uid, {
         name: name.trim(),
+        phone: phone.trim() || undefined,
+        dateOfBirth: dateOfBirth || undefined,
+        gender: (gender || undefined) as typeof profile.gender,
         className: classNames[0],
         classNames,
         accommodations: {
@@ -88,6 +99,41 @@ export default function StudentProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-1.5">Email</label>
               <input value={profile?.email ?? ""} disabled className={`${inputClass} bg-gray-50`} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Phone</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={inputClass}
+                placeholder="+234 800 000 0000"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Date of birth</label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Prefer not to say</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5">
@@ -152,10 +198,14 @@ export default function StudentProfilePage() {
                 <Save className="w-4 h-4" /> Save
               </Button>
               {saved && <span className="text-sm text-emerald-600">Saved</span>}
+              <Button variant="outline" onClick={() => setPwOpen(true)}>
+                <KeyRound className="w-4 h-4" /> Change password
+              </Button>
             </div>
           </CardBody>
         </Card>
       </div>
+      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
     </DashboardShell>
   );
 }
