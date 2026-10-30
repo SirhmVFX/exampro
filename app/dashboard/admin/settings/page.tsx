@@ -21,6 +21,7 @@ import { adminNav } from "@/app/components/dashboard/nav";
 import { Button } from "@/app/components/ui/button";
 import { CopyButton } from "@/app/components/ui/copy-button";
 import { Badge } from "@/app/components/ui/badge";
+import { ChangePasswordModal } from "@/app/components/dashboard/change-password-modal";
 import { useAuth } from "@/lib/auth-context";
 import {
   updateInstitution,
@@ -145,11 +146,10 @@ function ColorPicker({
                 key={p.color}
                 type="button"
                 onClick={() => onChange(p.color)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition ${
-                  active
-                    ? "border-[var(--dash-primary)] bg-[var(--dash-primary)] text-[var(--dash-on-primary)]"
-                    : "border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-primary)]"
-                }`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition ${active
+                  ? "border-[var(--dash-primary)] bg-[var(--dash-primary)] text-[var(--dash-on-primary)]"
+                  : "border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-primary)]"
+                  }`}
               >
                 <span
                   className="w-3.5 h-3.5 rounded border border-black/20"
@@ -187,6 +187,7 @@ export default function AdminSettingsPage() {
   const [tab, setTab] = useState<Tab>("institution");
   const [saving, setSaving] = useState(false);
   const [rotating, setRotating] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
   const [form, setForm] = useState({
     name: institution?.name ?? "",
     phone: institution?.phone ?? "",
@@ -233,8 +234,8 @@ export default function AdminSettingsPage() {
 
   const set =
     (field: string) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      setForm((f) => ({ ...f, [field]: e.target.value }));
+      (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const save = async () => {
     if (!institution || !profile) return;
@@ -316,9 +317,9 @@ export default function AdminSettingsPage() {
 
   const links = institution
     ? institutionJoinLinks({
-        slug: form.slug || institution.slug,
-        code: institution.code,
-      })
+      slug: form.slug || institution.slug,
+      code: institution.code,
+    })
     : null;
   const root = rootDomain();
 
@@ -339,11 +340,10 @@ export default function AdminSettingsPage() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  on
-                    ? "bg-[var(--dash-surface)] text-[var(--dash-text)] shadow-sm border border-[var(--dash-border)]"
-                    : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-surface)]"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${on
+                  ? "bg-[var(--dash-surface)] text-[var(--dash-text)] shadow-sm border border-[var(--dash-border)]"
+                  : "text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-surface)]"
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{t.label}</span>
@@ -695,6 +695,11 @@ export default function AdminSettingsPage() {
                 </Badge>
               </div>
             </SettingRow>
+            <SettingRow label="Password">
+              <Button variant="outline" size="sm" onClick={() => setPwOpen(true)}>
+                <Key className="w-4 h-4" /> Change password
+              </Button>
+            </SettingRow>
           </SectionCard>
         )}
 
@@ -708,6 +713,7 @@ export default function AdminSettingsPage() {
           </p>
         </div>
       </div>
+      <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
     </DashboardShell>
   );
 }
