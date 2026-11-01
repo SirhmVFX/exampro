@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AlertCircle, Clock, Play, FileUp } from "lucide-react";
+import { AlertCircle, Clock, Play, FileUp, WifiOff } from "lucide-react";
 import DashboardShell from "@/app/components/dashboard/shell";
 import { studentNav } from "@/app/components/dashboard/nav";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/card";
@@ -275,11 +275,15 @@ export default function TakeAssessmentPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
-  const startedAt = useRef(Date.now());
+  const [offline, setOffline] = useState(false);
+  const [essaySaved, setEssaySaved] = useState<Record<string, boolean>>({});
+  const [essaySaving, setEssaySaving] = useState<Record<string, boolean>>({});
+  const essayTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const startedAt = useRef<number>(0);
   const submittedRef = useRef(false);
   const answersRef = useRef(answers);
   answersRef.current = answers;
-  const submitRef = useRef<() => Promise<void>>(async () => {});
+  const submitRef = useRef<() => Promise<void>>(async () => { });
 
   useEffect(() => {
     if (!profile || !institution) return;
@@ -313,7 +317,7 @@ export default function TakeAssessmentPage() {
       if (inProgress) {
         setAttemptId(inProgress.id);
         setAttemptNumber(inProgress.attemptNumber);
-        startedAt.current = inProgress.startedAt;
+        if (!startedAt.current) startedAt.current = inProgress.startedAt;
         const restored: Record<string, unknown> = {};
         for (const r of inProgress.perQuestion) restored[r.questionId] = r.answer;
         setAnswers(restored);
@@ -328,7 +332,7 @@ export default function TakeAssessmentPage() {
         setAttemptNumber(num);
         const newAttemptId = newId(COL.attempts);
         setAttemptId(newAttemptId);
-        startedAt.current = Date.now();
+        if (!startedAt.current) startedAt.current = Date.now();
         const draft: Attempt = {
           id: newAttemptId,
           institutionId: institution.id,
@@ -397,6 +401,50 @@ export default function TakeAssessmentPage() {
 
   submitRef.current = submit;
 
+  // ── Offline guard ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const goOffline = () => {
+      setOffline(true);
+      if (attemptId) {
+        void appendAttemptEvent(attemptId, { type: "leave_attempt", at: Date.now(), detail: "offline" });
+      }
+    };
+    const goOnline = () => {
+      setOffline(false);
+      if (attemptId) {
+        void appendAttemptEvent(attemptId, { type: "resume", at: Date.now(), detail: "reconnected" });
+      }
+    };
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, [attemptId]);
+
+  // ── Keyboard navigation for MCQ ─────────────────────────────────────────
+  useEffect(() => {
+    if (!questions.length) return;
+    const handler = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      if (active && (active.tagName === "TEXTAREA" || active.tagName === "INPUT")) return;
+      const mcqQuestions = questions.filter((q) => q.type === "mcq");
+      if (!mcqQuestions.length) return;
+      // Find the first visible MCQ on screen (simple heuristic: first unanswered or first)
+      const targetQ = mcqQuestions.find((q) => answers[q.id] === undefined) ?? mcqQuestions[0];
+      if (!targetQ?.options) return;
+      const optCount = targetQ.options.length;
+      const keyMap: Record<string, number> = { "1": 0, "2": 1, "3": 2, "4": 3, "a": 0, "b": 1, "c": 2, "d": 3 };
+      const idx = keyMap[e.key.toLowerCase()];
+      if (idx !== undefined && idx < optCount) {
+        setAnswers((prev) => ({ ...prev, [targetQ.id]: idx }));
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [questions, answers]);
+
   useEffect(() => {
     if (!attemptId || !assessment) return;
     const t = setInterval(() => {
@@ -460,6 +508,20 @@ export default function TakeAssessmentPage() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   }, [secondsLeft]);
 
+  const onEssayChange = (questionId: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+    setEssaySaved((prev) => ({ ...prev, [questionId]: false }));
+    setEssaySaving((prev) => ({ ...prev, [questionId]: false }));
+    if (essayTimers.current[questionId]) clearTimeout(essayTimers.current[questionId]);
+    essayTimers.current[questionId] = setTimeout(() => {
+      setEssaySaving((prev) => ({ ...prev, [questionId]: true }));
+      setTimeout(() => {
+        setEssaySaving((prev) => ({ ...prev, [questionId]: false }));
+        setEssaySaved((prev) => ({ ...prev, [questionId]: true }));
+      }, 600);
+    }, 1500);
+  };
+
   if (error && !questions.length) {
     return (
       <DashboardShell role="student" navItems={studentNav} title="Assessment">
@@ -502,13 +564,18 @@ export default function TakeAssessmentPage() {
         )}
         {clock && (
           <div
-            className={`sticky top-2 z-10 flex items-center gap-2 px-4 py-2 text-sm font-semibold ${
-              secondsLeft !== null && secondsLeft < 60
-                ? "bg-red-600 text-white"
-                : "bg-[var(--dash-primary)] text-[var(--dash-on-primary)]"
-            }`}
+            className={`sticky top-2 z-10 flex items-center gap-2 px-4 py-2 text-sm font-semibold ${secondsLeft !== null && secondsLeft < 60
+              ? "bg-red-600 text-white"
+              : "bg-[var(--dash-primary)] text-[var(--dash-on-primary)]"
+              }`}
           >
             <Clock className="w-4 h-4" /> Time remaining {clock}
+          </div>
+        )}
+        {offline && (
+          <div className="flex items-center gap-3 bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded-xl text-sm font-medium">
+            <WifiOff className="w-4 h-4 shrink-0" />
+            You are offline. Your answers are saved locally. Reconnect to continue.
           </div>
         )}
         {error && (
@@ -539,11 +606,10 @@ export default function TakeAssessmentPage() {
                   {(q.options ?? []).map((opt, idx) => (
                     <label
                       key={opt}
-                      className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer ${
-                        answers[q.id] === idx
-                          ? "border-[var(--dash-primary)] bg-[var(--dash-primary-soft)]"
-                          : "border-gray-200"
-                      }`}
+                      className={`flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer ${answers[q.id] === idx
+                        ? "border-[var(--dash-primary)] bg-[var(--dash-primary-soft)]"
+                        : "border-gray-200"
+                        }`}
                     >
                       <input
                         type="radio"
@@ -551,7 +617,8 @@ export default function TakeAssessmentPage() {
                         checked={answers[q.id] === idx}
                         onChange={() => setAnswers({ ...answers, [q.id]: idx })}
                       />
-                      <span className="text-sm">{opt}</span>
+                      <span className="text-sm flex-1">{opt}</span>
+                      <span className="text-[10px] text-[var(--dash-text-faint)] font-mono border border-[var(--dash-border)] rounded px-1">{idx + 1}</span>
                     </label>
                   ))}
                 </div>
@@ -563,11 +630,10 @@ export default function TakeAssessmentPage() {
                       key={String(v)}
                       type="button"
                       onClick={() => setAnswers({ ...answers, [q.id]: v })}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium ${
-                        answers[q.id] === v
-                          ? "bg-[var(--dash-primary)] text-[var(--dash-on-primary)] border-[var(--dash-primary)]"
-                          : "border-gray-200"
-                      }`}
+                      className={`flex-1 py-2 rounded-lg border text-sm font-medium ${answers[q.id] === v
+                        ? "bg-[var(--dash-primary)] text-[var(--dash-on-primary)] border-[var(--dash-primary)]"
+                        : "border-gray-200"
+                        }`}
                     >
                       {v ? "True" : "False"}
                     </button>
@@ -576,12 +642,18 @@ export default function TakeAssessmentPage() {
               )}
               {(q.type === "short" || q.type === "essay") &&
                 (q.type === "essay" ? (
-                  <WysiwygEditor
-                    content={String(answers[q.id] ?? "")}
-                    onChange={(v) => setAnswers({ ...answers, [q.id]: v })}
-                    placeholder="Write your answer…"
-                    minHeight={180}
-                  />
+                  <div>
+                    <WysiwygEditor
+                      content={String(answers[q.id] ?? "")}
+                      onChange={(v) => onEssayChange(q.id, v)}
+                      placeholder="Write your answer…"
+                      minHeight={180}
+                    />
+                    <div className="flex justify-end mt-1 h-4">
+                      {essaySaving[q.id] && <span className="text-xs text-[var(--dash-text-faint)]">Saving…</span>}
+                      {essaySaved[q.id] && !essaySaving[q.id] && <span className="text-xs text-emerald-600">Saved ✓</span>}
+                    </div>
+                  </div>
                 ) : (
                   <textarea
                     rows={3}
@@ -621,8 +693,8 @@ export default function TakeAssessmentPage() {
             </CardBody>
           </Card>
         ))}
-        <Button fullWidth size="lg" loading={submitting} onClick={() => void submit()}>
-          Submit {KIND_LABEL[assessment.kind].toLowerCase()}
+        <Button fullWidth size="lg" loading={submitting} disabled={offline} onClick={() => void submit()}>
+          {offline ? "Offline — reconnect to submit" : `Submit ${KIND_LABEL[assessment.kind].toLowerCase()}`}
         </Button>
       </div>
     </DashboardShell>
