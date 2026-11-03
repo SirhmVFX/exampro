@@ -369,3 +369,114 @@ body {
   max-width: 100%;
   height: auto;
 }
+
+/* ── Print styles for student result sheet ─────────────────────────────── */
+@media print {
+  /* Hide everything that isn't the main content */
+  nav, header, aside, [data-sidebar], footer,
+  .dash > aside,
+  button[aria-label="Toggle menu"],
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  /* Make the main content full-width */
+  .dash {
+    display: block !important;
+  }
+
+  main {
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Cards print cleanly */
+  [class*="rounded"] {
+    border-radius: 4px !important;
+  }
+
+  /* Page breaks */
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* ── Marketing light mode ──────────────────────────────────────────────────── */
+/* Activated by data-marketing-theme="light" on <html> */
+[data-marketing-theme="light"] .bg-black,
+[data-marketing-theme="light"] body > .bg-black,
+[data-marketing-theme="light"] main {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+}
+
+[data-marketing-theme="light"] .text-white {
+  color: #09090b !important;
+}
+
+[data-marketing-theme="light"] .text-white\/45,
+[data-marketing-theme="light"] .text-white\/40,
+[data-marketing-theme="light"] .text-white\/50,
+[data-marketing-theme="light"] .text-white\/55,
+[data-marketing-theme="light"] .text-white\/60 {
+  color: #52525b !important;
+}
+
+[data-marketing-theme="light"] .text-white\/30,
+[data-marketing-theme="light"] .text-white\/35,
+[data-marketing-theme="light"] .text-white\/25 {
+  color: #71717a !important;
+}
+
+[data-marketing-theme="light"] .border-white\/10,
+[data-marketing-theme="light"] .border-white\/15 {
+  border-color: #e4e4e7 !important;
+}
+
+[data-marketing-theme="light"] .bg-white\/5,
+[data-marketing-theme="light"] .bg-white\/8 {
+  background-color: #f4f4f5 !important;
+}
+
+[data-marketing-theme="light"] .bg-zinc-950,
+[data-marketing-theme="light"] .bg-black\/40,
+[data-marketing-theme="light"] .bg-black\/60 {
+  background-color: #f4f4f5 !important;
+}
+
+[data-marketing-theme="light"] .lp-grid {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+}
+
+[data-marketing-theme="light"] .bg-white {
+  background-color: #000000 !important;
+}
+
+[data-marketing-theme="light"] .text-black {
+  color: #ffffff !important;
+}
+
+/* Nav stays readable in light mode */
+[data-marketing-theme="light"] nav {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom-color: #e4e4e7 !important;
+}
+
+[data-marketing-theme="light"] nav .text-white\/65,
+[data-marketing-theme="light"] nav .text-white\/60 {
+  color: #3f3f46 !important;
+}
+
+[data-marketing-theme="light"] nav .text-white {
+  color: #09090b !important;
+}
