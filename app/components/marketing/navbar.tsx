@@ -8,7 +8,7 @@ import {
   Brain, Code2, BarChart3, Shield, BookOpen, FileText,
   Users, Bell, Award, Layers, Zap, Clock,
   GraduationCap, Building2, Briefcase, Globe,
-  LayoutDashboard, PenTool,
+  LayoutDashboard, PenTool, Sun, Moon,
 } from "lucide-react";
 
 // ─── Mega-menu data ───────────────────────────────────────────────────────────
@@ -237,9 +237,34 @@ export default function MarketingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState<MenuKey>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [lightMode, setLightMode] = useState(false);
   const pathname = usePathname();
   const solid = scrolled || pathname !== "/";
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // Restore saved preference
+    try {
+      const saved = localStorage.getItem("exampro:marketingTheme");
+      if (saved === "light") {
+        setLightMode(true);
+        document.documentElement.setAttribute("data-marketing-theme", "light");
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const toggleMarketingTheme = () => {
+    const next = !lightMode;
+    setLightMode(next);
+    try {
+      localStorage.setItem("exampro:marketingTheme", next ? "light" : "dark");
+    } catch { /* ignore */ }
+    if (next) {
+      document.documentElement.setAttribute("data-marketing-theme", "light");
+    } else {
+      document.documentElement.removeAttribute("data-marketing-theme");
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -348,6 +373,15 @@ export default function MarketingNavbar() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-2">
+            {/* Marketing light/dark toggle */}
+            <button
+              onClick={toggleMarketingTheme}
+              className="p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label={lightMode ? "Switch to dark mode" : "Switch to light mode"}
+              title={lightMode ? "Dark mode" : "Light mode"}
+            >
+              {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
             <Link
               href="/auth/login"
               className="px-3.5 py-2 text-sm font-medium text-white/65 hover:text-white transition-colors"
