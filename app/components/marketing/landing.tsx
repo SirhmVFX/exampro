@@ -59,9 +59,8 @@ function Reveal({
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${
-        show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      } ${className}`}
+      className={`transition-all duration-700 ease-out ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        } ${className}`}
     >
       {children}
     </div>
@@ -545,11 +544,10 @@ function ProductPreview({
             <button
               key={t.id}
               onClick={() => setRole(t.id)}
-              className={`px-4 py-2.5 rounded-lg text-sm transition border ${
-                role === t.id
-                  ? "bg-white text-black border-white"
-                  : "border-white/10 text-white/55 hover:text-white hover:border-white/25"
-              }`}
+              className={`px-4 py-2.5 rounded-lg text-sm transition border ${role === t.id
+                ? "bg-white text-black border-white"
+                : "border-white/10 text-white/55 hover:text-white hover:border-white/25"
+                }`}
             >
               <span className="font-medium">{t.label}</span>
               <span
@@ -624,7 +622,7 @@ function ProductPreview({
                           onClick={() => {
                             navigator.clipboard
                               .writeText("K7MQ2P")
-                              .catch(() => {});
+                              .catch(() => { });
                             setCopied(true);
                             setTimeout(() => setCopied(false), 1600);
                           }}
@@ -758,13 +756,12 @@ function ProductPreview({
                         <button
                           key={opt}
                           onClick={() => setPicked(i)}
-                          className={`text-left text-sm px-4 py-3 rounded-xl border transition ${
-                            on
-                              ? correct
-                                ? "border-white bg-white text-black"
-                                : "border-white/40 bg-white/10 text-white"
-                              : "border-white/10 text-white/70 hover:border-white/30"
-                          }`}
+                          className={`text-left text-sm px-4 py-3 rounded-xl border transition ${on
+                            ? correct
+                              ? "border-white bg-white text-black"
+                              : "border-white/40 bg-white/10 text-white"
+                            : "border-white/10 text-white/70 hover:border-white/30"
+                            }`}
                         >
                           {opt}
                           {on && correct && (
@@ -1093,11 +1090,10 @@ function PricingTeaser() {
           {PLANS.map((p, i) => (
             <Reveal key={p.id} delay={i * 60}>
               <div
-                className={`h-[35rem] rounded-2xl border p-6 flex flex-col ${
-                  p.highlighted
-                    ? "border-white bg-white text-black"
-                    : "border-white/10 text-white"
-                }`}
+                className={`h-[35rem] rounded-2xl border p-6 flex flex-col ${p.highlighted
+                  ? "border-white bg-white text-black"
+                  : "border-white/10 text-white"
+                  }`}
               >
                 <p className="text-sm font-medium">{p.name}</p>
                 <p
@@ -1130,11 +1126,10 @@ function PricingTeaser() {
                       ? "/contact"
                       : "/auth/register/institution"
                   }
-                  className={`mt-6 text-center text-sm py-2.5 rounded-lg font-medium transition ${
-                    p.highlighted
-                      ? "bg-black text-white hover:bg-zinc-800"
-                      : "border border-white/15 hover:bg-white hover:text-black"
-                  }`}
+                  className={`mt-6 text-center text-sm py-2.5 rounded-lg font-medium transition ${p.highlighted
+                    ? "bg-black text-white hover:bg-zinc-800"
+                    : "border border-white/15 hover:bg-white hover:text-black"
+                    }`}
                 >
                   {p.id === "enterprise"
                     ? "Talk to us"
@@ -1260,6 +1255,70 @@ function CTA() {
   );
 }
 
+/* ─── Testimonials ─────────────────────────────────────────────────────── */
+
+const TESTIMONIALS = [
+  {
+    quote: "We cut our exam-printing costs to zero in a term. Auto-grading alone saves our teachers 4 hours a week.",
+    name: "Adaeze Okonkwo",
+    title: "Principal, Greenfield Secondary School",
+    initials: "AO",
+  },
+  {
+    quote: "The AI question generator is phenomenal. I brief it once — topic, difficulty, type — and get a full 20-question set ready to review in under 30 seconds.",
+    name: "Mr. Balogun",
+    title: "Head of Mathematics, Apex Academy",
+    initials: "MB",
+  },
+  {
+    quote: "Our coding bootcamp runs live exams with real JavaScript playgrounds. Students get pass/fail feedback before they even leave the room. It changed how we teach.",
+    name: "Fatimah Abubakar",
+    title: "Director of Training, Helix Code School",
+    initials: "FA",
+  },
+  {
+    quote: "Setting up was a 10-minute job. Within the week every teacher was issuing quizzes and parents were messaging us asking how to check their kids' scores.",
+    name: "Rev. Emmanuel Idowu",
+    title: "Admin, Grace Community Learning Centre",
+    initials: "EI",
+  },
+];
+
+function Testimonials() {
+  return (
+    <section className="py-24 border-t border-white/10">
+      <div className="max-w-7xl mx-auto px-6">
+        <Reveal>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">Testimonials</p>
+          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white max-w-2xl">
+            Institutions that switched to ExamPro
+          </h2>
+        </Reveal>
+        <div className="mt-12 grid md:grid-cols-2 gap-5">
+          {TESTIMONIALS.map((t) => (
+            <Reveal key={t.name} delay={80}>
+              <div className="border border-white/10 rounded-2xl p-6 flex flex-col gap-4 h-full hover:border-white/20 transition">
+                <p className="text-white/70 leading-relaxed text-sm flex-1">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{t.name}</p>
+                    <p className="text-xs text-white/40">{t.title}</p>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── Page ─────────────────────────────────────────────────────────────── */
 
 export default function LandingPage() {
@@ -1273,6 +1332,7 @@ export default function LandingPage() {
         <Marquee />
         <ProductPreview role={role} setRole={setRole} />
         <Features />
+        <Testimonials />
         <How />
         <Roles />
         <Stats />
