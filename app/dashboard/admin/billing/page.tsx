@@ -41,13 +41,12 @@ function TrialBanner({ trialEndsAt }: { trialEndsAt: number }) {
   const expired = days === 0;
   return (
     <div
-      className={`flex items-start gap-3 rounded-xl px-4 py-3.5 text-sm ${
-        expired
+      className={`flex items-start gap-3 rounded-xl px-4 py-3.5 text-sm ${expired
           ? "bg-red-50 border border-red-200 text-red-700"
           : days <= 7
             ? "bg-amber-50 border border-amber-200 text-amber-800"
             : "bg-blue-50 border border-blue-200 text-blue-800"
-      }`}
+        }`}
     >
       <Clock className="w-4 h-4 mt-0.5 shrink-0" />
       <div className="flex-1">
@@ -85,15 +84,37 @@ function BillingInner() {
   const [checked, setChecked] = useState(false);
   const [months, setMonths] = useState(1);
 
-  // On load: check whether plan or trial has expired
+  // On load: check whether plan or trial has expired; send trial reminder if needed
   useEffect(() => {
     if (!institution || checked) return;
     (async () => {
       await checkAndExpirePlan(institution);
       await refresh();
       setChecked(true);
+      // Send trial reminder email if trial is expiring within 7 days (once per day)
+      if (institution.trialEndsAt && profile?.email) {
+        const days = daysLeft(institution.trialEndsAt);
+        if (days <= 7) {
+          const storageKey = `exampro:trialReminder:${institution.id}:${new Date().toISOString().slice(0, 10)}`;
+          try {
+            if (!localStorage.getItem(storageKey)) {
+              localStorage.setItem(storageKey, "1");
+              void fetch("/api/email/trial-reminder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  adminEmail: profile.email,
+                  adminName: profile.name,
+                  institutionName: institution.name,
+                  daysLeft: days,
+                }),
+              });
+            }
+          } catch { /* ignore localStorage errors in private mode */ }
+        }
+      }
     })();
-  }, [institution, checked, refresh]);
+  }, [institution, checked, refresh, profile]);
 
   useEffect(() => {
     if (!institution) return;
@@ -155,8 +176,7 @@ function BillingInner() {
     await refresh();
     setPayments(await listPayments(institution.id));
     setNotice(
-      `You're now on the ${getPlan(opts.planId).name} plan for ${opts.months} month${
-        opts.months !== 1 ? "s" : ""
+      `You're now on the ${getPlan(opts.planId).name} plan for ${opts.months} month${opts.months !== 1 ? "s" : ""
       }. Welcome! 🎉`,
     );
   };
@@ -173,7 +193,7 @@ function BillingInner() {
       if (!res.ok || data.status !== "success") {
         setError(
           data.error ??
-            "Payment could not be verified. If you were charged, contact support with your reference number.",
+          "Payment could not be verified. If you were charged, contact support with your reference number.",
         );
         return;
       }
@@ -330,11 +350,10 @@ function BillingInner() {
                     key={m}
                     type="button"
                     onClick={() => setMonths(m)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition border ${
-                      months === m
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition border ${months === m
                         ? "bg-[var(--dash-primary)] text-white border-transparent"
                         : "text-[var(--dash-text-muted)] border-[var(--dash-border)] hover:bg-[var(--dash-surface-alt)]"
-                    }`}
+                      }`}
                   >
                     {m} mo
                   </button>
@@ -517,9 +536,7 @@ function BillingInner() {
                     <tr key={p.id}>
                       <td className="px-6 py-3">{formatDate(p.createdAt)}</td>
                       <td className="px-6 py-3 capitalize">{p.plan}</td>
-                      <td className="px-6 py-3">
-                        {p.months ?? 1} mo
-                      </td>
+                      <td className="px-6 py-3">{p.months ?? 1} mo</td>
                       <td className="px-6 py-3">
                         {p.currency} {p.amount.toLocaleString()}
                       </td>
