@@ -107,7 +107,7 @@ export const BILLING_MONTH_OPTIONS: number[] = Array.from(
 
 export function planAllows(
   plan: Plan,
-  counts: { students?: number; teachers?: number; aiUsed?: number }
+  counts: { students?: number; teachers?: number; aiUsed?: number },
 ): { students: boolean; teachers: boolean; ai: boolean } {
   return {
     students:
