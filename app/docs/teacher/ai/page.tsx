@@ -37,17 +37,13 @@ export default function Page() {
       <DocP>
         ExamPro sends your prompt (subject, class, topic, skill, difficulty,
         question type, context, count) to Google Gemini via a secure server-side
-        API call. Large requests are automatically split into batches of 15
-        questions so nothing gets truncated — a 100-question paper simply runs
-        several batches one after another. Gemini returns a structured JSON
-        array of questions with options, answers, explanations, and worked
-        solutions. You review each one and choose what to save. Nothing is saved
-        automatically.
+        API call. The model used is <code className="bg-white/8 px-1 rounded text-xs">gemini-2.0-flash-lite</code> by default (overridable with the <code className="bg-white/8 px-1 rounded text-xs">GEMINI_MODEL</code> environment variable). Large requests are automatically split into batches of 15 questions so nothing gets truncated — a 100-question paper simply runs several batches one after another. Gemini returns a structured JSON array of questions with options, answers, explanations, and worked solutions. You review each one and choose what to save. Nothing is saved automatically.
       </DocP>
       <Note>
         AI generation requires a{" "}
         <code className="bg-white/8 px-1 rounded text-xs">GEMINI_API_KEY</code>{" "}
-        to be configured by your administrator. If the button is disabled or
+        to be configured by your administrator. Free API keys are available at{" "}
+        <strong>aistudio.google.com/apikey</strong>. If the button is disabled or
         shows an error, contact your admin.
       </Note>
 
