@@ -117,12 +117,15 @@ export default function Page() {
 
       <DocH2 id="questions">Adding questions</DocH2>
       <DocP>
-        In the question picker, search by subject, class, topic, or type. Select
-        questions with the checkbox. They appear in the question list below in
-        the order you add them. Assessments can hold up to{" "}
+        In the question picker panel, search by subject, class, topic, or type. Select
+        questions with the checkbox. They appear in the question list in the
+        order you add them. Assessments can hold up to{" "}
         <strong>100 questions</strong>.
       </DocP>
       <DocUl>
+        <DocLi>
+          <strong>Difficulty filter</strong> — use the <strong>All difficulties</strong> dropdown at the top of the question panel to show only questions of a specific difficulty tier (Easy, Medium, Hard, Support, Core, Extension). The difficulty label is also shown as a badge on each question card, so you can build tiered assessments quickly.
+        </DocLi>
         <DocLi>
           <strong>Import from sets</strong> — click{" "}
           <strong>Import from sets</strong> to pull an entire question set from
@@ -138,13 +141,6 @@ export default function Page() {
         <DocLi>
           <strong>Shuffle questions</strong> — enable to randomise order per
           student. Reduces seat-neighbour copying.
-        </DocLi>
-        <DocLi>
-          <strong>Reorder</strong> — drag questions up/down when shuffle is off.
-        </DocLi>
-        <DocLi>
-          <strong>Remove</strong> — click × on a question to remove it from this
-          assessment (it stays in your library).
         </DocLi>
       </DocUl>
 
