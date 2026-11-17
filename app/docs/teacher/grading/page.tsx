@@ -6,6 +6,7 @@ export default function Page() {
       { id: "auto-graded", label: "Auto-graded questions", depth: 2 },
       { id: "manual", label: "Manual grading", depth: 2 },
       { id: "workflow", label: "Grading workflow", depth: 2 },
+      { id: "retake-reset", label: "Resetting a student's retake", depth: 2 },
       { id: "override", label: "Overriding auto grades", depth: 2 },
       { id: "feedback", label: "Per-question feedback", depth: 2 },
       { id: "status", label: "Submission statuses", depth: 2 },
@@ -40,6 +41,16 @@ export default function Page() {
         <Step n={5} title="Save grades">Click <strong>Save grades</strong>. The attempt status changes to <em>graded</em>. The student&apos;s results update immediately if results are visible to them.</Step>
       </Steps>
 
+      <DocH2 id="retake-reset">Resetting a student&apos;s retake</DocH2>
+      <DocP>If a student has used all their allowed attempts and needs another chance, you can reset their attempt history for a specific assessment — without changing the assessment settings for everyone else.</DocP>
+      <Steps>
+        <Step n={1} title="Go to Submissions">Dashboard → <strong>Submissions</strong>.</Step>
+        <Step n={2} title="Find the student&apos;s row">Locate the student and assessment you want to reset.</Step>
+        <Step n={3} title="Click the reset icon">Click the <strong>🔄 refresh icon</strong> at the right edge of the row. A confirmation dialog appears.</Step>
+        <Step n={4} title="Confirm">Confirm the reset. All previous attempts for that student on that assessment are permanently deleted. The student can now attempt from scratch as if for the first time.</Step>
+      </Steps>
+      <Note>Retake reset deletes attempt history — scores, timestamps, and grading are gone. Use it deliberately. It cannot be undone.</Note>
+
       <DocH2 id="override">Overriding auto grades</DocH2>
       <DocP>Every question — even auto-graded ones — shows a points input field in the grading view. Change the value and save to override the auto-grade. Use this for:</DocP>
       <DocUl>
@@ -49,14 +60,14 @@ export default function Page() {
       </DocUl>
 
       <DocH2 id="feedback">Per-question feedback</DocH2>
-      <DocP>Enter feedback text in the feedback field of any question. The student sees this feedback on their result detail page after grading is complete. Keep it specific — "Good reasoning but the conclusion was off" is more useful than "Partially correct".</DocP>
+      <DocP>Enter feedback text in the feedback field of any question. The student sees this feedback on their result detail page after grading is complete. Keep it specific — &quot;Good reasoning but the conclusion was off&quot; is more useful than &quot;Partially correct&quot;.</DocP>
       <Tip>Feedback is optional but improves learning outcomes significantly. Even a single sentence per essay question helps students understand where they went wrong.</Tip>
 
       <DocH2 id="status">Submission statuses</DocH2>
       <DocUl>
         <DocLi><strong>in_progress</strong> — student has started but not submitted. You can view but not grade.</DocLi>
         <DocLi><strong>submitted</strong> — student has submitted; contains manual questions awaiting your review.</DocLi>
-        <DocLi><strong>graded</strong> — fully graded (either all auto, or you&apos;ve reviewed all manual questions).</DocLi>
+        <DocLi><strong>graded</strong> — fully graded (either all auto, or you have reviewed all manual questions).</DocLi>
       </DocUl>
     </DocPage>
   );
