@@ -1,16 +1,33 @@
 import Link from "next/link";
-import { DocPage, DocH1, DocH2, DocLead, DocP, DocUl, DocLi, Note, Tip, DocTable } from "../../doc-components";
+import {
+  DocPage,
+  DocH1,
+  DocH2,
+  DocLead,
+  DocP,
+  DocUl,
+  DocLi,
+  Note,
+  Tip,
+  DocTable,
+} from "../../doc-components";
 
 export default function Page() {
   return (
-    <DocPage href="/docs/billing/plans" headings={[
-      { id: "plans", label: "The plans", depth: 2 },
-      { id: "free", label: "Free plan", depth: 2 },
-      { id: "paid", label: "Paid plans", depth: 2 },
-      { id: "enterprise", label: "Enterprise", depth: 2 },
-    ]}>
+    <DocPage
+      href="/docs/billing/plans"
+      headings={[
+        { id: "plans", label: "The plans", depth: 2 },
+        { id: "free", label: "Free plan", depth: 2 },
+        { id: "paid", label: "Paid plans", depth: 2 },
+        { id: "enterprise", label: "Enterprise", depth: 2 },
+      ]}
+    >
       <DocH1>Plans</DocH1>
-      <DocLead>ExamPro has four plans. Every institution starts on Free — upgrade when you need more capacity.</DocLead>
+      <DocLead>
+        ExamPro has four plans. Every institution starts on Free — upgrade when
+        you need more capacity.
+      </DocLead>
 
       <DocH2 id="plans">The plans</DocH2>
       <DocTable
@@ -22,23 +39,60 @@ export default function Page() {
           ["Enterprise", "Custom", "Unlimited", "Unlimited", "Unlimited"],
         ]}
       />
-      <Note>AI generation quota is shared across all teachers in the institution for the calendar month.</Note>
+      <Note>
+        AI generation quota is shared across all teachers in the institution for
+        the calendar month.
+      </Note>
 
       <DocH2 id="free">Free plan</DocH2>
-      <DocP>The Free plan is permanent — it doesn&apos;t expire. It&apos;s suitable for small classes (up to 30 students, 3 teachers) and light AI usage. You get all core features: questions, assessments, grading, materials, and basic analytics.</DocP>
-      <DocP>The Free plan does not require a credit card or any payment details.</DocP>
+      <DocP>
+        The Free plan is permanent — it doesn&apos;t expire. It&apos;s suitable
+        for small classes (up to 30 students, 3 teachers) and light AI usage.
+        You get all core features: questions, assessments, grading, materials,
+        and basic analytics.
+      </DocP>
+      <DocP>
+        The Free plan does not require a credit card or any payment details. Every new institution also gets a <strong>30-day free trial</strong> that temporarily lifts plan limits — no card needed to start.
+      </DocP>
+      <DocP>
+        When your trial is within 7 days of expiring, ExamPro automatically emails the admin with a reminder. The reminder is sent once per day until the trial ends or you upgrade.
+      </DocP>
 
       <DocH2 id="paid">Paid plans</DocH2>
-      <DocP>Starter and Growth are priced per month — you can pay for a single month or prepay any term up to 12 months in one checkout. Payments are processed by <strong>Paystack</strong> — supports Nigerian bank cards, Visa, Mastercard, bank transfer, and USSD. Paid plans activate immediately after a successful payment.</DocP>
+      <DocP>
+        Starter and Growth are priced per month — you can pay for a single month
+        or prepay any term up to 12 months in one checkout. Payments are
+        processed by <strong>Paystack</strong> — supports Nigerian bank cards,
+        Visa, Mastercard, bank transfer, and USSD. Paid plans activate
+        immediately after a successful payment.
+      </DocP>
       <DocUl>
-        <DocLi><strong>Starter ($39/mo)</strong> — growing schools up to 200 students. Includes full Cloudinary file storage for materials.</DocLi>
-        <DocLi><strong>Growth ($89/mo)</strong> — established institutions up to 1,000 students. Unlimited AI generations and priority support.</DocLi>
+        <DocLi>
+          <strong>Starter ($39/mo)</strong> — growing schools up to 200
+          students. Includes full Cloudinary file storage for materials.
+        </DocLi>
+        <DocLi>
+          <strong>Growth ($89/mo)</strong> — established institutions up to
+          1,000 students. Unlimited AI generations and priority support.
+        </DocLi>
       </DocUl>
-      <Tip>Plans do not auto-renew. Your plan stays active for the number of months you prepaid, then reverts to Free. No data is deleted.</Tip>
+      <Tip>
+        Plans do not auto-renew. Your plan stays active for the number of months
+        you prepaid, then reverts to Free. No data is deleted.
+      </Tip>
 
       <DocH2 id="enterprise">Enterprise</DocH2>
-      <DocP>For universities, multi-campus institutions, or anyone with special requirements. Features include unlimited students and teachers, dedicated account manager, custom SLA, and onboarding support.</DocP>
-      <DocP><Link href="/contact" className="text-blue-400 underline font-medium">Contact us</Link> to discuss pricing and requirements.</DocP>
+      <DocP>
+        For universities, multi-campus institutions, or anyone with special
+        requirements. Features include unlimited students and teachers,
+        dedicated account manager, custom SLA, and onboarding support.
+      </DocP>
+      <DocP>
+        <Link href="/contact" className="text-blue-400 underline font-medium">
+          Contact us
+        </Link>{" "}
+        to discuss pricing and requirements.
+      </DocP>
     </DocPage>
   );
 }
