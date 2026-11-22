@@ -130,6 +130,11 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/docs/student/certificates",
         icon: Award,
       },
+      {
+        label: "Profile & password",
+        href: "/docs/student/profile",
+        icon: Settings,
+      },
     ],
   },
   {
